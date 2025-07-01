@@ -1,0 +1,19 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/import-urls",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "description": "Import URLs from clipboard or a text file as tabs or bookmarks",
+  "icons": {
+    "256": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Import URLs",
+  "permissions": ["storage"],
+  "optional_permissions": ["bookmarks", "clipboardRead"],
+  "version": "1.0.16"
+}
