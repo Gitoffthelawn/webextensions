@@ -1,0 +1,83 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <title>Options</title>
+  <style>
+    body {
+      background-color: lightgrey;
+      padding: 5px;
+      min-height: 640px;
+      font-family: monospace;
+      font-size: 1em;
+    }
+    fieldset {
+      padding: 10px;
+      margin: 5px;
+      border: 1px groove black;
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <legend>
+      <b
+        >Toolbar Button action opens a
+        <abbr title="Temporary Container">TC</abbr> with
+      </b>
+    </legend>
+
+    <input type="radio" value="reopen" name="toolbarAction" />
+    active Tab URL <i>(default)</i>
+    <br />
+    <input type="radio" value="newtab" name="toolbarAction" />
+    about:newtab
+  </fieldset>
+
+  <fieldset>
+    <legend>
+      <b>Change TC Color</b>
+    </legend>
+
+    <span style="background-color: turquoise"
+      ><input type="radio" name="usecolors" value="turquoise" />
+      turquoise_</span
+    >
+    <br />
+
+    <span style="background-color: blue; color: white"
+      ><input type="radio" name="usecolors" value="blue" /> blue______
+    </span>
+
+    <br />
+    <span style="background-color: green; color: white"
+      ><input type="radio" name="usecolors" value="green" /> green_____
+    </span>
+
+    <br />
+    <span style="background-color: yellow"
+      ><input type="radio" name="usecolors" value="yellow" /> yellow____
+    </span>
+    <br />
+
+    <span style="background-color: orange">
+      <input type="radio" name="usecolors" value="orange" /> orange____
+    </span>
+
+    <br />
+    <span style="background-color: red; color: white">
+      <input type="radio" name="usecolors" value="red" /> red_______
+    </span>
+
+    <br />
+    <span style="background-color: pink">
+      <input type="radio" name="usecolors" value="pink" /> pink______
+    </span>
+
+    <br />
+    <span style="background-color: purple; color: white">
+      <input type="radio" name="usecolors" value="purple" /> purple____</span
+    >
+  </fieldset>
+
+  <script src="options.js"></script>
+</body>

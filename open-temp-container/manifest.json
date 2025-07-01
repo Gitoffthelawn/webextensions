@@ -1,0 +1,34 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/open-temp-container",
+  "background": { "scripts": ["background.js"] },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "commands": {
+    "opennewtab": {
+      "description": "Open TC with about:newtab"
+    },
+    "openinsame": {
+      "description": "Open TC with active URL"
+    }
+  },
+  "description": "Open bookmarks, links or tabs in temporary containers",
+  "icons": {
+    "512": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Open Temp Container",
+  "options_ui": {
+    "page": "options.html"
+  },
+  "permissions": [
+    "contextualIdentities",
+    "cookies",
+    "menus",
+    "storage",
+    "tabs",
+    "bookmarks"
+  ],
+  "version": "1.3.54"
+}
