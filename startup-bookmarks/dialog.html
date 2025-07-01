@@ -1,0 +1,44 @@
+<!doctype html>
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+  <style>
+    body {
+      background-color: lightgray;
+    }
+    input {
+    }
+    #folder {
+      width: 100%;
+      text-align: center;
+    }
+    #test {
+      text-align: center;
+      margin-left: 25%;
+      width: 50%;
+    }
+    #titlePreface {
+      text-align: center;
+    }
+    #window {
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <select id="folder">
+      <option value="">Select Bookmark Folder</option>
+    </select>
+  </fieldset>
+  <fieldset>
+    <small>
+      <span>Child folders will be opened as new windows</span>
+    </small>
+  </fieldset>
+  <fieldset>
+    <small>Append <i>#pin</i> to a bookmark url to open it pinned</small>
+  </fieldset>
+  <fieldset>
+    <input id="test" type="button" value=">> Quick Test <<" disabled />
+  </fieldset>
+  <script src="dialog.js"></script>
+</body>

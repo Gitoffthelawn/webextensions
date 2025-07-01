@@ -1,0 +1,22 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/startup-bookmarks",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "description": "Open a set of bookmarks on browser startup",
+  "icons": {
+    "128": "icon.png"
+  },
+  "browser_action": {
+    "default_area": "navbar",
+    "default_popup": "dialog.html"
+  },
+  "manifest_version": 2,
+  "name": "Startup Bookmarks",
+  "options_ui": {
+    "page": "dialog.html"
+  },
+  "permissions": ["tabs", "bookmarks", "storage"],
+  "version": "1.7.16"
+}
