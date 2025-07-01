@@ -1,0 +1,139 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <title>Get Tabs Infos - Toolbar Action Popup</title>
+  <style>
+    body {
+      width: 680px;
+      background: lightgray;
+      padding: 3px;
+      /*font-size: 0.6em;*/
+    }
+    legend {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    #btnSaveToFile {
+      width: 100%;
+      text-align: center;
+    }
+    #btnCopyAsText,
+    #btnCopyAsHTML {
+      width: 50%;
+      float: right;
+      text-align: center;
+    }
+    #saveFilename {
+      width: 100%;
+      text-align: center;
+    }
+    #selectTable {
+      width: 100%;
+      text-align: left;
+    }
+    #output {
+      width: 100%;
+      height: 16em;
+      resize: vertical;
+    }
+    #btnDeleteFormat,
+    #btnAddFormat {
+      width: 10%;
+      text-align: center;
+    }
+
+    #newEntry,
+    #formatOptions,
+    #scopeOptions {
+      width: 90%;
+      text-align: center;
+    }
+    #scopeOptions {
+      width: 100%;
+      text-align: center;
+    }
+
+    #formatOptions {
+      float: right;
+    }
+    #newEntry {
+      float: left;
+    }
+  </style>
+</head>
+<body>
+  <table id="selectTable" border="0">
+    <tr>
+      <td>
+        <abbr
+          title="Placeholders: %linebreak, %url, %protocol, %search, %port, %pathname, %hostname, %origin, %title"
+        >
+          <input
+            id="newEntry"
+            type="text"
+            value=""
+            placeholder="Add new Format String here, Hover to show placeholders."
+          />
+        </abbr>
+        <input
+          type="button"
+          value="➕"
+          title="Add new Format String"
+          id="btnAddFormat"
+        />
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input
+          type="button"
+          value="🗑"
+          title="Delete Selected Format String"
+          id="btnDeleteFormat"
+        />
+        <select id="formatOptions">
+          <option value="">-- Select Format --</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <select id="scopeOptions">
+          <option value="">-- Select Scope --</option>
+          <option value="AllTabs">All Tabs (Current Window)</option>
+          <option value="SelectedTabs">Selected Tabs (Current Window)</option>
+          <option value="AllTabsAllWindows">All Tabs (All Windows)</option>
+          <option value="SelectedTabsAllWindows">
+            Selected Tabs (All Windows)
+          </option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <textarea
+          wrap="off"
+          id="output"
+          placeholder="Select Format and Scope and Output will appear here"
+        ></textarea>
+        <input type="button" value="Copy as Text" id="btnCopyAsText" />
+        <input type="button" value="Copy as HTML" id="btnCopyAsHTML" />
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input
+          id="saveFilename"
+          type="text"
+          value=""
+          placeholder="Save Filename: YYYY-MM-DD_hh-mm-ss Get Tabs Infos "
+        />
+        <input type="button" value="Save as File" id="btnSaveToFile" />
+      </td>
+    </tr>
+    <tr></tr>
+  </table>
+
+  <script src="utils.js"></script>
+  <script src="popup.js"></script>
+</body>
