@@ -1,0 +1,22 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/mute-unfocused-tabs",
+  "description": "Only let the focused tab be audible",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "320": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Mute Unfocused Tabs",
+  "options_ui": {
+    "page": "options.html"
+  },
+  "permissions": ["tabs", "storage", "menus"],
+  "version": "1.4.23"
+}

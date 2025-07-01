@@ -1,0 +1,34 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    .element {
+      color: light-dark(black, white);
+      background-color: light-dark(white, black);
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <span
+      >Whitelist mode:<input id="mode" type="checkbox" /> ( only matching tabs
+      will be managed )
+    </span>
+  </fieldset>
+  <fieldset>
+    <textarea
+      id="listmatchers"
+      style="width: 100%; min-height: 20em"
+      placeholder="Enter regular expressions line by line here
+Examples:
+    ^https:\/\/www\.facebook\.com.*
+    ^https:\/\/example\.net.*
+    ^https:\/\/.*\.wikipedia\.org.*
+"
+    ></textarea>
+  </fieldset>
+  <script src="options.js"></script>
+</body>
