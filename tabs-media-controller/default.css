@@ -1,0 +1,112 @@
+:root {
+  /* dark mode */
+  /*
+  --main-bg-color: gray;
+  --main-btn-bgcolor: black;
+  --main-btn-fontcolor: white;
+  */
+
+  /* light mode  */
+  /**/
+  --main-bg-color: lightgray;
+  --main-btn-bgcolor: silver;
+  --main-btn-fontcolor: black;
+  /**/
+}
+
+button {
+  background-color: var(--main-btn-bgcolor);
+  color: var(--main-btn-fontcolor);
+}
+
+button:hover {
+  border-color: black;
+}
+
+body {
+  max-width: 595px;
+  padding: 10px;
+  margin: 0;
+  background-color: var(--main-bg-color);
+}
+
+#tabs {
+  padding: 0;
+  margin: 0;
+  overflow-y: scroll;
+}
+.tabDiv {
+  padding: 10px;
+  margin: 0;
+}
+.tabFavImg {
+  display: block;
+  height: 1.5em;
+  float: left;
+  padding: 0;
+  margin: 0;
+}
+.tabFocusBtn {
+  display: inline-block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.tabMuteBtn {
+  width: 25%;
+}
+.tabPauseBtn {
+  width: 25%;
+}
+.sitePauseBtn {
+  width: 25%;
+}
+.siteMuteBtn {
+  width: 25%;
+}
+.elementDiv {
+  width: 100%;
+  height: 175px;
+}
+.previewImg {
+  height: 170px;
+  float: left;
+  border: 5px groove var(--main-bg-color);
+  margin-left: 5px;
+  padding-bottom: 3px;
+  padding-right: 3px;
+  width: 297px;
+}
+.elementControlsDiv {
+  position: relative;
+  border: 5px groove var(--main-bg-color);
+  height: 162px;
+  width: 250px;
+  float: left;
+  padding-top: 10px;
+}
+.elementFocusBtn {
+  width: 70%;
+  margin-left: 15%;
+}
+.elementMuteBtn {
+  width: 70%;
+  margin-left: 15%;
+}
+
+.elementPlaybackRateBtn {
+  width: 70%;
+  margin-left: 15%;
+}
+.elementVolumeBtn {
+  width: 70%;
+  margin-left: 15%;
+}
+.elementPlayPauseBtn {
+  width: 70%;
+  margin-left: 15%;
+}
+.elementTimeBtn {
+  width: 70%;
+  margin-left: 15%;
+}
