@@ -1,0 +1,29 @@
+<!doctype html>
+<head>
+  <style>
+    label {
+      display: block;
+    }
+
+    input,
+    label {
+      margin: 0.4rem 0;
+    }
+    input {
+      width: 100%;
+    }
+    body {
+      background: lightgray;
+    }
+  </style>
+</head>
+<body>
+  <p></p>
+  <fieldset>
+    <label for="name">What's the countdown for?</label>
+    <input type="text" id="name" placeholder="Short description" />
+    <label for="enddate">When should the countdown end?</label>
+    <input type="datetime-local" id="enddate" name="enddate" />
+  </fieldset>
+  <script src="popup.js"></script>
+</body>
