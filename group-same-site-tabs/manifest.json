@@ -1,0 +1,25 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/group-same-site-tabs",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "commands": {
+    "group-selected": {
+      "description": "Group Selected Sites"
+    },
+
+    "group-all": {
+      "description": "Group All Sites"
+    }
+  },
+  "icons": {},
+  "description": "Group tabs with the same domains",
+  "manifest_version": 2,
+  "name": "Group Same Site Tabs",
+  "permissions": ["tabs", "menus", "tabGroups"],
+  "version": "1.0.10"
+}
