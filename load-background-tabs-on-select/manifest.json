@@ -1,0 +1,21 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/load-background-tabs-on-select",
+  "description": "Prevent background tabs from loading until they brought to the foreground",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Load Background Tabs on Select",
+  "options_ui": {
+    "page": "options.html"
+  },
+  "permissions": ["storage", "tabs"],
+  "version": "1.2.13"
+}

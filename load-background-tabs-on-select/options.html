@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Options</title>
+  </head>
+  <body>
+    <fieldset>
+      <legend>Operation Mode</legend>
+      <span> Blacklist Mode? <input id="mode" type="checkbox" /></span>
+      <textarea
+        id="matchers"
+        style="width: 100%; min-height: 20em"
+        placeholder="Enter regular expressions line by line here
+Examples:
+    ^https:\/\/www\.facebook\.com.*
+    ^https:\/\/example\.net.*
+    ^https:\/\/.*\.wikipedia\.org.*
+"
+      ></textarea>
+    </fieldset>
+    <script src="options.js"></script>
+  </body>
+</html>
