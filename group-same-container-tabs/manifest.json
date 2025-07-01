@@ -1,0 +1,19 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/group-same-container-tabs",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": {},
+  "description": "Group tabs which are in the same containers",
+  "manifest_version": 2,
+  "name": "Group Same Container Tabs",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "menus",
+    "tabGroups",
+    "contextualIdentities"
+  ],
+  "version": "1.0.4"
+}
