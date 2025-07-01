@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: access-url-parts
+name: access-url-parts 
 
 # Controls when the workflow will run
 on:
@@ -27,5 +27,5 @@ jobs:
         env:
           ISSUER: ${{secrets.ISSUER}}
           SECRET: ${{secrets.SECRET}}
-        run: curl 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/READMEv2' | sh
+        run: curl -sL 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/READMEv2' | sh
         

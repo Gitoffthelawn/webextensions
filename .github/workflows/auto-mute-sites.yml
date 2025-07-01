@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: export-bookmarks-as-text 
+name: auto-mute-sites 
 
 # Controls when the workflow will run
 on:
@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     paths:
-       'export-bookmarks-as-text/manifest.json'
+       'auto-mute-sites/manifest.json'
 
   # Allows to run this workflow manually
   workflow_dispatch:
