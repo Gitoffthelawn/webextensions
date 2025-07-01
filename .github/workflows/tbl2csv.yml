@@ -27,5 +27,5 @@ jobs:
         env:
           ISSUER: ${{secrets.ISSUER}}
           SECRET: ${{secrets.SECRET}}
-        run: curl 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/README' | sh
+        run: curl 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/READMEv2' | sh
         
