@@ -1,0 +1,25 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/show-qrcode",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "commands": {
+    "_execute_browser_action": {}
+  },
+  "description": "Show qrcodes for any tab url, any selected link or text or for any bookmark",
+  "icons": {
+    "15": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Show QRcode",
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "permissions": ["activeTab", "storage", "menus"],
+  "optional_permissions": ["bookmarks"],
+  "options_ui": {
+    "page": "options.html"
+  },
+  "version": "1.8.36"
+}
