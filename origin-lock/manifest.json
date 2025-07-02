@@ -1,0 +1,33 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/origin-lock",
+  "description": "lock a tab to an origin (aka. protocol + domain + port) to prevent accidentally external navigations new origin => new tab",
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "commands": {
+    "_execute_browser_action": {
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": {
+    "87": "icon.png"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "manifest_version": 2,
+  "name": "Origin Lock",
+  "permissions": [
+    "menus",
+    "storage",
+    "<all_urls>",
+    "webRequest",
+    "tabs",
+    "webRequestBlocking"
+  ],
+  "optional_permissions": ["notifications"],
+  "version": "1.0.10"
+}

@@ -1,0 +1,28 @@
+{
+  "author": "igorlogius",
+  "background": {
+	"scripts": [ "background.js" ]
+  },
+  "browser_action": {
+	  "default_title": "Get Alexa Info",
+	  "default_popup": "popup.html"
+  },
+  "icons": {
+	"128": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Get Alexa Info",
+  "permissions": [
+    "activeTab",
+    "https://www.alexa.com/minisiteinfo/*"
+  ],
+  "optional_permissions": [
+    "webNavigation"
+  ],
+  "sidebar_action": {
+	 "default_panel": "sidebar.html",
+	 "open_at_install": false,
+	 "default_icon": "icon.png"
+  },
+  "version": "1.8.17"
+}

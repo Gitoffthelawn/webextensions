@@ -1,0 +1,21 @@
+{
+    "author": "igorlogius",
+    "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/quick-image-print",
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "icons": {
+        "256": "icon.png"
+    },
+    "manifest_version": 2,
+    "name": "Quick Image Print",
+    "permissions": [
+        "menus",
+        "tabs",
+        "cookies",
+        "<all_urls>"
+    ],
+    "version": "1.2.3"
+}

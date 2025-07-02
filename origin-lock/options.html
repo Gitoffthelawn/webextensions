@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        background-color: lightgray;
+        height: 680px;
+      }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>Settings</legend>
+      <ol>
+        <li>
+          <input id="mode" type="checkbox" />
+          <label for="mode">
+            (un)check to switch between <b>whitelist</b> or <b>blacklist</b>
+          </label>
+          <abbr title="(uncheck := white, check := black)">(&#63;)</abbr>
+        </li>
+        <li>
+          <input
+            id="impbtn_wrapper"
+            type="button"
+            name="impbtn"
+            value="Import"
+          />
+          or
+          <input
+            id="impbtn"
+            type="file"
+            name="impbtn"
+            value=""
+            style="display: none"
+          />
+          <input id="expbtn" type="button" name="impbtn" value="Export" /> the
+          domain list
+          <abbr
+            title="importing replaces the list and export save the list to a file"
+            >(&#63;)</abbr
+          >
+        </li>
+      </ol>
+    </fieldset>
+    <script src="options.js"></script>
+  </body>
+</html>
