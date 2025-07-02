@@ -1,0 +1,27 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/load-times",
+  "browser_style": true,
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "browser_style": true,
+    "default_area": "navbar",
+
+    "default_title": "Show loading times of all tabs",
+    "default_popup": "popup.html"
+  },
+  "page_action": {
+    "browser_style": true,
+    "default_title": "Show loading time of the current tab",
+    "default_popup": "popup.html?activeTab=1"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Load Times",
+  "permissions": ["tabs", "webNavigation"],
+  "version": "1.4.7"
+}
