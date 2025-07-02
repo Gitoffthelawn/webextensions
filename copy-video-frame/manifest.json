@@ -1,0 +1,15 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/copy-video-frame",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "description": "Get a still frame image from any video element",
+  "icons": {
+    "512": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Copy Video Frame",
+  "permissions": ["menus", "activeTab"],
+  "version": "1.1.9"
+}
