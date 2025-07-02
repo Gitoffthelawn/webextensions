@@ -1,5 +1,5 @@
 name: "🪲 Report a Bug"
-description: "Use this if something doesn't work"
+description: "Use this if something doesn't work with an existing extension"
 title: "extension + title"
 labels: ["🪲 Bug"]
 body:
