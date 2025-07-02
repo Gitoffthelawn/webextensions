@@ -1,0 +1,7 @@
+body {
+  background: lightgray;
+}
+
+button {
+  min-width: 5vw;
+}

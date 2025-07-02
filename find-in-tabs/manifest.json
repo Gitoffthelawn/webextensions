@@ -36,10 +36,5 @@
       }
     }
   },
-  "version": "1.1.20",
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{1ea9b794-9e71-4dfa-9308-a21fbc6644d9}"
-    }
-  }
+  "version": "1.1.20"
 }

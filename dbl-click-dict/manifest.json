@@ -1,0 +1,34 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/dbl-click-dict",
+  "manifest_version": 2,
+  "name": "Double Click Dictionary",
+  "browser_action": {
+    "default_area": "navbar",
+    "default_popup": "options.html"
+  },
+  "description": "Lookup word definitions as you browse the web by double clicking any on a word",
+  "icons": {
+    "512": "icon.png"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["hammer.js", "content-script.js"]
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "menus",
+    "storage",
+    "<all_urls>"
+  ],
+  "version": "2.2.18"
+}
