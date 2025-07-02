@@ -1,0 +1,21 @@
+name: "🪲 Report a Bug"
+description: "Use this if something doesn't work"
+title: "extension + title"
+labels: ["🪲 Bug"]
+body:
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: "Description"
+      value: |
+        A. Reproduction Steps
+          1. ...
+          2. ...
+          
+        B. Expected Result
+          ...
+          
+        C. Actual Result
+          ...
