@@ -1,0 +1,11 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/skip-save",
+  "background": { "scripts": ["background.js"] },
+  "icons": { "256": "icon.png" },
+  "manifest_version": 2,
+  "name": "Skip Save",
+  "permissions": ["menus", "downloads"],
+  "optional_permissions": ["notifications"],
+  "version": "1.0.2"
+}
