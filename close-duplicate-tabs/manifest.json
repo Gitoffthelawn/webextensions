@@ -1,0 +1,27 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/close-duplicate-tabs",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "commands": {
+    "_execute_browser_action": {},
+    "ignore-set": {
+      "description": "Ignore selected tabs"
+    },
+    "ignore-clear": {
+      "description": "Clear ignored tabs"
+    }
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Close Duplicate Tabs",
+  "description": "Shows the amount of duplicate tabs close them",
+  "permissions": ["storage", "cookies", "tabs", "menus"],
+  "version": "1.0.28"
+}

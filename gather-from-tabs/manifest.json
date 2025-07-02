@@ -1,0 +1,74 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/gather-from-tabs",
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "background": {
+    "scripts": ["utils.js", "background.js"]
+  },
+  "commands": {
+    "page-actions": {
+      "description": "Show SSA page popup"
+    },
+    "0": {
+      "description": "Script-Scope-Action 0"
+    },
+    "1": {
+      "description": "Script-Scope-Action 1"
+    },
+    "2": {
+      "description": "Script-Scope-Action 2"
+    },
+    "3": {
+      "description": "Script-Scope-Action 3"
+    },
+    "4": {
+      "description": "Script-Scope-Action 4"
+    },
+    "5": {
+      "description": "Script-Scope-Action 5"
+    },
+    "6": {
+      "description": "Script-Scope-Action 6"
+    },
+    "7": {
+      "description": "Script-Scope-Action 7"
+    },
+    "8": {
+      "description": "Script-Scope-Action 8"
+    },
+    "9": {
+      "description": "Script-Scope-Action 9"
+    },
+    "10": {
+      "description": "Script-Scope-Action 10"
+    },
+    "11": {
+      "description": "Script-Scope-Action 11"
+    }
+  },
+  "content_scripts": [
+    {
+      "js": ["utils.js", "content.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "main.html"
+  },
+  "icons": {
+    "512": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Gather from Tabs",
+  "permissions": [
+    "<all_urls>",
+    "clipboardWrite",
+    "menus",
+    "storage",
+    "downloads"
+  ],
+  "version": "1.4.23"
+}

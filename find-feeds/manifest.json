@@ -1,0 +1,25 @@
+{
+  "author": "igorlogius",
+  "icons": {
+    "266": "icon.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "commands": {
+    "_execute_browser_action": {}
+  },
+  "description": "Find RSS, ATOM and JSON feeds",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/find-feeds",
+  "manifest_version": 2,
+  "name": "Find Feeds",
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "options.html"
+  },
+  "permissions": ["menus", "storage", "<all_urls>"],
+  "version": "1.4.14"
+}

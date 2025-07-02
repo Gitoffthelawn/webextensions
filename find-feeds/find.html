@@ -1,0 +1,38 @@
+<!doctype html>
+<head>
+  <title>Find Feeds</title>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+  <style>
+    body {
+      font-family: monospace;
+      background-color: lightgray;
+    }
+    table#feedlist {
+      width: 100%;
+    }
+    table#feedlist tr td {
+      border: 1px solid black;
+      padding: 10px;
+      /*text-align: right;*/
+    }
+    tr:hover {
+      background-color: skyblue;
+    }
+    td {
+      line-break: anywhere;
+    }
+    #urls2checkProgress {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <div style="width: 100%; text-align: right">
+      <b><span id="msg">Looking for feed-like URLs, please wait</span></b>
+    </div>
+    <progress id="urls2checkProgress" value="0" max="1"></progress>
+    <table id="feedlist"></table>
+  </fieldset>
+  <script src="find.js"></script>
+</body>

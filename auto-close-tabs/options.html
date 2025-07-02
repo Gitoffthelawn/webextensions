@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <title>options</title>
+    <style>
+      body {
+        padding: 3px;
+      }
+      textarea {
+        overflow-wrap: normal;
+        overflow-x: scroll;
+      }
+      #savebtn {
+        text-align: center;
+        margin-left: 40%;
+        width: 20%;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>
+        <b>#Tabs to keep</b>
+        <abbr
+          title="tabs to keep open, last access time determines closing order"
+          >(?)</abbr
+        >
+      </legend>
+      <input type="number" id="closeThreshold" value="7" min="0" />
+    </fieldset>
+
+    <fieldset>
+      <legend>
+        <b>Auto Save</b>
+        <abbr title="save auto closed tabs as bookmarks">(?)</abbr>
+      </legend>
+
+      <select id="saveFolder">
+        <option value="">Select a bookmark save folder to enable</option>
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend>
+        <b>Close Rules </b>
+        <abbr title="Format: CloseTime(MS), Container(RE) | URL(RE)">(?)</abbr>
+      </legend>
+      <textarea
+        id="intervalrules_time_ms_and_container_regex"
+        style="resize: none; float: left; width: 50%; height: 15em"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="# CloseTime(MS),'Container(RE)
+# Examples:
+# 10s, no container
+10000,
+# 20s, any container
+20000,.*
+# 1s Tmp container
+1000,^Tmp$
+"
+      ></textarea>
+      <textarea
+        id="intervalrules_url_regex"
+        style="resize: none; width: 50%; height: 15em"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="# 'URL(RE)'
+# Examples:
+# any http/s URL
+^https?:\/\/.*
+# new tab page
+^about:newtab
+# any about page
+^about:.*
+"
+      ></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>
+        <b>Ignore Rules</b>
+
+        <abbr title="Format: Container(RE) | URL(RE)">(?)</abbr>
+      </legend>
+      <textarea
+        id="ignorerules_container_regex"
+        style="float: left; resize: none; width: 50%; height: 15em"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="# Enter 'Container(RE)' here
+# Examples:
+#                  := no container
+#  .*              := any container
+#  ^Personal$      := exact Match with Personal container
+#  ^Tmp.*          := container starting with Tmp
+"
+      ></textarea>
+      <textarea
+        id="ignorerules_url_regex"
+        style="resize: none; width: 50%; height: 15em"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="# Enter 'URL(RE)' here
+# Examples:
+#  ^https?:\/\/    := any http/s URL
+#  ^about:newtab   := new tab page
+#  ^about:blank    := blank tab
+#  ^about:.*       := any about page
+"
+      ></textarea>
+    </fieldset>
+    <button id="savebtn">Save</button>
+    <script src="options.js"></script>
+  </body>
+</html>

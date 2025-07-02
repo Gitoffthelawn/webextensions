@@ -1,0 +1,45 @@
+{
+  "manifest_version": 2,
+  "name": "Find in Tabs",
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/find-in-tabs",
+  "description": "Find text in all your active open tabs",
+  "icons": {
+    "128": "icon.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar",
+    "default_popup": "popup.html"
+  },
+  "sidebar_action": {
+    "default_icon": "icon.png",
+    "open_at_install": false,
+    "default_panel": "popup.html"
+  },
+  "permissions": ["menus", "storage", "find", "tabs"],
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_ui": {
+    "page": "options.html"
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F"
+      }
+    }
+  },
+  "version": "1.1.20",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{1ea9b794-9e71-4dfa-9308-a21fbc6644d9}"
+    }
+  }
+}

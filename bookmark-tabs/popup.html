@@ -1,0 +1,63 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {
+      background: lightgray;
+    }
+    #saveFolder,
+    #postfix {
+      width: 100%;
+    }
+    #savebtn {
+      float: right;
+    }
+    #closeAfterSave {
+    }
+  </style>
+</head>
+<body>
+  <small>
+    <fieldset>
+      <b>Save folder postfix title</b>
+      <p>
+        <input
+          type="text"
+          id="postfix"
+          placeholder="Tabs Group Name / ID / Keywords"
+          autofocus
+        />
+      </p>
+    </fieldset>
+
+    <fieldset>
+      <legend>⚠️Persistent options</legend>
+      <b>Base Save Folder</b>
+      <p>
+        <select id="saveFolder"></select>
+      </p>
+
+      <b>Close Tabs After Save?</b>
+      <input type="checkbox" id="closeAfterSave" />
+    </fieldset>
+
+    <fieldset>
+      <b>No timestamp subfolder?</b>
+      <input type="checkbox" id="noTimestampSubfolder" />
+    </fieldset>
+
+    <fieldset>
+      <button id="savebtn"><b>Bookmark Tabs!</b></button>
+    </fieldset>
+
+    <fieldset>
+      <b>Hint:</b>
+      <br />
+      - enable notification via optional permissions
+      <br />
+      - use the custom shortcut, to skip this popup
+    </fieldset>
+  </small>
+
+  <script src="popup.js"></script>
+</body>

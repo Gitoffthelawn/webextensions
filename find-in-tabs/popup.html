@@ -1,0 +1,53 @@
+<!doctype html>
+<head>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body class="browser-style">
+  <template id="li_template">
+    <li class="browser-style">
+      <a>
+        <h4 class="title browser-style"></h4>
+        <p class="result browser-style"></p>
+      </a>
+    </li>
+  </template>
+
+  <fieldset id="fsinput">
+    <input
+      class=""
+      id="searchField"
+      type="search"
+      placeholder="Enter text here"
+      autofocus
+    />
+
+    <input
+      class=""
+      id="maxhits"
+      type="number"
+      min="1"
+      title="Max Results per Tab"
+    />
+
+    <input class="" id="caseSensitive" type="checkbox" title="Match Case" />
+
+    <input
+      class=""
+      id="accentSensitive"
+      type="checkbox"
+      title="Match Diacritics"
+    />
+
+    <input class="" id="regexmode" type="checkbox" title="Regex Mode" />
+
+    <progress id="searchprogress" value="0" max="1"></progress>
+  </fieldset>
+
+  <ul id="resultlist"></ul>
+
+  <small>
+    <div style="padding: 0px; margin: 3px; text-size: small" id="note"></div>
+  </small>
+
+  <script src="popup.js"></script>
+</body>

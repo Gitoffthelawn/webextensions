@@ -1,0 +1,62 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <title>Copy Tabs - Options</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      padding: 0;
+      margin: 0;
+      color: light-dark(black, white);
+      background-color: light-dark(white, black);
+    }
+    #noURLParamsFunction {
+      color: light-dark(black, white);
+      background-color: light-dark(white, black);
+      height: 40em;
+      resize: vertical;
+      white-space: pre-wrap;
+      width: 99%;
+    }
+    #reset {
+      text-align: center;
+      margin-left: 25%;
+      width: 50%;
+    }
+    button {
+      color: light-dark(black, black);
+      background-color: light-dark(white, gainsboro);
+      padding: 3px;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: light-dark(gainsboro, white);
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <b>Toolbar button</b>: Swap
+    <abbr title="Left Mouse Button"><b>LMB</b></abbr> and
+    <abbr title="Middle Mouse Button"><b>MMB</b></abbr> actions
+    <input type="checkbox" id="popupmode" />
+    <abbr
+      title="unchecked: LMB: shows popup and MMB: invokes the immediate action"
+      >(?)</abbr
+    >
+  </fieldset>
+  <fieldset>
+    <b>Customize the strip parameter function:</b><br />
+    <textarea
+      class="browser-style"
+      spellcheck="false"
+      id="noURLParamsFunction"
+    ></textarea>
+  </fieldset>
+
+  <button class="browser-style" id="reset">Reset to default</button>
+  <script src="options.js"></script>
+</body>
