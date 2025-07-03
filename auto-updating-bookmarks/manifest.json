@@ -6,14 +6,12 @@
   },
   "browser_action": {
     "default_area": "navbar",
-    "default_title": "create a auto updating bookmarks"
+    "default_title": "create auto updating bookmark"
   },
-  "icons": {
-    "250": "icon.png"
-  },
+  "icons": {},
   "description": "Create auto updating bookmarks on navigation in the same domain, for example to read webcomics and continue from where you left off",
   "manifest_version": 2,
   "name": "Auto Updating Bookmarks",
   "permissions": ["tabs", "bookmarks", "storage", "menus"],
-  "version": "1.6.11"
+  "version": "1.6.12"
 }

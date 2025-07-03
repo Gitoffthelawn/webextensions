@@ -27,7 +27,6 @@ function makeUpgradeId(length) {
 
 function onTabsRemoved(tabId /*, removeInfo */) {
   if (marks.has(tabId)) {
-    //console.debug(`stopped tracking for tabId: ${tabId}`);
     delete marks.delete(tabId);
   }
 }
@@ -40,11 +39,7 @@ async function onTabsUpdated(tabId, changeInfo, tabInfo) {
   const tabUrl = tabInfo.url;
   const tabTitle = tabInfo.title;
 
-  //console.debug(tabTitle);
-
-  //if(tabUrl.endsWith(postfix)){
   if (/.*#trackmark[0-9]+$/.test(tabUrl)) {
-    //console.debug(`started tracking for tabId: ${tabId}`);
     marks.set(tabId, {
       id: tabUrl.split(postfix)[1],
       url: tabUrl.split(postfix)[0],
