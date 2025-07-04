@@ -17,9 +17,9 @@
     }
   },
   "icons": {},
-  "description": "Group tabs with the same domains",
+  "description": "Group tabs with same domains",
   "manifest_version": 2,
   "name": "Group Same Site Tabs",
   "permissions": ["tabs", "menus", "tabGroups"],
-  "version": "1.0.10"
+  "version": "1.0.11"
 }
