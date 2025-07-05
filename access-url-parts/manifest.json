@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/access-url-parts",
   "commands": {
     "_execute_page_action": {}
   },
@@ -15,5 +15,5 @@
   "manifest_version": 2,
   "name": "Access URL Parts",
   "permissions": ["activeTab"],
-  "version": "1.0.9"
+  "version": "1.0.10"
 }
