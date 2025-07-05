@@ -1,6 +1,7 @@
 {
   "author": "igorlogius",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/access-url-parts",
+  "description": "Quickly access parts of the URL in the addressbar",
   "commands": {
     "_execute_page_action": {}
   },
@@ -15,5 +16,5 @@
   "manifest_version": 2,
   "name": "Access URL Parts",
   "permissions": ["activeTab"],
-  "version": "1.0.10"
+  "version": "1.0.11"
 }
