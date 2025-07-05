@@ -5,14 +5,17 @@
     "default_area": "navbar"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["storage.js", "background.js"]
   },
   "icons": {
     "474": "icon.png"
   },
   "manifest_version": 2,
   "name": "Auto Mute Sites",
-  "description": "Toggle the mute state of sites instead of individual tabs",
+  "options_ui": {
+    "page": "options.html"
+  },
+  "description": "Set the inital audible state of a site",
   "permissions": ["storage", "tabs"],
-  "version": "1.2.6"
+  "version": "1.2.7"
 }
