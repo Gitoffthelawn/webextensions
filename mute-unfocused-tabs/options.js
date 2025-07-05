@@ -28,7 +28,7 @@ function onChange(evt) {
   browser.storage.local.set(obj).catch(console.error);
 }
 
-["mode", "listmatchers"].map((id) => {
+["scope", "mode", "listmatchers"].map((id) => {
   browser.storage.local
     .get(id)
     .then((obj) => {

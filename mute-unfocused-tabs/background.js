@@ -71,12 +71,13 @@
 
   async function updateMuteState() {
     log("debug", "updateMuteState");
-    //let tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    //const activTabId = tabs[0].id;
-    tabs = await browser.tabs.query({
-      /*url: "<all_urls>"*/
-      currentWindow: true,
-    });
+    let tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const activTabId = tabs[0].id;
+    const qobj = {};
+    if (scope === false) {
+      qobj["currentWindow"] = true;
+    }
+    tabs = await browser.tabs.query(qobj);
     tabs.forEach(async (tab) => {
       // ignore not https? urls
       if (!url_regex.test(tab.url)) {
@@ -103,7 +104,7 @@
         (mode && !_regexList && _taggedManually);
 
       if (managed) {
-        setMuted(tab.id, !tab.active);
+        setMuted(tab.id, tab.id !== activTabId);
         browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
         browser.browserAction.setBadgeBackgroundColor({
           tabId: tab.id,
@@ -142,10 +143,7 @@
     log("debug", "onStorageChange");
 
     mode = await getFromStorage("boolean", "mode", false);
-
-    browser.menus.update("mmme", {
-      checked: mode,
-    });
+    scope = await getFromStorage("boolean", "scope", false);
 
     regexList = await getRegexList();
 
@@ -163,6 +161,8 @@
   const extname = manifest.name;
 
   let mode = await getFromStorage("boolean", "mode", false);
+  let scope = await getFromStorage("boolean", "scope", false); // false:= consider current window
+
   let regexList = await getRegexList();
   let taggedManually = new Set();
 
