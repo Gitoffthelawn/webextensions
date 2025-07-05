@@ -1,3 +1,3 @@
 
-builds should be available at `https://addons.mozilla.org/en-US/firefox/addon/{extension-name}`
+builds when enabled (see `.github/workflows` ) are available at `https://addons.mozilla.org/en-US/firefox/addon/{extension-name}`
 
