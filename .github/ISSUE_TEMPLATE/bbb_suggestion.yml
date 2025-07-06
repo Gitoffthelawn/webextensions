@@ -3,12 +3,15 @@ description: "Use this for feature and change requests for existing extensions"
 title: "Please insert the extension name and a short title"
 body:
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: "Please description your suggestion"
       value: |
-        1. Problem description (aka. usecase motivation)
+        **Problem description (aka. usecase motivation)**
+        
         ...
-        2. Solution suggestion
+        
+        **Solution suggestion**
+        
         ...
-    validations:
-      required: true
