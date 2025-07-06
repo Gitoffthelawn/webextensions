@@ -4,4 +4,4 @@ title: "What's on your mind?"
 body:
   - type: textarea
     attributes:
-      label: ""
+      label: "-----"
