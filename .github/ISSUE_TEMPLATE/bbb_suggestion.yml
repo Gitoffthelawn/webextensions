@@ -3,11 +3,11 @@ description: "Use this for feature and change requests for existing extensions"
 title: "please insert the extension name and a brief title here"
 body:
   - type: textarea
+    description: "(supports markdown)*
     validations:
       required: true
     attributes:
       label: "Description"
-      description: "use markdown for formatting*
       value: |
         1. Problem description (aka. usecase motivation)
         ...
