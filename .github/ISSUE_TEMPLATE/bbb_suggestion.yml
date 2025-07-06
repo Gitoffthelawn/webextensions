@@ -7,8 +7,9 @@ body:
       required: true
     attributes:
       label: "Description"
+      description: "use markdown for formatting*
       value: |
-        **Problem Description (aka. usecase motivation)**
+        1. Problem description (aka. usecase motivation)
         ...
-        **Solution suggestion**
+        2. Solution suggestion
         ...
