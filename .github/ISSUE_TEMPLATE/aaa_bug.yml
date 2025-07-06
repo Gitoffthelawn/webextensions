@@ -6,7 +6,7 @@ body:
     validations:
       required: true
     attributes:
-      label: "Description"
+      label: "Please description the bug"
       value: |
         **Reproduction Steps**
         
