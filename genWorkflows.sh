@@ -4,6 +4,7 @@ for x in *;do
         CODE=$(curl -sL -I "https://addons.mozilla.org/en-US/firefox/addon/$x" -w "%{http_code}" -o /dev/null)
         if [ $CODE -eq 200 ];then 
             sed "s/PLACEHOLDER/$x/g" workflow-template.yml > .github/workflows/$x.yml
+            echo .github/workflows/$x.yml
         fi
     fi
 done
