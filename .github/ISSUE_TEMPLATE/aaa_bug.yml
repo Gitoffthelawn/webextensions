@@ -1,21 +1,22 @@
 name: "🪲 Report a Bug"
-description: "Use this if something doesn't work with an existing extension"
-title: "extension + title"
-labels: ["🪲 Bug"]
+description: "Use this if something doesn't seem to work with an existing extension"
+title: "Please insert the extension name and a short title"
 body:
-
   - type: textarea
     validations:
       required: true
     attributes:
       label: "Description"
       value: |
-        A. Reproduction Steps
+        **Reproduction Steps**
+        
           1. ...
           2. ...
           
-        B. Expected Result
+        **Expected Result**
+        
           ...
           
-        C. Actual Result
+        **Actual Result**
+        
           ...
