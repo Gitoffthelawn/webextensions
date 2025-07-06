@@ -1,8 +1,6 @@
 name: "🛟 Something else"
-description: "Use this for anything that isnt a bug report or suggestion that relates to an existing extension"
-title: "title"
-labels: ["🛟 Support"]
+description: "Use this for anything that isnt a bug report or a suggestion"
 body:
   - type: textarea
     attributes:
-      label: "Description"
+      label: "What's on your mind?"
