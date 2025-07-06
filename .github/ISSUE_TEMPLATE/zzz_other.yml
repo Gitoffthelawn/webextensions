@@ -1,7 +1,6 @@
 name: "🛟 Something else"
 description: "Use this for anything that isnt a bug report or a suggestion"
-title: "What's on your mind?"
 body:
   - type: textarea
     attributes:
-      label: "_______________________________"
+      label: "What is on your mind?"
