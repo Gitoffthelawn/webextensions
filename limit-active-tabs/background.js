@@ -105,6 +105,7 @@
 
   // add listeners
   browser.browserAction.onClicked.addListener(onClicked);
+  browser.storage.onChanged.addListener(onStorageChange);
   browser.tabs.onRemoved.addListener(onRemoved);
   browser.tabs.onUpdated.addListener(
     (tabId, changeInfo, tab) => {
