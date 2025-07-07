@@ -1,10 +1,33 @@
 <!doctype html>
 <head> </head>
 <body>
-  <span
-    ><input type="number" id="maxactivtabs" value="3" min="1" size="8" />number
-    of last accessed tabs to keep active (loaded)</span
-  >
-  <span> <input type="checkbox" id="includepins" /> unload pinned tabs </span>
+  <fieldset>
+    <span
+      ><input
+        type="number"
+        id="maxactivtabs"
+        value="3"
+        min="1"
+        size="8"
+      />number of last accessed tabs to keep active (loaded)</span
+    >
+  </fieldset>
+  <fieldset>
+    <span> <input type="checkbox" id="includepins" /> unload pinned tabs </span>
+  </fieldset>
+  <fieldset>
+    Whitelist URLs (excluded from unloading)
+    <textarea
+      id="listmatchers"
+      style="width: 100%; min-height: 20em"
+      placeholder="Enter regular expressions line by line here
+Examples:
+    ^https:\/\/www\.facebook\.com.*
+    ^https:\/\/example\.net.*
+    ^https:\/\/.*\.wikipedia\.org.*
+"
+    ></textarea>
+  </fieldset>
+
   <script src="options.js"></script>
 </body>

@@ -29,7 +29,7 @@ function onChange(evt) {
   browser.storage.local.set(obj).catch(console.error);
 }
 
-["maxactivtabs", "includepins"].map((id) => {
+["maxactivtabs", "includepins", "listmatchers"].map((id) => {
   browser.storage.local
     .get(id)
     .then((obj) => {
@@ -49,9 +49,9 @@ function onChange(evt) {
   let el = document.getElementById(id);
   el.addEventListener("click", onChange);
   el.addEventListener("keyup", onChange);
-  el.addEventListener("keypress", function allowOnlyNumbers(event) {
+  /*el.addEventListener("keypress", function allowOnlyNumbers(event) {
     if (event.key.length === 1 && /\D/.test(event.key)) {
       event.preventDefault();
     }
-  });
+  });*/
 });

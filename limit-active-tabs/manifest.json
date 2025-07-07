@@ -2,7 +2,7 @@
   "author": "igorlogius",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/limit-active-tabs",
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["storage.js", "background.js"]
   },
   "browser_action": {
     "default_area": "navbar"
@@ -20,5 +20,5 @@
     "page": "options.html"
   },
   "permissions": ["storage", "tabs"],
-  "version": "1.2.12"
+  "version": "1.2.13"
 }
