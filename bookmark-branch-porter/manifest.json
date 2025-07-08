@@ -8,9 +8,8 @@
     "128": "icon.png"
   },
   "manifest_version": 2,
-  "description": "Import or export a branch of the bookmark tree as a JSON or HTML file",
+  "description": "Import or Export a branch of the bookmark tree as a JSON or HTML file",
   "name": "Bookmark Branch Porter",
   "permissions": ["menus", "bookmarks"],
-  "optional_permissions": ["downloads"],
-  "version": "1.4.22"
+  "version": "1.5.22"
 }
