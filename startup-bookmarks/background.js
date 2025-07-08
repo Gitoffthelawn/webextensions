@@ -56,14 +56,14 @@ async function openStartupBookmarks() {
 
   const urls = await getURLsFromBMFolder(bmId);
 
-  let already_open_urls = new Set();
+  //let already_open_urls = new Set();
 
   tmp = await browser.windows.getCurrent({ populate: false });
-  already_open_urls = new Set((await browser.tabs.query({})).map((t) => t.url));
+  //already_open_urls = new Set((await browser.tabs.query({})).map((t) => t.url));
 
   let first = true;
   for (const url of urls) {
-    if (!already_open_urls.has(url.split("#pin")[0])) {
+    //if (!already_open_urls.has(url.split("#pin")[0])) {
       try {
         const tmpurl = new URL(url);
         await browser.tabs.create({
@@ -77,7 +77,7 @@ async function openStartupBookmarks() {
         // ignore invalid urls and
         // about: pages can not be created
       }
-    }
+    //}
   }
 
   await openSubFolderWindows(bmId);

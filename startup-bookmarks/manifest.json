@@ -14,9 +14,6 @@
   },
   "manifest_version": 2,
   "name": "Startup Bookmarks",
-  "options_ui": {
-    "page": "dialog.html"
-  },
-  "permissions": ["tabs", "bookmarks", "storage"],
-  "version": "1.7.16"
+  "permissions": ["bookmarks", "storage"],
+  "version": "1.7.17"
 }
