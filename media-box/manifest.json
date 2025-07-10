@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/media-control-panel",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/media-box",
   "description": "Control audio and video elements from all tabs via the toolbar button popup menu",
   "background": {
     "scripts": ["background.js"]
@@ -28,7 +28,7 @@
     "256": "icon.png"
   },
   "manifest_version": 2,
-  "name": "Media Control Panel",
+  "name": "Media Box",
   "options_ui": {
     "page": "options.html"
   },
