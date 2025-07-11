@@ -10,10 +10,12 @@
   "commands": {
     "_execute_browser_action": {}
   },
-  "icons": {},
+  "icons": {
+    "512": "icon.png"
+  },
   "description": "See #tabs with same origin as current one and detach them into a new window",
   "manifest_version": 2,
   "name": "Detach Same Site Tabs",
   "permissions": ["tabs", "menus"],
-  "version": "1.0.4"
+  "version": "1.0.5"
 }
