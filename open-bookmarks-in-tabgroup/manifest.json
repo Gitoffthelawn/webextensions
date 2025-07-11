@@ -5,9 +5,14 @@
     "scripts": ["background.js"]
   },
   "icons": {},
-  "description": "Open a bookmarks folder as a tabgroup",
+  "description": "Open a bookmark folder as a tabgroup",
   "manifest_version": 2,
   "name": "Open Bookmarks in Tabgroup",
   "permissions": ["bookmarks", "menus", "tabGroups"],
-  "version": "1.0.4"
+  "version": "1.0.5",
+  "browser_specific_settings": {
+    "gecko": {
+      "strict_min_version": "139.0"
+    }
+  }
 }
