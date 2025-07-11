@@ -10,10 +10,12 @@
   "commands": {
     "_execute_browser_action": {}
   },
-  "icons": {},
+  "icons": {
+    "160": "icon.png"
+  },
   "description": "See #tabs with same container as current one and detach them into a new window",
   "manifest_version": 2,
   "name": "Detach Same Container Tabs",
   "permissions": ["tabs", "cookies", "menus"],
-  "version": "1.0.4"
+  "version": "1.0.5"
 }
