@@ -1,8 +1,8 @@
 /* global browser */
 
-// tabId => dataURI
 let tempData = new Map();
-/*
+
+// tabId => dataURI
 function notify(title, message = "", iconUrl = "icon.png") {
   try {
     const nid = browser.notifications.create("" + Date.now(), {
@@ -20,7 +20,6 @@ function notify(title, message = "", iconUrl = "icon.png") {
     // noop
   }
 }
-*/
 
 browser.menus.create({
   title: "Copy Video Frame",
@@ -43,44 +42,43 @@ browser.menus.create({
         rect: elBrect,
       });
 
-      tempData.set(tab.id, dataURI);
-
-      //DATAURI = dataURI;
-      //const blob = await (await fetch(dataURI)).blob();
-      /*
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "image/png": blob,
-        }),
-      ]);
-      notify("Copy Video Frame", "Image in clipboard\n(Insert with CTRL+V)");
-        */
-
-      //const objurl = URL.createObjectURL(blob, { type: "image/png" });
-
-      browser.tabs.create({
-        active: true,
-        url: "show.html?tabId=" + tab.id,
-      });
+      // if we have the clipboardWrite permission, just copy into the clipboard
+      if (
+        await browser.permissions.contains({
+          permissions: ["clipboardWrite"],
+        })
+      ) {
+        const blob = await (await fetch(dataURI)).blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+        notify("Copy Video Frame", "Image in clipboard\n(Insert with CTRL+V)");
+      } else {
+        // if we dont have the clipbordWrite permission, open the image in a new tab
+        tempData.set(tab.id, dataURI);
+        browser.tabs.create({
+          active: true,
+          url: "show.html?tabId=" + tab.id,
+        });
+      }
     } catch (e) {
       console.error(e);
-      //notify("Copy Video Frame", e.toString());
+      notify("Copy Video Frame", e.toString());
     }
   },
 });
 
 browser.runtime.onMessage.addListener((data, sender) => {
-  console.debug(data);
   if (data.tabId) {
     return Promise.resolve(tempData.get(data.tabId));
   }
   return false;
 });
 
-function handleRemoved(tabId, removeInfo) {
+browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
   if (tempData.has(tabId)) {
     tempData.delete(tabId);
   }
-}
-
-browser.tabs.onRemoved.addListener(handleRemoved);
+});
