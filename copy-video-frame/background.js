@@ -25,29 +25,33 @@ browser.menus.create({
   title: "Copy Video Frame",
   contexts: ["video"],
   onclick: async (info, tab) => {
-    try {
+    //try
+    {
       // first we get the <video>
-      const drmProtected = (
+      const vidElrestricted = (
         await browser.tabs.executeScript(tab.id, {
           frameId: info.frameId,
+          // DRM and CORS can lead to tab capture fallback
           code: `var vidEl = browser.menus.getTargetElement(${info.targetElementId});
-var drmProtected = vidEl.mediaKeys !== null;
-if(!drmProtected){
-    let canvas = document.createElement('canvas');
-    canvas.width = vidEl.videoWidth;
-    canvas.height = vidEl.videoHeight;
-    let context = canvas.getContext('2d');
-    context.drawImage(vidEl, 0, 0, vidEl.videoWidth, vidEl.videoHeight);
-    browser.runtime.sendMessage({ "dataURI": canvas.toDataURL() });
+var restricted = vidEl.mediaKeys !== null;
+if(!restricted){
+    try {
+        let canvas = document.createElement('canvas');
+        canvas.width = vidEl.videoWidth;
+        canvas.height = vidEl.videoHeight;
+        let context = canvas.getContext('2d');
+        context.drawImage(vidEl, 0, 0, vidEl.videoWidth, vidEl.videoHeight);
+        browser.runtime.sendMessage({ "dataURI": canvas.toDataURL() });
+    }catch(e){
+        restricted = true;
+    }
 }
-drmProtected;
+restricted;
 `,
         })
       )[0];
 
-      console.log("drmProtected", drmProtected);
-
-      if (drmProtected) {
+      if (vidElrestricted) {
         // then we get the video coords + size (x,y,width,height)
         let elBrect = await browser.tabs.executeScript(tab.id, {
           frameId: info.frameId,
@@ -83,15 +87,15 @@ drmProtected;
           });
         }, 750);
       }
-    } catch (e) {
+    } /*catch (e) {
       console.error(e);
       notify("Copy Video Frame", e.toString());
-    }
+    } */
   },
 });
 
 browser.runtime.onMessage.addListener((data, sender) => {
-  //console.debug('onMessage', data, sender);
+  //console.debug("onMessage", data, sender);
   if (data.dataURI) {
     tempData.set(sender.tab.id, data.dataURI);
     return;
