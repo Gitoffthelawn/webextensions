@@ -57,7 +57,7 @@
       "description": "10 Custom Action"
     }
   },
-  "description": "Add extra functions to links and links in selections - Open Links in Tabs (loaded or unloaded), Bookmark Links, Download Links and Copy Links to the Clipboard in Custom Formats",
+  "description": "Add extra functions to links, like open in tabs (loaded or unloaded), bookmark, download and copy in custom formats",
   "icons": {
     "980": "icon.png"
   },
