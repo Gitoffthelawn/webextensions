@@ -1,5 +1,7 @@
 /* global browser */
 
+let collapsed = true;
+
 async function grpTabsBySite(all_tabs, sites) {
   sites.forEach(async (site) => {
     const tabIds = all_tabs
@@ -14,7 +16,7 @@ async function grpTabsBySite(all_tabs, sites) {
     site = site.startsWith("www.") ? site.slice(4) : site;
     browser.tabGroups.update(grpId, {
       title: site,
-      collapsed: true,
+      collapsed,
     });
   });
 }
@@ -79,7 +81,7 @@ async function grpAllSites() {
     k = k.startsWith("www.") ? k.slice(4) : k;
     browser.tabGroups.update(grpId, {
       title: k,
-      collapsed: true,
+      collapsed,
     });
   }
 }
@@ -88,6 +90,11 @@ browser.menus.create({
   title: "Selected Sites",
   contexts: ["tab"],
   onclick: async (clickdata, atab) => {
+    if (clickdata.button === 1) {
+      collapsed = false;
+    } else {
+      collapsed = true;
+    }
     if (!atab.highlighted) {
       grpSingleSite(new URL(atab.url).hostname);
     } else {
@@ -100,11 +107,17 @@ browser.menus.create({
   title: "All Sites",
   contexts: ["tab"],
   onclick: async (clickdata, tab) => {
+    if (clickdata.button === 1) {
+      collapsed = false;
+    } else {
+      collapsed = true;
+    }
     grpAllSites();
   },
 });
 
 function onCommand(cmd) {
+  collapsed = true;
   switch (cmd) {
     case "group-all":
       grpAllSites();
