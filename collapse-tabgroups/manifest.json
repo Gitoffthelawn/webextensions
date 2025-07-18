@@ -1,0 +1,15 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/collapse-tabgroups",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": {
+    "1024": "icon.png"
+  },
+  "description": "Control the collapse state of tabgroups",
+  "manifest_version": 2,
+  "name": "Collapse Tabgroups",
+  "permissions": ["menus", "tabGroups"],
+  "version": "1.0.1"
+}
