@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/reload-windows",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/reload-all-tabs-in-all-windows",
   "background": {
     "scripts": ["background.js"]
   },
@@ -10,10 +10,12 @@
   "commands": {
     "_execute_browser_action": {}
   },
-  "icons": {},
+  "icons": {
+    "95": "icon.png"
+  },
   "description": "Reloads all tabs in all windows",
   "manifest_version": 2,
-  "name": "Reload Windows",
+  "name": "Reload All Tabs in All Windows",
   "permissions": [],
   "version": "1.0.0"
 }
