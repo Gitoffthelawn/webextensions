@@ -56,7 +56,7 @@ function createTableRow(feed) {
       function () {
         deleteRow(tr);
       },
-      false
+      false,
     );
   }
   tr.insertCell().appendChild(button);
@@ -152,7 +152,7 @@ syncGetbtn.addEventListener("click", async function () {
 syncSetbtn.addEventListener("click", async function () {
   if (
     confirm(
-      "Are you sure? This will save your current local rules via your FF account, if available. To retain any previous saved rules use from the FF Sync use the restore button first to load, modify and save them locally."
+      "Are you sure? This will save your current local rules via your FF account, if available. To retain any previous saved rules use from the FF Sync use the restore button first to load, modify and save them locally.",
     )
   ) {
     const result = await browser.storage.local.get("selectors");
@@ -169,7 +169,7 @@ expbtn.addEventListener("click", async function (/*evt*/) {
   let content = JSON.stringify(res.selectors, null, 4);
   dl.setAttribute(
     "href",
-    "data:application/json;charset=utf-8," + encodeURIComponent(content)
+    "data:application/json;charset=utf-8," + encodeURIComponent(content),
   );
   dl.setAttribute("download", "data.json");
   dl.setAttribute("visibility", "hidden");
