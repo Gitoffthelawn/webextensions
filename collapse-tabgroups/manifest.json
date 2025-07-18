@@ -1,8 +1,14 @@
 {
   "author": "igorlogius",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/collapse-tabgroups",
+  "browser_action": {
+    "default_area": "navbar"
+  },
   "background": {
     "scripts": ["background.js"]
+  },
+  "commands": {
+    "_execute_browser_action": {}
   },
   "icons": {
     "1024": "icon.png"
@@ -11,5 +17,5 @@
   "manifest_version": 2,
   "name": "Collapse Tabgroups",
   "permissions": ["menus", "tabGroups"],
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
