@@ -7,7 +7,9 @@ function detect() {
   browser.runtime.sendMessage({ hasSessionStorageData, hasLocalStorageData });
 }
 
-browser.runtime.onMessage.addListener((data /*, sender*/) => {
+browser.runtime.onMessage.addListener((data, sender) => {
+  console.debug(data, sender);
+
   localStorage.clear();
   sessionStorage.clear();
 

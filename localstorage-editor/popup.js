@@ -517,6 +517,11 @@ function onChange(evt) {
 
   let el = document.getElementById(id);
   el.addEventListener("input", onChange);
+
+  browser.runtime.onMessage.addListener((data, sender) => {
+    console.debug(data, sender);
+    document.getElementById(data.cmd).click();
+  });
 });
 
 // init

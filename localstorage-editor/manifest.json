@@ -8,6 +8,32 @@
     "default_area": "navbar",
     "default_popup": "popup.html"
   },
+  "commands": {
+    "_execute_browser_action": {
+      "description": "Open Toolbar Panel"
+    },
+    "addbtn": {
+      "description": "Add Storage Entry"
+    },
+    "delbtn": {
+      "description": "Delete Selected"
+    },
+    "savbtn": {
+      "description": "Save Changes"
+    },
+    "disbtn": {
+      "description": "Discard Changes"
+    },
+    "impbtn": {
+      "description": "Clipboard Import"
+    },
+    "cpybtn": {
+      "description": "Copy Selected"
+    },
+    "expbtn": {
+      "description": "Download Selected"
+    }
+  },
   "content_scripts": [
     {
       "js": ["content.js"],
@@ -21,5 +47,5 @@
   "manifest_version": 2,
   "name": "LocalStorage Editor",
   "permissions": ["storage", "clipboardRead", "clipboardWrite", "<all_urls>"],
-  "version": "1.3.21"
+  "version": "1.3.22"
 }
