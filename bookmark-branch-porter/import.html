@@ -8,11 +8,31 @@
     #impbtn {
       display: block;
     }
+    #imptxt {
+      width: 99%;
+      height: 65vh;
+      white-space: nowrap;
+      overflow-wrap: normal;
+      overflow-x: scroll;
+      overflow-y: scroll;
+    }
+    #save {
+      width: 99%;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h2>Use this file picker to select the file to import</h2>
-  <input id="impbtn" type="file" value="" />
   <p id="message" />
+  <h2>Import from File</h2>
+  <input id="impbtn" type="file" value="" />
+  <h2>Import from Textarea (Clipboard)</h2>
+  <textarea
+    id="imptxt"
+    spellcheck="false"
+    wrap="no"
+    placeholder="Paste your data here, then click on the button below"
+  ></textarea>
+  <button id="save">Import from Textarea</button>
   <script src="import.js"></script>
 </body>

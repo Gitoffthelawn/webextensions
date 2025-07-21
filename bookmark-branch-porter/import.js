@@ -158,32 +158,55 @@ async function onLoad() {
   globaltype = params.get("type");
   globalnoroot = params.get("noroot") === "1";
 
-  let impbtn = document.getElementById("impbtn");
+  document
+    .getElementById("impbtn")
+    .addEventListener("input", function (/*evt*/) {
+      const file = this.files[0];
+      const reader = new FileReader();
+      reader.onload = async function (/*e*/) {
+        try {
+          let data;
+          if (globaltype === "json") {
+            data = JSON.parse(reader.result);
+          } else {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(reader.result, "text/html");
+            data = htmlDoc2Json(htmlDoc);
+          }
+          await importData(globalbookmarkId, data, globalnoroot);
+          document.getElementById("message").innerText =
+            "INFO: Import from file finished without errors, check the results then you can close this tab";
+        } catch (e) {
+          console.error(e);
+          document.getElementById("message").innerText =
+            "ERROR: Import from file failed, " + e.toString();
+        }
+      };
+      reader.readAsText(file);
+    });
 
-  impbtn.addEventListener("input", function (/*evt*/) {
-    const file = this.files[0];
-    const reader = new FileReader();
-    reader.onload = async function (/*e*/) {
+  document
+    .getElementById("save")
+    .addEventListener("click", async function (/*evt*/) {
+      const text = document.getElementById("imptxt").value;
       try {
         let data;
         if (globaltype === "json") {
-          data = JSON.parse(reader.result);
+          data = JSON.parse(text);
         } else {
           const parser = new DOMParser();
-          const htmlDoc = parser.parseFromString(reader.result, "text/html");
+          const htmlDoc = parser.parseFromString(text, "text/html");
           data = htmlDoc2Json(htmlDoc);
         }
         await importData(globalbookmarkId, data, globalnoroot);
         document.getElementById("message").innerText =
-          "INFO: Import finished without errors, check the results then you can close this tab";
+          "INFO: Import from textarea finished without errors, check the results then you can close this tab";
       } catch (e) {
         console.error(e);
         document.getElementById("message").innerText =
-          "ERROR: Import failed, " + e.toString();
+          "ERROR: Import from textarea failed, " + e.toString();
       }
-    };
-    reader.readAsText(file);
-  });
+    });
 
   // doenst work in noe debugging mode, snice user activation is required
   /*
