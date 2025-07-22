@@ -11,39 +11,10 @@
   var top = 0,
     left = 0;
   do {
-    top += element.offsetTop || 0;
-    left += element.offsetLeft || 0;
+    top += element.offsetTop + element.clientTop;
+    left += element.offsetLeft + element.clientLeft;
     element = element.offsetParent;
   } while (element);
-
-  /*
-   * hide generic html5 controls
-   */
-  if (vidEl.hasAttribute("controls")) {
-    vidEl.removeAttribute("controls");
-    setTimeout(() => {
-      vidEl.setAttribute("controls", "");
-    }, 2000);
-  }
-
-  function brieflyHide(selector) {
-    const el = document.querySelector(selector);
-    if (el !== null) {
-      el_style_display = el.style.display;
-      el.style.display = "none";
-      setTimeout(() => {
-        el.style.display = el_style_display;
-      }, 2000);
-    }
-  }
-  // hide: title and some buttons (watch later, share)
-  brieflyHide(".ytp-chrome-top");
-  // hide: fake controls
-  brieflyHide(".ytp-chrome-bottom");
-  // remove fake contextmenus
-  Array.from(document.querySelectorAll(".ytp-contextmenu")).forEach((el) => {
-    el.remove();
-  });
 
   return {
     x: left,
