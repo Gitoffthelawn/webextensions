@@ -148,12 +148,26 @@ async function onStorageChanged() {
   browser.runtime.onMessage.addListener(onMessage);
   browser.storage.onChanged.addListener(onStorageChanged);
   browser.tabs.onUpdated.addListener(onTabUpdated, { properties: ["status"] });
-  browser.browserAction.onClicked.addListener((tab) => {
-    browser.tabs.create({
-      url: "find.html?tabId=" + tab.id + "&url=" + encodeURIComponent(tab.url),
-      index: tab.index + 1,
-      active: true,
-    });
+  browser.browserAction.onClicked.addListener((tab, info) => {
+    if (info.button === 1) {
+      browser.tabs.create({
+        url:
+          "find.html?tabId=" + tab.id + "&url=" + encodeURIComponent(tab.url),
+        index: tab.index + 1,
+        active: true,
+      });
+    } else {
+      // default: open in popup
+      browser.windows.create({
+        url: [
+          "find.html?tabId=" + tab.id + "&url=" + encodeURIComponent(tab.url),
+        ],
+        type: "popup",
+        height: 480,
+        width: 1080,
+        focused: true,
+      });
+    }
   });
   browser.menus.create({
     title: "Configure Feed Detectors",

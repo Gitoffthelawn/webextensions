@@ -80,6 +80,7 @@ async function init() {
     url: decodeQueryParam(popupsearchparams.get("url")),
   });
   //
+  document.title = decodeQueryParam(popupsearchparams.get("url"));
   if (objs_length < 1) {
     msg.textContent =
       "No feed-like URLs found on " +
