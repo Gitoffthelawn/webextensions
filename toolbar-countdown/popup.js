@@ -1,51 +1,53 @@
 /* global browser */
 
-Date.prototype.toDateInputValue = function () {
-  var local = new Date(this);
-  local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-  return local.toJSON().slice(0, 10);
-};
+(async () => {
+  let storage = await import("./storage.js");
 
-function onChange(evt) {
-  let id = evt.target.id;
-  let el = document.getElementById(id);
+  Date.prototype.toDateInputValue = function () {
+    var local = new Date(this);
+    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+    return local.toJSON().slice(0, 10);
+  };
 
-  let value = el.type === "checkbox" ? el.checked : el.value;
-  let obj = {};
+  function onChange(evt) {
+    let id = evt.target.id;
+    let el = document.getElementById(id);
 
-  //console.log(id,value, el.type);
+    let value = el.type === "checkbox" ? el.checked : el.value;
+    let obj = {};
 
-  if (el.type === "number") {
-    try {
-      value = parseInt(value);
-      if (isNaN(value)) {
+    //console.log(id,value, el.type);
+
+    if (el.type === "number") {
+      try {
+        value = parseInt(value);
+        if (isNaN(value)) {
+          value = el.min;
+        }
+        if (value < el.min) {
+          value = el.min;
+        }
+      } catch (e) {
         value = el.min;
       }
-      if (value < el.min) {
-        value = el.min;
+    } else if (el.type === "date") {
+      if (value === "") {
+        value = new Date().toDateInputValue();
       }
-    } catch (e) {
-      value = el.min;
     }
-  } else if (el.type === "date") {
-    if (value === "") {
-      value = new Date().toDateInputValue();
-    }
+
+    //console.log(id, value);
+    obj[id] = value;
+
+    //console.log(id,value);
+    storage.set(id, value);
+    //browser.storage.local.set(obj).catch(console.error);
   }
 
-  //console.log(id, value);
-  obj[id] = value;
-
-  //console.log(id,value);
-  browser.storage.local.set(obj).catch(console.error);
-}
-
-["enddate", "name"].map((id) => {
-  browser.storage.local
-    .get(id)
-    .then((obj) => {
+  ["enddate", "name"].map(async (id) => {
+    try {
+      const val = await storage.get("string", id, undefined);
       let el = document.getElementById(id);
-      let val = obj[id];
 
       if (typeof val !== "undefined") {
         if (el.type === "checkbox") {
@@ -59,14 +61,13 @@ function onChange(evt) {
           el.value = val;
         }
       }
-    })
-    .catch((err) => {
-      console.error(err);
-    });
 
-  let el = document.getElementById(id);
-  el.addEventListener("change", onChange);
-  if (el.type === "text") {
-    el.addEventListener("keyup", onChange);
-  }
-});
+      el.addEventListener("change", onChange);
+      if (el.type === "text") {
+        el.addEventListener("keyup", onChange);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  });
+})();
