@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     paths:
-       'localstorage-editor/manifest.json'
+       'localstorage-editor/**'
 
   # Allows to run this workflow manually
   workflow_dispatch:
@@ -27,5 +27,5 @@ jobs:
         env:
           ISSUER: ${{secrets.ISSUER}}
           SECRET: ${{secrets.SECRET}}
-        run: curl -sL 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/READMEv2' | sh
+        run: curl -sL 'https://raw.githubusercontent.com/igorlogius/meta-addon-builder/main/README' | sh
         
