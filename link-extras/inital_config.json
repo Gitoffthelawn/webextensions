@@ -2,12 +2,12 @@
   {
     "html": false,
     "name": "URL",
-    "format": "- %url"
+    "format": "%url"
   },
   {
     "html": false,
     "name": "URL w/o params",
-    "format": "- %url_origin%url_path"
+    "format": "%url_origin%url_path"
   },
   {
     "html": true,
@@ -22,11 +22,21 @@
   {
     "html": false,
     "name": "Markdown",
-    "format": "- [%text](%url)"
+    "format": "[%text](%url)"
   },
   {
     "html": false,
     "name": "Markdown w/o params",
-    "format": "- [%text](%url_origin%url_path)"
+    "format": "[%text](%url_origin%url_path)"
+  },
+  {
+    "html": false,
+    "name": "BBCode",
+    "format": "[url=%url]%text[/url]"
+  },
+  {
+    "html": false,
+    "name": "LaTeX",
+    "format": "\hrefi{%url}{%text}"
   }
 ]

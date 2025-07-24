@@ -300,7 +300,7 @@ async function onMenuShow(/*info, tab*/) {
     });
 
     browser.menus.create({
-      title: "Select related Tabs",
+      title: "Selected matching Tabs",
       contexts: ["link", "selection"],
       parentId: "tabs_actions",
       onclick: async (info) => {
@@ -329,39 +329,6 @@ async function onMenuShow(/*info, tab*/) {
         browser.tabs.highlight({ tabs: tabIdxs });
 
         notify(extname, "Selected " + tabIdxs.length + " related Tabs");
-      },
-    });
-
-    browser.menus.create({
-      title: "Close related Tabs",
-      contexts: ["link", "selection"],
-      parentId: "tabs_actions",
-      onclick: async (info) => {
-        //-- handle text selection
-
-        let links = [];
-
-        if (info.selectionText) {
-          const ret = await browser.tabs.executeScript({
-            code: `selection = getSelection();
-                 [...document.links]
-                        .filter((anchor) => selection.containsNode(anchor, true))
-                        .map(link => link.href);`,
-          });
-
-          links = ret[0];
-        } else {
-          //-- handle link selection
-          links.push(info.linkUrl);
-        }
-
-        const tabIdsToClose = (await browser.tabs.query({}))
-          .filter((t) => links.includes(t.url))
-          .map((t) => t.id);
-
-        browser.tabs.remove(tabIdsToClose);
-
-        notify(extname, "Closed " + tabIdsToClose.length + " related Tabs");
       },
     });
   }

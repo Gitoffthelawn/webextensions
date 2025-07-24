@@ -67,15 +67,7 @@
     "open_in_tab": true,
     "page": "options.html"
   },
-  "permissions": [
-    "activeTab",
-    "bookmarks",
-    "clipboardWrite",
-    "downloads",
-    "menus",
-    "notifications",
-    "storage",
-    "tabs"
-  ],
-  "version": "1.4.21"
+  "permissions": ["activeTab", "clipboardWrite", "menus", "storage", "tabs"],
+  "optional_permissions": ["bookmarks", "downloads", "notifications"],
+  "version": "1.4.22"
 }
