@@ -39,11 +39,12 @@ function updateDupData() {
 }
 
 //
-async function seperateDups(tabId) {
+async function seperateDups(tabId, titlePreface = "") {
   if (dupdata.has(tabId)) {
     const tmp = dupdata.get(tabId);
     if (tmp.length > 0) {
       let win = await browser.windows.create({
+        titlePreface,
         tabId,
       });
 
@@ -141,13 +142,13 @@ browser.tabs.onRemoved.addListener((tabId) => {
 
 // trigger deletion
 browser.browserAction.onClicked.addListener((tab) => {
-  seperateDups(tab.id);
+  seperateDups(tab.id, new URL(tab.url).origin);
 });
 
 browser.menus.create({
   title: "Detach Same Site Tabs",
   contexts: ["tab"],
   onclick: async (clickdata, tab) => {
-    seperateDups(tab.id);
+    seperateDups(tab.id, new URL(tab.url).origin);
   },
 });
