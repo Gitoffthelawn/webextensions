@@ -11,15 +11,20 @@
     "group-selected": {
       "description": "Group Selected Sites"
     },
-
     "group-all": {
       "description": "Group All Sites"
+    },
+    "group-selected-uncollapsed": {
+      "description": "Group Selected Sites (uncollapsed)"
+    },
+    "group-all-unclollapsed": {
+      "description": "Group All Sites (uncollapsed)"
     }
   },
   "icons": {},
-  "description": "Group tabs with same domains",
+  "description": "Move same site/domain tabs into named collapsed or unclollapsed native tabgroups",
   "manifest_version": 2,
   "name": "Group Same Site Tabs",
   "permissions": ["tabs", "menus", "tabGroups"],
-  "version": "1.0.12"
+  "version": "1.0.0"
 }

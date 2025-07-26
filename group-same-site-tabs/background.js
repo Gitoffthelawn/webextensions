@@ -116,19 +116,34 @@ browser.menus.create({
   },
 });
 
-function onCommand(cmd) {
-  collapsed = true;
+browser.browserAction.onClicked.addListener((tab, clickdata) => {
+  if (clickdata.button === 1) {
+    collapsed = false;
+  } else {
+    collapsed = true;
+  }
+  grpAllSites();
+});
+
+browser.commands.onCommand.addListener((cmd) => {
   switch (cmd) {
     case "group-all":
+      collapsed = true;
       grpAllSites();
       break;
     case "group-selected":
+      collapsed = true;
+      grpSelectedSites();
+      break;
+    case "group-all-uncollapsed":
+      collapsed = false;
+      grpAllSites();
+      break;
+    case "group-selected-uncollapsed":
+      collapsed = false;
       grpSelectedSites();
       break;
     default:
       break;
   }
-}
-
-browser.browserAction.onClicked.addListener(grpAllSites);
-browser.commands.onCommand.addListener(onCommand);
+});
