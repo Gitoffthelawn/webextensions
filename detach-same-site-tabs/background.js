@@ -142,13 +142,13 @@ browser.tabs.onRemoved.addListener((tabId) => {
 
 // trigger deletion
 browser.browserAction.onClicked.addListener((tab) => {
-  seperateDups(tab.id, new URL(tab.url).origin);
+  seperateDups(tab.id, new URL(tab.url).hostname + " :: ");
 });
 
 browser.menus.create({
   title: "Detach Same Site Tabs",
   contexts: ["tab"],
   onclick: async (clickdata, tab) => {
-    seperateDups(tab.id, new URL(tab.url).origin);
+    seperateDups(tab.id, new URL(tab.url).hostname + " :: ");
   },
 });
