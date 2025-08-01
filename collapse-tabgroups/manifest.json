@@ -16,6 +16,6 @@
   "description": "Control the collapse state of tabgroups",
   "manifest_version": 2,
   "name": "Collapse Tabgroups",
-  "permissions": ["menus", "tabGroups"],
+  "permissions": ["menus", "tabs", "tabGroups"],
   "version": "1.0.2"
 }
