@@ -14,7 +14,7 @@ function onChange(evt) {
   browser.storage.local.set(obj);
 }
 
-["matchers"].map((id) => {
+["includeAllWindows", "matchers"].map((id) => {
   browser.storage.local
     .get(id)
     .then((obj) => {
