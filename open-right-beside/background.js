@@ -17,13 +17,22 @@ async function onCreated(newTab) {
   }
   if (newTab.windowId === activeTab.windowId) {
     const aTab_index = activeTab.index;
+
     /*
-        fix: inconsistent behaviour with tabgroups
-        first we move the tab onto the same position as the active tab
-        this makes the behaviour consistent if we directly move it to the slot besides the active tab
-        and the active tab is the last tab of a group, that tab will be outside the tabgroup
+        Fix for inconsistent behaviour with tabGroups
+
+        Issue: when the active tab is the last tab in a group, moving any tab to the right position places the tab outside of the group while doing the same with other tabs in the group will result in the new tab becoming a part of the group.
+
     */
-    browser.tabs.move(newTab.id, { index: aTab_index });
+
+    if (browser.tabGroups) {
+      // check if groups are available
+      if (activeTab.groupId) {
+        // check if the active tab is part of a group
+        browser.tabs.move(newTab.id, { index: aTab_index });
+      }
+    }
+
     browser.tabs.move(newTab.id, { index: aTab_index + 1 });
     prevTabId = newTab.id;
   }
