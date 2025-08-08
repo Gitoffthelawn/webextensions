@@ -14,7 +14,14 @@ function onChange(evt) {
   browser.storage.local.set(obj);
 }
 
-["includeAllWindows", "matchers"].map((id) => {
+[
+  "ignoreWindowScope",
+  "ignoreContainerScope",
+  "ignoreGroupScope",
+  "ignoreURLPath",
+  "ignoreURLParams",
+  "ignoredREMatchersString",
+].map((id) => {
   browser.storage.local
     .get(id)
     .then((obj) => {

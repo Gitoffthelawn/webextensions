@@ -6,10 +6,16 @@
   const manifest = browser.runtime.getManifest();
   const extname = manifest.name;
 
-  let delayTimerId = null;
-  let isActive = true;
-  let regexList = null;
-  let includeAllWindows = false;
+  let settings = {
+    delayTimerId: null,
+    isActive: true,
+    ignoredREMatchers: [],
+    ignoreWindowScope: false,
+    ignoreContainerScope: false,
+    ignoreGroupScope: false,
+    ignoreURLPath: false,
+    ignoreURLParams: false,
+  };
 
   function serializeSearchParams(searchParams) {
     // Sort the key/value pairs
@@ -22,49 +28,53 @@
     return out;
   }
 
-  async function buildRegExList() {
+  async function storageString2REArray(storageId) {
     const out = [];
-    (await storage.get("string", "matchers", ""))
-      .split("\n")
-      .forEach((line) => {
-        line = line.trim();
-        if (line !== "") {
-          try {
-            out.push(new RegExp(line));
-          } catch (e) {
-            console.error(e);
-          }
+    (await storage.get("string", storageId, "")).split("\n").forEach((line) => {
+      line = line.trim();
+      if (line !== "") {
+        try {
+          out.push(new RegExp(line));
+        } catch (e) {
+          console.error(e);
         }
-      });
+      }
+    });
     return out;
   }
 
-  function isOnRegexList(url) {
+  function containsMatch(regexList, str) {
     for (let i = 0; i < regexList.length; i++) {
-      if (regexList[i].test(url)) {
+      if (regexList[i].test(str)) {
         return true;
       }
     }
     return false;
   }
 
+  async function syncSetting(type, id, fallback) {
+    settings[id] = await storage.get(type, id, fallback);
+  }
+
   async function onStorageChanged() {
-    regexList = await buildRegExList();
-    includeAllWindows = await storage.get(
-      "boolean",
-      "includeAllWindows",
-      false,
+    settings.ignoredREMatchers = await storageString2REArray(
+      "ignoredREMatchersString",
     );
-    console.debug(includeAllWindows);
+    await syncSetting("boolean", "ignoreWindowScope", false);
+    await syncSetting("boolean", "ignoreContainerScope", false);
+    await syncSetting("boolean", "ignoreGroupScope", false);
+    await syncSetting("boolean", "ignoreURLPath", false);
+    await syncSetting("boolean", "ignoreURLParams", false);
+    delayed_delDups();
   }
 
   async function delayed_delDups() {
-    clearTimeout(delayTimerId);
-    delayTimerId = setTimeout(delDups, 2500); // 2.5 seconds w/o tab status changes
+    clearTimeout(settings.delayTimerId);
+    settings.delayTimerId = setTimeout(delDups, 3500); // 3.5 seconds w/o tab status changes
   }
 
   async function delDups() {
-    if (!isActive) {
+    if (!settings.isActive) {
       return;
     }
 
@@ -72,14 +82,7 @@
       pinned: false,
     };
 
-    if (!includeAllWindows) {
-      qryobj["currentWindow"] = true;
-    }
-
     const allTabs = await browser.tabs.query(qryobj);
-    const last_focused_window = await browser.windows.getLastFocused({
-      populate: false,
-    });
 
     // check if any tab is still loading , if so we wait
     if (allTabs.some((t) => t.status !== "complete")) {
@@ -94,14 +97,34 @@
     const dup_groups = new Map();
 
     for (const t of allTabs) {
-      if (!isOnRegexList(t.url)) {
+      if (!containsMatch(settings.ignoredREMatchers, t.url)) {
         const urlobj = new URL(t.url);
-        tab_url =
-          urlobj.origin +
-          urlobj.pathname +
-          serializeSearchParams(urlobj.searchParams);
+        //if (!settings.ignoredHostnames.includes(urlobj.hostname)) {
+        let key = urlobj.origin;
 
-        const key = t.cookieStoreId + "_" + tab_url;
+        // -----
+
+        if (!settings.ignoreURLPath) {
+          key = key + "_" + urlobj.pathname;
+        }
+        if (!settings.ignoreURLParams) {
+          key = key + "_" + serializeSearchParams(urlobj.searchParams);
+        }
+        if (!settings.ignoreContainerScope) {
+          key = t.cookieStoreId + "_" + key;
+        }
+        if (!settings.ignoreWindowScope) {
+          key = t.windowId + "_" + key;
+        }
+        if (!settings.ignoreGroupScope) {
+          if (browser.tabGroups) {
+            if (t.groupId) {
+              key = t.groupId + "_" + key;
+            }
+          }
+        }
+
+        // -----
 
         if (!dup_groups.has(key)) {
           dup_groups.set(key, []);
@@ -137,35 +160,18 @@
           } else {
             // in this case BOTH could be active/focused in the window
             if (focus_groups.includes(k)) {
-              if (a.active && b.active) {
-                // closeing neither would be a way to go or close the one in the inactive Window
-                // But even if the window is inactive the user could have them open for comparision ...
-                // this is kind of a not so straight forward decision
-                // i mean the user could still pin the tabs that is a workaround at least
-
-                // lets prefer the active one in the last focused window
-                if (a.windowId === last_focused_window.id) {
+              if (!(a.active && b.active)) {
+                // prefer active
+                if (a.active) {
                   return -1;
                 }
-                if (b.windowId === last_focused_window.id) {
+                if (b.active) {
                   return 1;
                 }
-                // if we get here, both tabs are in unfocused windows (cant have 2 focused windows AFAIK) ... what todo now?
-                // lets just fall back to lastAccessed
-                return b.lastAccessed - a.lastAccessed;
-              }
-
-              // prefer active
-              if (a.active) {
-                return -1;
-              }
-              if (b.active) {
-                return 1;
               }
             }
-            //return b.lastAccessed - a.lastAccessed;
           }
-          // and last fallback
+          // final fallback
           return b.lastAccessed - a.lastAccessed;
         });
 
@@ -180,14 +186,14 @@
         await browser.tabs.remove(tid);
       } catch (e) {}
     }
-    delayTimerId = null;
+    settings.delayTimerId = null;
   }
 
   async function onBAClicked() {
-    clearTimeout(delayTimerId);
-    isActive = !isActive;
-    storage.set("isActive", isActive);
-    if (isActive) {
+    clearTimeout(settings.delayTimerId);
+    settings.isActive = !settings.isActive;
+    storage.set("isActive", settings.isActive);
+    if (settings.isActive) {
       browser.browserAction.setBadgeBackgroundColor({ color: "green" });
       browser.browserAction.setBadgeText({ text: "on" });
       delayed_delDups();
@@ -199,10 +205,14 @@
 
   // setup
   await onStorageChanged();
-  isActive = await storage.get("boolean", "isActive", isActive);
-  storage.set("isActive", isActive);
+  settings.isActive = await storage.get(
+    "boolean",
+    "isActive",
+    settings.isActive,
+  );
+  storage.set("isActive", settings.isActive);
 
-  if (isActive) {
+  if (settings.isActive) {
     browser.browserAction.setBadgeBackgroundColor({ color: "green" });
     browser.browserAction.setBadgeText({ text: "on" });
   } else {
@@ -217,4 +227,12 @@
   });
   browser.tabs.onCreated.addListener(delayed_delDups);
   browser.storage.onChanged.addListener(onStorageChanged);
+  // tab moving might trigger group changes
+  browser.tabs.onMoved.addListener(() => {
+    if (!settings.ignoreGroupScope) {
+      if (browser.tabGroups) {
+        delayed_delDups();
+      }
+    }
+  });
 })();

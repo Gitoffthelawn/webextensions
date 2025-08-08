@@ -6,21 +6,43 @@
 <body style="padding: 7px">
   <fieldset>
     <span
-      ><input id="includeAllWindows" type="checkbox" />check to detect and close
-      duplicates across all windows
+      ><input id="ignoreWindowScope" type="checkbox" />ignore window scope
     </span>
   </fieldset>
 
   <fieldset>
-    <legend><b>Ignore URLs</b></legend>
+    <span
+      ><input id="ignoreContainerScope" type="checkbox" />ignore container scope
+    </span>
+  </fieldset>
+
+  <fieldset>
+    <span
+      ><input id="ignoreGroupScope" type="checkbox" /> ignore group scope
+    </span>
+  </fieldset>
+
+  <fieldset>
+    <span
+      ><input id="ignoreURLParams" type="checkbox" /> ignore URL parameters
+    </span>
+  </fieldset>
+
+  <fieldset>
+    <span><input id="ignoreURLPath" type="checkbox" /> ignore URL path </span>
+  </fieldset>
+
+  <fieldset>
+    <legend><b>Ignored URL Matchers</b></legend>
     <textarea
-      id="matchers"
+      id="ignoredREMatchersString"
       style="width: 100%; min-height: 20em"
-      placeholder="Enter regular expressions line by line here
+      spellcheck="false"
+      placeholder="Enter Regular Expressions line by line here
 Examples:
     ^https:\/\/www\.facebook\.com.*
     ^https:\/\/example\.net.*
-    ^https:\/\/.*\.wikipedia\.org.*
+    ^https:\/\/en\.wikipedia\.org.*
 "
     ></textarea>
   </fieldset>

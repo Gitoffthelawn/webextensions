@@ -7,7 +7,7 @@
   "browser_action": {
     "default_area": "navbar"
   },
-  "description": "Auto close tabs with URLs which were already open",
+  "description": "Auto close tabs with the same URLs (excluding hashes) in the same context and tabgroup which were already open",
   "icons": {
     "128": "icon.png"
   },
@@ -16,6 +16,6 @@
   "options_ui": {
     "page": "options.html"
   },
-  "permissions": ["cookies", "storage", "tabs"],
+  "permissions": ["cookies", "storage", "tabs", "tabGroups"],
   "version": "1.9.28"
 }
