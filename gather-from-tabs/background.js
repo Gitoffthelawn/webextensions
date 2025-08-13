@@ -42,6 +42,12 @@ async function updateMenus() {
   });
 
   browser.menus.create({
+    id: "open_window",
+    title: "Open Window",
+    contexts: ["tab", "page"],
+  });
+
+  browser.menus.create({
     id: "run_only",
     title: "Run Only (ignore output)",
     contexts: ["tab", "page"],
@@ -67,6 +73,7 @@ async function updateMenus() {
     "copy_as_text",
     "save_as_file",
     "download_as_files",
+    "open_window",
     "run_only",
   ]) {
     res.selectors.forEach((sel) => {
@@ -111,7 +118,12 @@ async function updateMenus() {
             }
 
             //out = tmp + out;
-            out.push(tmp);
+
+            if (typeof tmp === "string") {
+              out.push(tmp);
+            } else if (Array.isArray(tmp)) {
+              out = out.concat(tmp);
+            }
           }
 
           try {
@@ -125,9 +137,14 @@ async function updateMenus() {
               case "save_as_file":
                 saveToFile(out.join(""), "");
                 break;
+              // >>>  assumes url string array
               case "download_as_files":
                 downloadAsFiles(out);
                 break;
+              case "open_window":
+                openWindow(out);
+                break;
+              // <<<  assumes url string array
               case "run_only":
                 break;
             }
@@ -197,6 +214,9 @@ async function onCommand(cmd) {
       break;
     case "dl": // do nothing
       downloadAsFiles(out);
+      break;
+    case "ow":
+      openWindow(out);
       break;
     case "dn": // do nothing
       // do nothing

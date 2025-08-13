@@ -257,3 +257,9 @@ async function downloadAsFiles(urls) {
     }
   }
 }
+
+async function openWindow(urlOrurlsArray) {
+  browser.windows.create({
+    url: urlOrurlsArray,
+  });
+}
