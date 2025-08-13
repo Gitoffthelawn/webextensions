@@ -326,6 +326,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     al.add(new Option("Copy as HTML", "ch"));
     al.add(new Option("Save Output as File", "s"));
     al.add(new Option("Download as Files", "dl"));
+    al.add(new Option("Open Window", "ow"));
     al.add(new Option("Ignore Output", "dn"));
   });
 
