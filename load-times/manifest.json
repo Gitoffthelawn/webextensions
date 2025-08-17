@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/load-times",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/load-times",
   "browser_style": true,
   "background": {
     "scripts": ["background.js"]
