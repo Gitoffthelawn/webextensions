@@ -2,6 +2,18 @@
 
 let last_visible = true;
 
+let failed_urls = [];
+
+function isValidURL(str) {
+  try {
+    const newUrl = new URL(str);
+    return newUrl.protocol === "http:" || newUrl.protocol === "https:";
+  } catch (err) {
+    //console.error(err);
+    return false;
+  }
+}
+
 browser.menus.onShown.addListener(async (info, tab) => {
   if (info.bookmarkId) {
     // prevent needless check
@@ -25,10 +37,26 @@ browser.menus.create({
   onclick: async (info, tab) => {
     const [btNode] = await browser.bookmarks.get(info.bookmarkId);
     const createdTabs = [];
+    failed_urls = [];
     for (const c of await browser.bookmarks.getChildren(btNode.id)) {
-      createdTabs.push(
-        await browser.tabs.create({ url: c.url, active: false }),
-      );
+      console.debug(c.url);
+      if (typeof c.url === "string") {
+        if (isValidURL(c.url)) {
+          try {
+            const newTab = await browser.tabs.create({
+              url: c.url,
+              active: false,
+            });
+            createdTabs.push(newTab);
+            continue;
+          } catch (e) {
+            //console.error(e);
+            // noop
+          }
+        }
+        failed_urls.push(c.url);
+      }
+      // no a bookmark but a bookmark folder
     }
     if (createdTabs.length > 0) {
       const groupId = await browser.tabs.group({
@@ -40,5 +68,16 @@ browser.menus.create({
         collapsed: true,
       });
     }
+
+    if (failed_urls.length > 0) {
+      const newTab = await browser.tabs.create({
+        url: "/errors.html",
+        active: true,
+      });
+    }
   },
+});
+
+browser.runtime.onMessage.addListener((data, sender) => {
+  return Promise.resolve(failed_urls);
 });
