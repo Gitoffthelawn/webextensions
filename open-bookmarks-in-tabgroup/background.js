@@ -39,15 +39,18 @@ browser.menus.create({
     const createdTabs = [];
     failed_urls = [];
     for (const c of await browser.bookmarks.getChildren(btNode.id)) {
-      console.debug(c.url);
       if (typeof c.url === "string") {
-        if (isValidURL(c.url)) {
+        let c_url = c.url;
+        if (c_url.startsWith("about:reader?url=")) {
+          c_url = decodeURIComponent(new URL(c_url).searchParams.get("url"));
+        }
+        if (isValidURL(c_url)) {
           try {
             const newTab = await browser.tabs.create({
-              url: c.url,
+              url: c_url,
               active: false,
             });
-            createdTabs.push(newTab);
+            createdTabs.push({ id: newTab.id, url: c_url });
             continue;
           } catch (e) {
             //console.error(e);
