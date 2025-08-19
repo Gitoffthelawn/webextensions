@@ -6,7 +6,7 @@ body:
     validations:
       required: true
     attributes:
-      label: "Please description your suggestion"
+      label: "Please describe your suggestion"
       value: |
         **Problem description (aka. usecase motivation)**
         
