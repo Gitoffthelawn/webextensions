@@ -1,57 +1,57 @@
 [
-  {
-    "activ": true,
-    "code": "(async () => {\n  let feeds = [];\n  const re = /app\\/(\\d*)\\//gim\n  const appId = re.exec(document.location)[1]\n  feeds.push(\"https://store.steampowered.com/feeds/news/app/\" + appId);\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/store\\.steampowered\\.com\\/app\\/[\\d]+.*"
-  },
-  {
-    "activ": true,
-    "code": "(async () => {\n\n  /* find channel feed */ \n  let feeds = [];\n  const regex = /https:\\/\\/www\\.youtube\\.com\\/feeds\\/videos\\.xml\\?channel_id=[A-Za-z0-9_-]*/\n\n  const url = new URL(document.location.href);\n  const params = url.searchParams;\n\n  let resp = await fetch(url.href);\n  let text = await resp.text();\n\n  let found = text.match(regex)\n  if(found !== null && found.length > 0){\n     feeds.push(found[0]);\n  }\n\n  /* find playlist feed */\n\n  const videoId = params.get(\"v\");\n  if(videoId !== null){\n    const channelURL = document.querySelector('.ytd-channel-name a.yt-simple-endpoint').href;\n    if(channelURL !== null) {\n     resp = await fetch(channelURL);\n     text = await resp.text();\n     found = text.match(regex)\n     if(found != null && found.length > 0){\n       feeds.push(found[0]);\n     }\n    }\n  }\n\n  const playlistId = params.get(\"list\");\n  if(playlistId !== null){\n      feeds.push(\"https://www.youtube.com/feeds/videos.xml?playlist_id=\" + playlistId);\n  }\n\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/www\\.youtube\\.com\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let tmp;\n  const url = new URL(window.location.href);\n  for (let link_href of [\n    ...new Set(\n      Array.from(document.querySelectorAll(\"link\")).map((l) =>\n        l.getAttribute(\"href\")\n      )\n    ),\n  ]) {\n    if (typeof link_href === \"string\") {\n      link_href = link_href.trim();\n\n      // relativ href\n      if (!link_href.startsWith(\"http\") && !link_href.startsWith(\"//\")) {\n        try {\n          tmp = new URL(link_href, url.origin + url.pathname);\n          if (tmp !== null) {\n            link_href = tmp.toString();\n          }\n        } catch (e) {\n          console.warn(\"failed to built a valid absolute url for\", link_href);\n        }\n      }\n      feeds.push(link_href);\n    }\n  }\n\n  [\n    \"/feed/rss2\",\n    \"/feed/rss\",\n    \"/feed\",\n    \"/rss\",\n    \"/rss.xml\",\n    \"/feed.xml\",\n    \"/?feed=rss2\",\n    \"/?feed=rss\",\n    \"/?feed=atom\",\n  ].forEach((e) => {\n    tmp = new URL(e, url.origin);\n    tmp = tmp.toString();\n    feeds.push(tmp);\n    tmp = new URL(e, url.origin + url.pathname);\n    tmp = tmp.toString();\n    feeds.push(tmp);\n  });\n\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n\n  for (const tmp of [\n    \"feeds\",\n    \"feeds/featured\",\n    \"feeds/hot\",\n    \"feeds/week\",\n    \"feeds/month\",\n  ]) {\n    feeds.push(url.origin + \"/\" + tmp);\n  }\n\n  if (parts.length > 1) {\n    switch (parts[1]) {\n      case \"question\":\n        const question_id = parts[2];\n        feeds.push(url.origin + \"/feeds/question/\" + question_id);\n        break;\n      case \"users\":\n        const user_id = parts[2];\n        feeds.push(url.origin + \"/feeds/user/\" + user_id);\n        feeds.push(url.origin + \"/feeds/user/\" + user_id + \"/responses\");\n        break;\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/((math|softwareengineering|electronics|security|scifi|apple|skeptics|crypto|movies|mathematica|anime|networkengineering|softwarerecs|worldbuilding|meta)\\.stackexchange|stackoverflow|serverfault|askubuntu|mathoverflow)\\.(com|net)/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    if (parts[1][0] === \"@\") {\n      const userId = parts[1];\n      feeds.push(\"https://hiverss.com/\" + userId + \"/feed\");\n      feeds.push(\"https://hiverss.com/\" + userId + \"/blog\");\n      feeds.push(\"https://hiverss.com/\" + userId + \"/comments\");\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/(hive\\.blog)|(steemit\\.com)\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    const channelname = parts[1];\n    if (channelname.startsWith(\"@\")) {\n      feeds.push(url.origin + \"/$/rss/\" + channelname);\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/odysee\\.com\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length === 2) {\n    const channelname = parts[1];\n    if (\n      ![\n        \"\",\n        \"watch\",\n        \"create\",\n        \"upload\",\n        \"features\",\n        \"blog\",\n        \"for-hire\",\n        \"stock\",\n        \"ott\",\n        \"solutions\",\n        \"enterprise\",\n        \"partners\",\n        \"upgrade\",\n      ].includes(channelname)\n    ) {\n      feedUrl = new URL(\"/\" + channelname + \"/videos/rss\", url.origin);\n      feeds.push(feedUrl.toString());\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/vimeo\\.com\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    const articleTitle = parts[parts.length - 1];\n    feedUrl = new URL(\n      \"/w/index.php?title=\" + articleTitle + \"&action=history&feed=atom\",\n      url.origin\n    );\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\n      \"/w/index.php?title=\" + articleTitle + \"&action=history&feed=rss\",\n      url.origin\n    );\n    feeds.push(feedUrl.toString());\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/(.*\\.)*wikipedia\\.org\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  let user;\n  let repo;\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    user = parts[1];\n    feedUrl = new URL(user + \".atom\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n  if (parts.length > 2) {\n    repo = parts[2];\n    feedUrl = new URL(user + \"/\" + repo + \"/releases.atom\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(user + \"/\" + repo + \"/tags.atom\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/github\\.com\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  feedUrl = new URL(\".rss\", url.origin);\n  feeds.push(feedUrl.toString());\n\n  feedUrl = new URL(\"/comments/.rss\", url.origin);\n  feeds.push(feedUrl.toString());\n\n  if (url.pathname.startsWith(\"/user/\")) {\n    const userId = url.pathname.split(\"/\")[2];\n    feedUrl = new URL(\"/user/\" + userId + \"/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\"/user/\" + userId + \"/comments/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\"/user/\" + userId + \"/submitted/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n\n  if (url.pathname.startsWith(\"/search/\") && url.searchParams.has(\"q\")) {\n    feedUrl = new URL(\"/search.rss\", url.origin);\n    feedUrl.searchParams.set(\"q\", url.searchParams.get(\"q\"));\n    feeds.push(feedUrl.toString());\n  }\n\n  if (url.pathname.startsWith(\"/r/\")) {\n    const parts = url.pathname.split(\"/\");\n    if (parts.length > 1) {\n      const subRedditName = parts[2];\n      feedUrl = new URL(\"/r/\" + subRedditName + \"/new/.rss\", url.origin);\n      feeds.push(feedUrl.toString());\n\n      if (url.pathname.indexOf(\"/comments/\") > 0) {\n        if (parts.length > 3) {\n          const postId = parts[4];\n          feedUrl = new URL(\n            \"/r/\" + subRedditName + \"/comments/\" + postId + \"/.rss\",\n            url.origin\n          );\n          feeds.push(feedUrl.toString());\n        }\n      }\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/www\\.reddit\\.com\\/.*"
-  },
-  {
-    "activ": true,
-    "code": "(async () => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    let channelname = \"\";\n    let tmp = null;\n    switch (parts[1]) {\n      case \"video\":\n         tmp = await fetch(\"https://api.bitchute.com/api/beta9/video\", {\n            method: \"post\",\n            headers: { 'Content-Type': 'application/json'},\n            body: JSON.stringify({ video_id: parts[2] }),\n         });\n         tmp = await tmp.json();\n         tmp = tmp.channel.channel_id;\n         tmp = await fetch(\"https://api.bitchute.com/api/beta/channel\", {\n             method: \"post\",\n             headers: { 'Content-Type': 'application/json'},\n             body: JSON.stringify({ channel_id: tmp }),\n          });\n          tmp = await tmp.json();\n          channelname = tmp.url_slug;\n          break;\n      case \"channel\":\n         tmp = await fetch(\"https://api.bitchute.com/api/beta/channel\", {\n             method: \"post\",\n             headers: { 'Content-Type': 'application/json'},\n             body: JSON.stringify({ channel_id: parts[2] }),\n          });\n          tmp = await tmp.json();\n          channelname = tmp.url_slug;\n          break;\n    }\n    if (channelname !== \"\") {\n      feedUrl = new URL(\n        \"/feeds/rss/channel/\" + channelname + \"?showall=1\",\n        url.origin\n      );\n      feeds.push(feedUrl.toString());\n    }\n  }\n  return feeds;\n})();",
-    "url_regex": "^https:\\/\\/www\\.bitchute\\.com\\/.*"
-  }
+    {
+        "activ": true,
+        "code": "(async () => {\n  let feeds = [];\n  const re = /app\\/(\\d*)\\//gim\n  const appId = re.exec(document.location)[1]\n  feeds.push(\"https://store.steampowered.com/feeds/news/app/\" + appId);\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/store\\.steampowered\\.com\\/app\\/[\\d]+.*"
+    },
+    {
+        "activ": true,
+        "code": "(async () => {\n\n  /* find channel feed */ \n  let feeds = [];\n  const regex = /https:\\/\\/www\\.youtube\\.com\\/feeds\\/videos\\.xml\\?channel_id=[A-Za-z0-9_-]*/\n\n  const url = new URL(document.location.href);\n  const params = url.searchParams;\n\n  let resp = await fetch(url.href);\n  let text = await resp.text();\n\n  let found = text.match(regex)\n  if(found !== null && found.length > 0){\n     feeds.push(found[0]);\n  }\n\n  /* find playlist feed */\n\n  const videoId = params.get(\"v\");\n  if(videoId !== null){\n    const channelURL = document.querySelector('.ytd-channel-name a.yt-simple-endpoint').href;\n    if(channelURL !== null) {\n     resp = await fetch(channelURL);\n     text = await resp.text();\n     found = text.match(regex)\n     if(found != null && found.length > 0){\n       feeds.push(found[0]);\n     }\n    }\n  }\n\n  const playlistId = params.get(\"list\");\n  if(playlistId !== null){\n      feeds.push(\"https://www.youtube.com/feeds/videos.xml?playlist_id=\" + playlistId);\n  }\n\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/www\\.youtube\\.com\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let tmp;\n  const url = new URL(window.location.href);\n  for (let link_href of [\n    ...new Set(\n      Array.from(document.querySelectorAll(\"link\")).map((l) =>\n        l.getAttribute(\"href\")\n      )\n    ),\n  ]) {\n    if (typeof link_href === \"string\") {\n      link_href = link_href.trim();\n\n      // relativ href\n      if (!link_href.startsWith(\"http\") && !link_href.startsWith(\"//\")) {\n        try {\n          tmp = new URL(link_href, url.origin + url.pathname);\n          if (tmp !== null) {\n            link_href = tmp.toString();\n          }\n        } catch (e) {\n          console.warn(\"failed to built a valid absolute url for\", link_href);\n        }\n      }\n      feeds.push(link_href);\n    }\n  }\n\n  [\n    \"/feed/rss2\",\n    \"/feed/rss\",\n    \"/feed\",\n    \"/rss\",\n    \"/rss.xml\",\n    \"/feed.xml\",\n    \"/atom.xml\",\n    \"/?feed=rss2\",\n    \"/?feed=rss\",\n    \"/?feed=atom\",\n  ].forEach((e) => {\n    tmp = new URL(e, url.origin);\n    tmp = tmp.toString();\n    feeds.push(tmp);\n    tmp = new URL(e, url.origin + url.pathname);\n    tmp = tmp.toString();\n    feeds.push(tmp);\n  });\n\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n\n  for (const tmp of [\n    \"feeds\",\n    \"feeds/featured\",\n    \"feeds/hot\",\n    \"feeds/week\",\n    \"feeds/month\",\n  ]) {\n    feeds.push(url.origin + \"/\" + tmp);\n  }\n\n  if (parts.length > 1) {\n    switch (parts[1]) {\n      case \"question\":\n        const question_id = parts[2];\n        feeds.push(url.origin + \"/feeds/question/\" + question_id);\n        break;\n      case \"users\":\n        const user_id = parts[2];\n        feeds.push(url.origin + \"/feeds/user/\" + user_id);\n        feeds.push(url.origin + \"/feeds/user/\" + user_id + \"/responses\");\n        break;\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/((math|softwareengineering|electronics|security|scifi|apple|skeptics|crypto|movies|mathematica|anime|networkengineering|softwarerecs|worldbuilding|meta)\\.stackexchange|stackoverflow|serverfault|askubuntu|mathoverflow)\\.(com|net)/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    if (parts[1][0] === \"@\") {\n      const userId = parts[1];\n      feeds.push(\"https://hiverss.com/\" + userId + \"/feed\");\n      feeds.push(\"https://hiverss.com/\" + userId + \"/blog\");\n      feeds.push(\"https://hiverss.com/\" + userId + \"/comments\");\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/(hive\\.blog)|(steemit\\.com)\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    const channelname = parts[1];\n    if (channelname.startsWith(\"@\")) {\n      feeds.push(url.origin + \"/$/rss/\" + channelname);\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/odysee\\.com\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length === 2) {\n    const channelname = parts[1];\n    if (\n      ![\n        \"\",\n        \"watch\",\n        \"create\",\n        \"upload\",\n        \"features\",\n        \"blog\",\n        \"for-hire\",\n        \"stock\",\n        \"ott\",\n        \"solutions\",\n        \"enterprise\",\n        \"partners\",\n        \"upgrade\",\n      ].includes(channelname)\n    ) {\n      feedUrl = new URL(\"/\" + channelname + \"/videos/rss\", url.origin);\n      feeds.push(feedUrl.toString());\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/vimeo\\.com\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    const articleTitle = parts[parts.length - 1];\n    feedUrl = new URL(\n      \"/w/index.php?title=\" + articleTitle + \"&action=history&feed=atom\",\n      url.origin\n    );\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\n      \"/w/index.php?title=\" + articleTitle + \"&action=history&feed=rss\",\n      url.origin\n    );\n    feeds.push(feedUrl.toString());\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/(.*\\.)*wikipedia\\.org\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  let user;\n  let repo;\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    user = parts[1];\n    feedUrl = new URL(user + \".atom\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n  if (parts.length > 2) {\n    repo = parts[2];\n    feedUrl = new URL(user + \"/\" + repo + \"/releases.atom\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(user + \"/\" + repo + \"/tags.atom\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/github\\.com\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(() => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  feedUrl = new URL(\".rss\", url.origin);\n  feeds.push(feedUrl.toString());\n\n  feedUrl = new URL(\"/comments/.rss\", url.origin);\n  feeds.push(feedUrl.toString());\n\n  if (url.pathname.startsWith(\"/user/\")) {\n    const userId = url.pathname.split(\"/\")[2];\n    feedUrl = new URL(\"/user/\" + userId + \"/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\"/user/\" + userId + \"/comments/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n    feedUrl = new URL(\"/user/\" + userId + \"/submitted/.rss\", url.origin);\n    feeds.push(feedUrl.toString());\n  }\n\n  if (url.pathname.startsWith(\"/search/\") && url.searchParams.has(\"q\")) {\n    feedUrl = new URL(\"/search.rss\", url.origin);\n    feedUrl.searchParams.set(\"q\", url.searchParams.get(\"q\"));\n    feeds.push(feedUrl.toString());\n  }\n\n  if (url.pathname.startsWith(\"/r/\")) {\n    const parts = url.pathname.split(\"/\");\n    if (parts.length > 1) {\n      const subRedditName = parts[2];\n      feedUrl = new URL(\"/r/\" + subRedditName + \"/new/.rss\", url.origin);\n      feeds.push(feedUrl.toString());\n\n      if (url.pathname.indexOf(\"/comments/\") > 0) {\n        if (parts.length > 3) {\n          const postId = parts[4];\n          feedUrl = new URL(\n            \"/r/\" + subRedditName + \"/comments/\" + postId + \"/.rss\",\n            url.origin\n          );\n          feeds.push(feedUrl.toString());\n        }\n      }\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/www\\.reddit\\.com\\/.*"
+    },
+    {
+        "activ": true,
+        "code": "(async () => {\n  const feeds = [];\n  let feedUrl;\n  const url = new URL(window.location.href);\n  const parts = url.pathname.split(\"/\");\n  if (parts.length > 1) {\n    let channelname = \"\";\n    let tmp = null;\n    switch (parts[1]) {\n      case \"video\":\n         tmp = await fetch(\"https://api.bitchute.com/api/beta9/video\", {\n            method: \"post\",\n            headers: { 'Content-Type': 'application/json'},\n            body: JSON.stringify({ video_id: parts[2] }),\n         });\n         tmp = await tmp.json();\n         tmp = tmp.channel.channel_id;\n         tmp = await fetch(\"https://api.bitchute.com/api/beta/channel\", {\n             method: \"post\",\n             headers: { 'Content-Type': 'application/json'},\n             body: JSON.stringify({ channel_id: tmp }),\n          });\n          tmp = await tmp.json();\n          channelname = tmp.url_slug;\n          break;\n      case \"channel\":\n         tmp = await fetch(\"https://api.bitchute.com/api/beta/channel\", {\n             method: \"post\",\n             headers: { 'Content-Type': 'application/json'},\n             body: JSON.stringify({ channel_id: parts[2] }),\n          });\n          tmp = await tmp.json();\n          channelname = tmp.url_slug;\n          break;\n    }\n    if (channelname !== \"\") {\n      feedUrl = new URL(\n        \"/feeds/rss/channel/\" + channelname + \"?showall=1\",\n        url.origin\n      );\n      feeds.push(feedUrl.toString());\n    }\n  }\n  return feeds;\n})();",
+        "url_regex": "^https:\\/\\/www\\.bitchute\\.com\\/.*"
+    }
 ]
