@@ -4,7 +4,7 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "description": "Get a still frame image from any video element",
+  "description": "Adds a context menu entry that allows to capture a still frame image from a html video element",
   "icons": {
     "512": "icon.png"
   },
