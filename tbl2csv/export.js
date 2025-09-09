@@ -1,21 +1,6 @@
-function getTimeStampStr() {
-  const d = new Date();
-  let ts = "";
-  [
-    d.getFullYear(),
-    d.getMonth() + 1,
-    d.getDate() + 1,
-    d.getHours(),
-    d.getMinutes(),
-    d.getSeconds(),
-  ].forEach((t, i) => {
-    ts = ts + (i !== 3 ? "-" : "_") + (t < 10 ? "0" : "") + t;
-  });
-  return ts.substring(1);
-}
-
 function exportData(data) {
   document.getElementById("output").value = data;
+  document.getElementById("output").select();
 }
 
 async function onDOMContentLoaded() {
@@ -33,13 +18,14 @@ async function onDOMContentLoaded() {
   document.getElementById("save").addEventListener("click", save);
 }
 
-function save() {
+async function save() {
   let dl = document.createElement("a");
+  const utils = await import("./utils.js");
   let textFileAsBlob = new Blob([document.getElementById("output").value], {
     type: "text/plain",
   });
   dl.setAttribute("href", window.URL.createObjectURL(textFileAsBlob));
-  dl.setAttribute("download", getTimeStampStr() + ".csv");
+  dl.setAttribute("download", utils.getTimeStampStr() + ".csv");
   dl.setAttribute("visibility", "hidden");
   dl.setAttribute("display", "none");
   document.body.appendChild(dl);
