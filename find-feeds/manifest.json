@@ -21,6 +21,6 @@
     "open_in_tab": true,
     "page": "options.html"
   },
-  "permissions": ["menus", "storage", "<all_urls>"],
+  "permissions": ["storage", "<all_urls>"],
   "version": "1.4.15"
 }

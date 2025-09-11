@@ -169,11 +169,4 @@ async function onStorageChanged() {
       });
     }
   });
-  browser.menus.create({
-    title: "Configure Feed Detectors",
-    contexts: ["browser_action"],
-    onclick: () => {
-      browser.runtime.openOptionsPage();
-    },
-  });
 })();
