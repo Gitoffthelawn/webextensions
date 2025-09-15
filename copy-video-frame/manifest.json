@@ -11,6 +11,6 @@
   "manifest_version": 2,
   "name": "Copy Video Frame",
   "permissions": ["menus", "activeTab"],
-  "optional_permissions": ["clipboardWrite", "notifications"],
+  "optional_permissions": ["clipboardWrite"],
   "version": "1.1.13"
 }
