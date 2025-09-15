@@ -7,7 +7,7 @@
   "browser_action": {
     "default_area": "navbar"
   },
-  "description": "Auto close tabs with the same URLs (excluding hashes) in the same context and tabgroup which were already open",
+  "description": "Auto close duplicate tabs with options to configure what duplicate means and what scope to consider",
   "icons": {
     "128": "icon.png"
   },
