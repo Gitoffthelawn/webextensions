@@ -1,7 +1,7 @@
 /* global browser */
 
 browser.menus.create({
-  title: "Link to Text: '%s'",
+  title: "&Link to Text: %s",
   contexts: ["selection"],
   documentUrlPatterns: ["<all_urls>"],
   onclick: async (info, tab) => {
