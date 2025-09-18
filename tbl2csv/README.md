@@ -1,21 +1,21 @@
 
 # NAME
 
-**toolbar-countdown** - adds a context menu entry export HTML Tables, CSS Pseudo DIV tables or lists (UL/OL) as a Comma Seperated Values (CSV), also adds a toolbar button to highlight actually exportable elements by adding a dashed outline border to them
+**tbl2csv** - adds a context menu entry to export HTML Tables, CSS Pseudo DIV tables or lists (UL/OL) as a Comma Seperated Values (CSV), also adds a toolbar button to highlight exportable elements by adding a dashed outline border to them
 
 # SYNOPSIS
 
-Click the toolbar button to highlight the exportable elements, then right click into a exportable area to open the page context menu. The context menu should contain a new submenu labled "Table to CSV". Click one of the entries in the submenu to copy or export the table data as raw html or plain text. 
+click the toolbar button to highlight the exportable elements, then right click into a exportable area to open the page context menu. The context menu should contain a submenu labled "Table to CSV". click one of the entries in the submenu to copy or export the table data as raw html or plain text. 
 
 
 # USER INPUTS
 
 - (pseudo) table element 
-- export mode
+- export mode (html/text)
 
 # OPTIONS
 
-Granting the addon the optional notifications permissions allows it to show a notification when the timer ends.
+none
 
 # REQUIRED PERMISSIONS
 
