@@ -16,7 +16,7 @@ const extREinput = document.getElementById("extractregex");
 
 reqBMPer.addEventListener("click", async () => {
   if (!(await browser.permissions.request(requiredPermissionB))) {
-    result.innerText = "Bookmark Permission not granted";
+    result2.innerText = "Bookmark Permission not granted";
     return;
   }
   location.reload();
@@ -140,7 +140,8 @@ async function onLoad() {
     reader.onload = async function (/*e*/) {
       try {
         const data = reader.result;
-        importData(data);
+        //importData(data);
+        document.getElementById("rawtext").value = data;
       } catch (e) {
         console.error(e);
         result.innerText = "Import failed!" + e;
@@ -152,12 +153,7 @@ async function onLoad() {
   let impcbbtn = document.getElementById("impcbbtn");
 
   impcbbtn.addEventListener("click", async () => {
-    if (!(await browser.permissions.request(requiredPermissionA))) {
-      result.innerText = "Clipboard Read Permission not available";
-      return;
-    }
-    const str = await navigator.clipboard.readText();
-    importData(str);
+    importData(document.getElementById("rawtext").value);
   });
 }
 

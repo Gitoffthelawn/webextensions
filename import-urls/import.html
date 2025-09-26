@@ -7,7 +7,8 @@
       background-color: lightgray;
       min-height: 400px;
     }
-    #urlspreview {
+    #urlspreview,
+    #rawtext {
       min-height: 25em;
       white-space: pre;
       overflow-wrap: normal;
@@ -21,45 +22,50 @@
 </head>
 <body>
   <fieldset>
-    <legend>Get URLs from ...</legend>
+    <legend>1. Provide text to extract URLs from</legend>
     <div>
-      <button id="impcbbtn">clipboard</button>
-      or
-      <span>
-        text file
-        <input id="impbtn" type="file" value="" />
-      </span>
-      <p>
-        <span
-          ><abbr title="Regular Expression used to extract the URLs"
-            >Extraction RegEx: </abbr
-          ><input id="extractregex" type="text"
-        /></span>
-      </p>
+      <textarea id="rawtext"></textarea>
+      load from file
+      <input id="impbtn" type="file" value="" />
+      <p />
+
+      <span
+        ><abbr title="Regular Expression used to extract the URLs"
+          >Extraction RegEx: </abbr
+        ><input id="extractregex" type="text"
+      /></span>
+
+      <p />
+
+      <button id="impcbbtn">2.Extract URLs</button>
     </div>
   </fieldset>
-  URL Preview
+  3. Preview URLs
   <textarea id="urlspreview"></textarea>
   <fieldset>
     <div id="status"></div>
   </fieldset>
   <fieldset>
-    <button id="urlsopen">Open in tabs</button>
+    <button id="urlsopen">4.Open in tabs</button>
     load tabs?
     <input type="checkbox" id="openLoad" />
     with seconds delay? <input type="number" id="openDelay" min="0" value="0" />
   </fieldset>
 
   <fieldset>
+    Or
     <select id="folders" disabled>
       <option value="">Create bookmarks in folder</option>
     </select>
 
-    <acronym id="reqBookmarkPermission" title="Request Permission">(?)</acronym>
+    <acronym id="reqBookmarkPermission" title="Request Permission"
+      >(click here to enable)</acronym
+    >
   </fieldset>
 
   <fieldset>
     <div id="status2"></div>
   </fieldset>
+
   <script src="import.js"></script>
 </body>
