@@ -17,4 +17,5 @@ async function get(type, id, fallback) {
   return typeof tmp[id] === type ? tmp[id] : fallback;
 }
 
+// interface
 export { set, get };
