@@ -1,6 +1,6 @@
-name: "💡 Make a Suggestion"
-description: "Use this for feature and change requests for existing extensions"
-title: "Please insert the extension name and a short title"
+name: "💡 Make a suggestion"
+description: "Use this for feature and change requests"
+title: "{{extension name}} + {{your title}}"
 body:
   - type: textarea
     validations:
@@ -10,8 +10,8 @@ body:
       value: |
         **Problem description (aka. usecase motivation)**
         
-        ...
+        {{...}}
         
         **Solution suggestion**
         
-        ...
+        {{...}}
