@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/toolbar-countdown",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/toolbar-countdown",
   "description": "Adds toolbar button, that functions as a single custom countdown timer that shows the most significant part (days,hours,minutes or seconds) of the remaining custom countdown",
   "background": {
     "scripts": ["background.js"]
