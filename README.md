@@ -3,7 +3,7 @@ Each folder in the repository root aside from `.github`, `modules` and `wiki` co
 
 **SIGNED BUILDS**
 
-Might be available here: `https://addons.mozilla.org/en-US/firefox/user/13634657/`
+Might be available [here](https://addons.mozilla.org/firefox/user/13634657/)
 
 **UNSIGNED BUILDS**
 
