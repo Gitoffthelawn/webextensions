@@ -1,0 +1,292 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <script src="codemirror.js"></script>
+  <title>Gather From Tabs</title>
+  <style>
+    body {
+      color: black;
+      /*background-color: silver;*/
+    }
+    #output {
+      height: 12em;
+      width: 99%;
+      overflow: auto;
+      white-space: pre;
+    }
+    .deleteButton {
+    }
+    .runButton {
+      float: right;
+    }
+    .deleteButton {
+      float: left;
+    }
+    textarea {
+      resize: vertical;
+      /*text-align:right;*/
+      /*background-color: #cda;*/
+      /*background-color: gainsboro;*/
+      color: black;
+    }
+    tr:hover > td {
+      border-top: 2px solid red;
+      border-bottom: 2px solid red;
+      /*background-color: pink;*/
+    }
+    #btn_copy_as_html,
+    #btn_copy_as_text {
+      width: 50%;
+      float: right;
+    }
+    #shortcutconfigs {
+      width: 100%;
+    }
+    #shortcutconfigs select {
+      width: 99%;
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <legend>
+      <b
+        ><abbr
+          title="Use the ▶️  button to run a script and its output will be shown in the textarea below"
+          >Debug ▶️ Output (?)</abbr
+        ></b
+      >
+    </legend>
+    <textarea id="output">
+Some hints:
+ .replace(/(?:\r\n|\r|\n)/gm, ' ')  // remove line breaks
+ .replace(/\s+/gm,' ') // remove duplicate white spaces:
+ .replace('"','""') // escape quotes, for csv output
+ btoa(Array.from((new TextEncoder).encode(),(o=>String.fromCodePoint(o))).join("")) // base64 encode
+ +"\n"  // append line break
+ // for more info, see: https://developer.mozilla.org/en-US/docs/Web/javascript
+</textarea
+    >
+    <button id="btn_copy_as_text">Copy as Text</button>
+    <button id="btn_copy_as_html">Copy as HTML</button>
+  </fieldset>
+  <fieldset>
+    <legend>
+      <b
+        ><abbr title="Add, edit and test run your set of scripts here"
+          >Scripts (?)</abbr
+        ></b
+      >
+    </legend>
+    <fieldset>
+      <input
+        id="impbtn_wrapper"
+        type="button"
+        name="impbtn"
+        value="Import"
+        title="Import Settings"
+      />
+      <input
+        id="impbtn"
+        type="file"
+        name="impbtn"
+        value=""
+        style="display: none"
+      />
+      <input
+        id="expbtn"
+        type="button"
+        name="impbtn"
+        value="Export"
+        title="Export Settings"
+      />
+      <input
+        id="savetable"
+        type="button"
+        value="✅Save"
+        style="float: right"
+        title="Save Edits"
+      />
+      <input
+        id="shrink"
+        type="button"
+        value="&#8690;Minimize"
+        style="float: right"
+        title="Minimize Textareas"
+      />
+      <input
+        id="discardEdits"
+        type="button"
+        value="Discard"
+        style="float: right"
+        title="Discard Edits"
+      />
+    </fieldset>
+    <table id="mainTable" border="1" style="width: 100%; table-layout: fixed">
+      <col width="auto" />
+      <col width="75px" />
+      <thead></thead>
+      <tbody id="mainTableBody" />
+    </table>
+  </fieldset>
+
+  <fieldset>
+    <legend>
+      <b
+        >Script-Scope-Actions ( =&gt;
+        <button id="btnOpenShortcutSettings">assign shortcuts</button> &lt;= )
+      </b>
+    </legend>
+
+    <table id="shortcutconfigs" border="1">
+      <tr>
+        <td>0</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>
+          <select name="formatlist"></select>
+        </td>
+        <td>
+          <select name="scopelist"></select>
+        </td>
+        <td>
+          <select name="actionlist"></select>
+        </td>
+      </tr>
+    </table>
+  </fieldset>
+
+  <script src="utils.js"></script>
+  <script src="main.js"></script>
+</body>

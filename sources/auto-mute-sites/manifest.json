@@ -1,0 +1,21 @@
+{
+  "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/auto-mute-sites",
+  "browser_action": {
+    "default_area": "navbar"
+  },
+  "background": {
+    "scripts": ["storage.js", "background.js"]
+  },
+  "icons": {
+    "474": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "Auto Mute Sites",
+  "options_ui": {
+    "page": "options.html"
+  },
+  "description": "Set the inital audible state for sites",
+  "permissions": ["storage", "tabs"],
+  "version": "1.2.7"
+}

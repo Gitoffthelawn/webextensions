@@ -1,0 +1,14 @@
+{
+  "author": "igorlogius",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_title": "toggle download blocking"
+  },
+  "icons": {},
+  "manifest_version": 2,
+  "name": "Block Downloads",
+  "permissions": ["downloads"],
+  "version": "1.0.0"
+}
