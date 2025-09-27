@@ -1,6 +1,6 @@
-name: "🪲 Report a Bug"
-description: "Use this if something doesn't seem to work with an existing extension"
-title: "Please insert the extension name and a short title"
+name: "🪲 Report a bug"
+description: "Use this if something does not work"
+title: "{{ extension-name }} + {{ you title }}"
 body:
   - type: textarea
     validations:
@@ -10,13 +10,13 @@ body:
       value: |
         **Reproduction Steps**
         
-          1. ...
-          2. ...
+          1. {{...}}
+          2. {{...}}
           
         **Expected Result**
         
-          ...
+          {{...}}
           
         **Actual Result**
         
-          ...
+          {{...}}
