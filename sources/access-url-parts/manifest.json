@@ -1,7 +1,7 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/access-url-parts",
-  "description": "Quickly access parts of the URL in the addressbar",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/access-url-parts",
+  "description": "Quickly access parts of the current tabs URL",
   "commands": {
     "_execute_page_action": {}
   },
