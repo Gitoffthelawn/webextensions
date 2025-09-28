@@ -1,7 +1,7 @@
 {
   "author": "igorlogius",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/gather-from-tabs",
-  "description": "Run a userscript in multiple tabs and collect the output"
+  "description": "Run a userscript in multiple tabs and collect the output",
   "browser_action": {
     "default_area": "navbar"
   },
