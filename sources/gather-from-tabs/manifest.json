@@ -5,7 +5,7 @@
     "default_area": "navbar"
   },
   "background": {
-    "scripts": ["utils.js", "background.js"]
+    "scripts": ["helper.js", "background.js"]
   },
   "commands": {
     "page-actions": {
@@ -50,7 +50,7 @@
   },
   "content_scripts": [
     {
-      "js": ["utils.js", "content.js"],
+      "js": ["helper.js", "content.js"],
       "matches": ["<all_urls>"]
     }
   ],
