@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: PLACEHOLDER 
+name: access-url-parts 
 
 # Controls when the workflow will run
 on:
@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     paths:
-       'sources/PLACEHOLDER/**'
+       'sources/access-url-parts/**'
 
   # Allows to run this workflow manually
   workflow_dispatch:
