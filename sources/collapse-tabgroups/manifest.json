@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/collapse-tabgroups",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/collapse-tabgroups",
   "browser_action": {
     "default_area": "navbar"
   },
