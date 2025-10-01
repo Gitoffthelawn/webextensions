@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/startup-bookmarks",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/startup-bookmarks",
   "background": {
     "scripts": ["background.js"]
   },

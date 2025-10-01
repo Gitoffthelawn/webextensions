@@ -64,19 +64,19 @@ async function openStartupBookmarks() {
   let first = true;
   for (const url of urls) {
     //if (!already_open_urls.has(url.split("#pin")[0])) {
-      try {
-        const tmpurl = new URL(url);
-        await browser.tabs.create({
-          windowId: tmp.id,
-          pinned: url.endsWith("#pin"),
-          url: tmpurl.toString().split("#pin")[0],
-          active: first,
-        });
-        first = false;
-      } catch (e) {
-        // ignore invalid urls and
-        // about: pages can not be created
-      }
+    try {
+      const tmpurl = new URL(url);
+      await browser.tabs.create({
+        windowId: tmp.id,
+        pinned: url.endsWith("#pin"),
+        url: tmpurl.toString().split("#pin")[0],
+        active: first,
+      });
+      first = false;
+    } catch (e) {
+      // ignore invalid urls and
+      // about: pages can not be created
+    }
     //}
   }
 
