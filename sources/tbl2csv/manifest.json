@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/tbl2csv",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/tbl2csv",
   "background": {
     "scripts": ["background.js"]
   },
