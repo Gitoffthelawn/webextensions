@@ -8,7 +8,7 @@ click the toobar button shows the QR Code for the current url. right clicking on
 
 # USER INPUTS
 
-- elmeent to QR'ify 
+- element to QR'ify 
 - visual and meta options (type, error correction, ..)  for the QRCode
 
 # OPTIONS

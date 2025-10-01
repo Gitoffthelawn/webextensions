@@ -1,13 +1,13 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/show-qrcode",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/show-qrcode",
   "background": {
     "scripts": ["background.js"]
   },
   "commands": {
     "_execute_browser_action": {}
   },
-  "description": "Show qrcodes for any tab url, any selected link or text or for any bookmark",
+  "description": "Show qrcodes for any tab url, any selected link, text or bookmark",
   "icons": {
     "15": "icon.png"
   },
