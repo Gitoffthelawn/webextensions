@@ -84,12 +84,21 @@ function createTableRow(feed, add = false) {
 
         createTableRow(
           {
+            code: "",
+            action: "add",
+          },
+          true,
+        );
+
+        deleteRow(mainTableBody.rows[0]);
+
+        createTableRow(
+          {
             code,
             action: "delete",
           },
           true,
         );
-        mainTableBody.rows[0].querySelector(".code").value = "";
       },
       true,
     );
