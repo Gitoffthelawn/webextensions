@@ -1,0 +1,14 @@
+name: "🛟 Ask for Help/Support"
+description: "Use this if you need some help/support"
+title: "{{extension name}} + {{your title}}"
+body:
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: "With what do you need help/support?"
+      value: |
+        **Problem description**
+        
+        {{...}}
+
