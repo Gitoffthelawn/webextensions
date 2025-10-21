@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/save-website-as-image",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/save-website-as-image",
   "background": {
     "scripts": ["jszip.js", "background.js"]
   },
@@ -15,10 +15,7 @@
   },
   "manifest_version": 2,
   "name": "Save Website as Image",
-  "description": "Save a snapshot of a website as a single or a series of images",
-  "permissions": ["storage", "tabs", "<all_urls>"],
-  "options_ui": {
-    "page": "options.html"
-  },
-  "version": "1.4.27"
+  "description": "Save a full snapshot of a website as a single or a series of images",
+  "permissions": ["activeTab", "<all_urls>"],
+  "version": "1.4.0"
 }
