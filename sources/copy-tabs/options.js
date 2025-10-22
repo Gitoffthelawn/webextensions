@@ -1,64 +1,54 @@
 /* global browser */
 
-function onChange(evt) {
-  let id = evt.target.id;
-  let el = document.getElementById(id);
-
-  let value = el.type === "checkbox" ? el.checked : el.value;
-  let obj = {};
-
-  if (value === "") {
-    return;
-  }
-  if (el.type === "number") {
-    try {
-      value = parseInt(value);
-      if (isNaN(value)) {
-        value = el.min;
-      }
-      if (value < el.min) {
-        value = el.min;
-      }
-    } catch (e) {
-      value = el.min;
-    }
-  }
-
-  obj[id] = value;
-
-  browser.storage.local.set(obj).catch(console.error);
-}
-
-function onDOMContentLoaded() {
-  const expbtn = document.getElementById("expbtn");
-  const impbtnWrp = document.getElementById("impbtn_wrapper");
-  const impbtn = document.getElementById("impbtn");
-  let mainTableBody = document.getElementById("mainTableBody");
+async function onDOMContentLoaded() {
   let noURLParamsFunction = document.getElementById("noURLParamsFunction");
   let reset = document.getElementById("reset");
 
+  const storage = await import("./storage.js");
+
+  function onChange(evt) {
+    let id = evt.target.id;
+    let el = document.getElementById(id);
+
+    let value = el.type === "checkbox" ? el.checked : el.value;
+    //let obj = {};
+
+    if (value === "") {
+      return;
+    }
+    if (el.type === "number") {
+      try {
+        value = parseInt(value);
+        if (isNaN(value)) {
+          value = el.min;
+        }
+        if (value < el.min) {
+          value = el.min;
+        }
+      } catch (e) {
+        value = el.min;
+      }
+    }
+
+    storage.set(id, value);
+  }
+
   [
     /* add individual settings here */
-    "noURLParamsFunction",
-    "popupmode",
-  ].map((id) => {
-    browser.storage.local
-      .get(id)
-      .then((obj) => {
-        let el = document.getElementById(id);
-        let val = obj[id];
+    { id: "noURLParamsFunction", type: "string" },
+    { id: "popupmode", type: "boolean" },
+  ].map(async (obj) => {
+    let el = document.getElementById(obj.id);
+    let val = await storage.get(obj.type, obj.id, undefined);
 
-        if (typeof val !== "undefined") {
-          if (el.type === "checkbox") {
-            el.checked = val;
-          } else {
-            el.value = val;
-          }
-        }
-      })
-      .catch(console.error);
+    if (typeof val !== "undefined") {
+      if (el.type === "checkbox") {
+        el.checked = val;
+      } else {
+        el.value = val;
+      }
+    }
 
-    let el = document.getElementById(id);
     el.addEventListener("input", onChange);
   });
 
@@ -74,7 +64,7 @@ function onDOMContentLoaded() {
     let tmp = await fetch(browser.runtime.getURL("noURLParamsFunction.js"));
     tmp = await tmp.text();
     noURLParamsFunction.value = tmp;
-    browser.storage.local.set({ noURLParamsFunction: tmp });
+    storage.set("noURLParamsFunction", tmp);
   });
 }
 

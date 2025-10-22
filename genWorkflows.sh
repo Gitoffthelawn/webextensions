@@ -6,7 +6,7 @@ if [ -f ./workflow-template.yml ];then
 
         if [ -d ./.github/workflows ]; then 
 
-            #rm -f ./.github/workflows/*.yml
+            rm -f ./.github/workflows/*.yml
 
             for x in ./sources/*;do 
 

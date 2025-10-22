@@ -14,8 +14,10 @@
       background-color: light-dark(gainsboro, darkgray);
     }
     button {
+      text-align: center;
       color: light-dark(black, black);
       background-color: light-dark(white, gainsboro);
+      font-family: monospace;
       padding: 3px;
       margin: 5px;
     }
@@ -24,10 +26,11 @@
     }
   </style>
 </head>
-<body class="browser-style">
+<body>
   <div
     id="btncontainer"
     style="display: grid; grid-template-columns: 2fr 0.25fr"
   ></div>
+  <div id="info"></div>
   <script src="popup.js"></script>
 </body>

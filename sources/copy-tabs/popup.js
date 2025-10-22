@@ -10,19 +10,32 @@ function onDOMContentLoaded() {
     let btn = document.createElement("button");
     let tmp = manifest.commands[cmd].description;
 
+    let scope = "All Window Tabs";
+    if (cmd.startsWith("cpysel")) {
+      scope = "Selected Tabs";
+    }
+
+    let type = "HTML HyperLink URLs";
+    if (cmd.endsWith("txt") || cmd.endsWith("txtnp")) {
+      type = "Plain Text URLs";
+    }
+
     if (cmd.endsWith("np")) {
-      btn.innerText = "✂️";
-      btn.setAttribute("title", "strip params");
-      btn.className = "browser-style";
+      btn.innerText = "🧹";
+      btn.setAttribute("title", "Copy [" + scope + "]\nas [clean " + type + "]");
     } else {
       btn.innerText = tmp;
-      btn.className = "browser-style";
+      btn.setAttribute("title", "Copy [" + scope + "]\nas [" + type + "]");
     }
 
     btn.addEventListener("click", async () => {
-      browser.runtime.sendMessage({
+      const ret = await browser.runtime.sendMessage({
         cmd: cmd,
       });
+      document.getElementById("info").innerText = `${ret} URLs done`;
+      setTimeout(() => {
+        document.getElementById("info").innerText = "";
+      }, 5000);
     });
 
     btncontainer.appendChild(btn);

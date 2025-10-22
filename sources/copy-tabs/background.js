@@ -1,32 +1,21 @@
 /* global browser */
 
 const manifest = browser.runtime.getManifest();
-const extname = manifest.name;
+//const extname = manifest.name;
 
 let toolbarAction = "cpyalllnk";
 let noURLParams = false;
 let runtab = null;
 let popupmode = false;
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+//const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let noURLParamsFunctionCode = "return url;";
-
-async function setToStorage(id, value) {
-  let obj = {};
-  obj[id] = value;
-  return browser.storage.local.set(obj);
-}
 
 function iconReset() {
   setTimeout(() => {
     browser.browserAction.enable();
   }, 450);
-}
-
-async function getFromStorage(type, id, fallback) {
-  let tmp = await browser.storage.local.get(id);
-  return typeof tmp[id] === type ? tmp[id] : fallback;
 }
 
 async function copyTabsAsText(tabs) {
@@ -172,39 +161,29 @@ async function onCommand(cmd) {
       copyTabsAsText(tabs);
       break;
   }
+  return tabs.length;
 }
 
 async function onStorageChange() {
-  toolbarAction = await getFromStorage("string", "toolbarAction", "cpyalllnk");
-  popupmode = await getFromStorage("boolean", "popupmode", false);
+  const storage = await import("./storage.js");
+  toolbarAction = await storage.get("string", "toolbarAction", "cpyalllnk");
+  popupmode = await storage.get("boolean", "popupmode", false);
 
-  browser.browserAction.setTitle({
-    title: manifest.commands[toolbarAction].description,
-  });
-
-  let txt = "";
-
-  // first letter
-
-  if (toolbarAction.includes("cpyall")) {
-    txt = txt + "A";
-  } else if (toolbarAction.includes("cpysel")) {
-    txt = txt + "S";
-  } else if (toolbarAction.includes("cpytab")) {
-    txt = txt + "T";
+  if (popupmode) {
+    browser.browserAction.setTitle({
+      title:
+        "LMB: " +
+        manifest.commands[toolbarAction].description +
+        "\nMMB: open panel",
+    });
+  } else {
+    browser.browserAction.setTitle({
+      title:
+        "LMB: open panel\nMMB: " + manifest.commands[toolbarAction].description,
+    });
   }
 
-  // second letter
-
-  if (toolbarAction.includes("lnk")) {
-    txt = txt + "L";
-  } else if (toolbarAction.includes("txt")) {
-    txt = txt + "T";
-  }
-
-  browser.browserAction.setBadgeText({ text: txt });
-
-  noURLParamsFunctionCode = await getFromStorage(
+  noURLParamsFunctionCode = await storage.get(
     "string",
     "noURLParamsFunction",
     "",
@@ -241,7 +220,8 @@ function onBAClicked(tab, info) {
 }
 
 async function onInstalled(details) {
-  noURLParamsFunctionCode = await getFromStorage(
+  const storage = await import("./storage.js");
+  noURLParamsFunctionCode = await storage.get(
     "string",
     "noURLParamsFunction",
     "",
@@ -249,12 +229,13 @@ async function onInstalled(details) {
   if (details.reason === "install" || noURLParamsFunctionCode === "") {
     let tmp = await fetch("noURLParamsFunction.js");
     noURLParamsFunctionCode = await tmp.text();
-    browser.storage.local.set({ noURLParamsFunction: noURLParamsFunctionCode });
+
+    storage.set("noURLParamsFunction", noURLParamsFunctionCode);
   }
 }
 
-function onMessage(req) {
-  onCommand(req.cmd);
+async function onMessage(req) {
+  return await onCommand(req.cmd);
 }
 
 async function onMenuShown(info, tab) {
@@ -279,14 +260,11 @@ async function onMenuShown(info, tab) {
 }
 
 (async () => {
-  // add some transparancy
-  browser.browserAction.setBadgeBackgroundColor({ color: [0, 0, 0, 115] });
-
   await onStorageChange();
 
   // add context entries to copy the clicked tab
   browser.menus.create({
-    title: "Copy tab as HTML link",
+    title: "Copy Tab as Link",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = false;
@@ -294,7 +272,7 @@ async function onMenuShown(info, tab) {
     },
   });
   browser.menus.create({
-    title: "Copy tab as HTML link (✂️)",
+    title: "Copy Tab as Link (clean)",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = true;
@@ -303,7 +281,7 @@ async function onMenuShown(info, tab) {
   });
 
   browser.menus.create({
-    title: "Copy Tab as Text URL",
+    title: "Copy Tab as Text",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = false;
@@ -312,7 +290,7 @@ async function onMenuShown(info, tab) {
   });
 
   browser.menus.create({
-    title: "Copy Tab as Text URL (✂️)",
+    title: "Copy Tab as Text (clean)",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = true;
@@ -331,7 +309,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrplnk",
-      title: "Copy Tabgroup as HTML Links",
+      title: "Copy Group as Links",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -348,7 +326,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrplnknp",
-      title: "Copy Tabgroup as HTML Links (✂️)",
+      title: "Copy Group as Links (clean)",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -365,7 +343,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrptxt",
-      title: "Copy Tabgroup as Text URLs",
+      title: "Copy Group as Text",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -382,7 +360,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrptxtnp",
-      title: "Copy Tabgroup as Text URLs (✂️)",
+      title: "Copy Group as Text (clean)",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -425,7 +403,7 @@ async function onMenuShown(info, tab) {
 
   browser.menus.create({
     id: "basela",
-    title:"Select MMB Action",
+    title: "Select MMB Action",
     contexts: ["browser_action"],
   });
 
@@ -444,8 +422,9 @@ async function onMenuShown(info, tab) {
       parentId: "basela",
       title: manifest.commands[cmd].description,
       contexts: ["browser_action"],
-      onclick: (info) => {
-        setToStorage("toolbarAction", cmd);
+      onclick: async (info) => {
+        const storage = await import("./storage.js");
+        storage.set("toolbarAction", cmd);
       },
     });
   }
