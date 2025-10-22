@@ -6,6 +6,18 @@
 
 click the toolbar button to access the copy modes, or select a set of tabs and use the context menu to invoke the copy action, or set a custom shortcut for each of the copy actions.
 
+1. Pick Copy Scope
+    • 🖱️ Clicked Tab
+    • 🗂️ Tabs in Group
+    • 🪟 Tabs in the Window
+    • 🎯 Selected/Highlighted Tabs
+
+2. Pick Copy Format
+    • 📄 Plain Text URLs
+    • 🔗 HTML Hyperlink URLs 
+
+3.  🧹 Clean URLs  
+
 # USER INPUTS
 
 - scope 

@@ -264,7 +264,7 @@ async function onMenuShown(info, tab) {
 
   // add context entries to copy the clicked tab
   browser.menus.create({
-    title: "Copy Tab as Link",
+    title: "🖱️+🔗",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = false;
@@ -272,7 +272,7 @@ async function onMenuShown(info, tab) {
     },
   });
   browser.menus.create({
-    title: "Copy Tab as Link (clean)",
+    title: "🖱️+🔗+🧹",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = true;
@@ -281,7 +281,7 @@ async function onMenuShown(info, tab) {
   });
 
   browser.menus.create({
-    title: "Copy Tab as Text",
+    title: "🖱️+📄",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = false;
@@ -290,7 +290,7 @@ async function onMenuShown(info, tab) {
   });
 
   browser.menus.create({
-    title: "Copy Tab as Text (clean)",
+    title: "🖱️+📄+🧹",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       noURLParams = true;
@@ -309,7 +309,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrplnk",
-      title: "Copy Group as Links",
+      title: "🗂️+🔗",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -326,7 +326,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrplnknp",
-      title: "Copy Group as Links (clean)",
+      title: "🗂️+🔗+🧹",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -343,7 +343,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrptxt",
-      title: "Copy Group as Text",
+      title: "🗂️+📄",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {
@@ -360,7 +360,7 @@ async function onMenuShown(info, tab) {
     browser.menus.create({
       visible: false,
       id: "cpygrptxtnp",
-      title: "Copy Group as Text (clean)",
+      title: "🗂️+📄+🧹",
       contexts: ["tab"],
       onclick: async (info, tab) => {
         const qryObj = {

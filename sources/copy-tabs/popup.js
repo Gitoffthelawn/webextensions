@@ -10,19 +10,22 @@ function onDOMContentLoaded() {
     let btn = document.createElement("button");
     let tmp = manifest.commands[cmd].description;
 
-    let scope = "All Window Tabs";
+    let scope = "Tabs in Window";
     if (cmd.startsWith("cpysel")) {
-      scope = "Selected Tabs";
+      scope = "Tabs in Selection";
     }
 
-    let type = "HTML HyperLink URLs";
+    let type = "HTML Links";
     if (cmd.endsWith("txt") || cmd.endsWith("txtnp")) {
-      type = "Plain Text URLs";
+      type = "Text URLs";
     }
 
     if (cmd.endsWith("np")) {
       btn.innerText = "🧹";
-      btn.setAttribute("title", "Copy [" + scope + "]\nas [clean " + type + "]");
+      btn.setAttribute(
+        "title",
+        "Copy [" + scope + "]\nas [clean " + type + "]",
+      );
     } else {
       btn.innerText = tmp;
       btn.setAttribute("title", "Copy [" + scope + "]\nas [" + type + "]");
@@ -39,11 +42,7 @@ function onDOMContentLoaded() {
     });
 
     btncontainer.appendChild(btn);
-    if (breakToggle) {
-      breakToggle = false;
-    } else {
-      breakToggle = true;
-    }
+    breakToggle = !breakToggle;
   }
 }
 
