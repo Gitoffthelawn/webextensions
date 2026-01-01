@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/localstorage-editor",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/localstorage-editor",
   "background": {
     "scripts": ["background.js"]
   },
