@@ -5,6 +5,42 @@
   <link href="popup.css" rel="stylesheet" />
 </head>
 <body>
+  <dialog id="editDialog" style="width: 99%; height: 99%">
+    <form>
+      <div style="float: right">
+        <button value="cancel" formmethod="dialog">Discard</button>
+        <button id="confirmBtn" value="default">Save</button>
+      </div>
+
+      <p>
+        <label>
+          Storage:
+          <select disabled>
+            <option value="Local">Local</option>
+            <option value="Session">Session</option>
+          </select>
+        </label>
+      </p>
+
+      <p>
+        <label>
+          Key:
+          <input style="width: 100%" value="" disabled />
+        </label>
+      </p>
+
+      <p>
+        <label>
+          Value:
+          <textarea
+            style="width: 100%; min-height: 20em"
+            spellcheck="false"
+          ></textarea>
+        </label>
+      </p>
+    </form>
+  </dialog>
+
   <fieldset>
     <button id="addbtn" title="add new value">&#10039;Add</button>
     <button id="delbtn" title="delete selected">&#10005;Delete</button>

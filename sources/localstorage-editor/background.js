@@ -16,12 +16,12 @@ browser.runtime.onMessage.addListener((data, sender) => {
 
 browser.browserAction.disable();
 
-browser.commands.onCommand.addListener(async (cmd, data) => {
-  await browser.browserAction.openPopup();
-  try {
-    await browser.runtime.sendMessage({ cmd });
-  } catch (e) {
-    // noop popup not open
-    browser.browserAction.openPopup();
-  }
+browser.browserAction.onClicked.addListener((tab) => {
+  browser.windows.create({
+    height: 460,
+    width: 640,
+    titlePreface: new URL(tab.url).hostname,
+    type: "popup",
+    url: "popup.html?tabId=" + tab.id,
+  });
 });

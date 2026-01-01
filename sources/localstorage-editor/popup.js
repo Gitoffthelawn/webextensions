@@ -8,6 +8,18 @@ async function getFromStorage(type, id, fallback) {
 let table = null;
 let tableData = null;
 
+const TABID = parseInt(
+  new URLSearchParams(window.location.search).get("tabId"),
+);
+
+const editDialog = document.getElementById("editDialog");
+const confirmBtn = editDialog.querySelector("#confirmBtn");
+const selectEl = editDialog.querySelector("select"); // store
+const inputEl = editDialog.querySelector("input"); // key
+const textareaEl = editDialog.querySelector("textarea"); // value
+
+let editorTempCell = null;
+
 // button refs
 const impbtn = document.getElementById("impbtn");
 const savbtn = document.getElementById("savbtn");
@@ -20,14 +32,14 @@ const log = document.getElementById("log");
 const tip = document.getElementById("tip");
 
 const tips = [
-  "Holding shift and click dragging over the row selector column to invert the selection state",
   "Use Copy & Import to quickly duplicate items",
   "Filtering doenst not change the item selection",
   "Copy & Download actions only take selected items into account",
   "Imported items get autoselected",
   "Cell validation erros get shown, when hovering over a cell",
-  "Use the row handle to reorder rows for copy or downloading",
-  "Use shift+enter in a value cell to submit",
+  "Use the row handle to reorder rows to copy or download them",
+  "Discard will drop all all not submitted changes and reload values from storage",
+  "Dont close the related tab or the editor wont work anymore.",
 ];
 
 let validateAndHighlightTimer;
@@ -95,7 +107,7 @@ function getTimeStampStr() {
 async function getTblData() {
   let data = [];
   try {
-    data = await browser.tabs.executeScript({
+    data = await browser.tabs.executeScript(TABID, {
       file: "getStorage.js",
     });
   } catch (e) {
@@ -160,11 +172,12 @@ savbtn.addEventListener("click", async () => {
     return;
   }
   const data = table.getData();
-  const tabs = await browser.tabs.query({
+  /*const tabs = await browser.tabs.query({
     currentWindow: true,
     active: true,
-  });
-  browser.tabs.sendMessage(tabs[0].id, data);
+  });*/
+  //browser.tabs.sendMessage(tabs[0].id, data);
+  browser.tabs.sendMessage(TABID, data);
   //unhighlightChange();
   table.alert("Syncing Storage ... ", "msg");
   setTimeout(function () {
@@ -187,11 +200,8 @@ expbtn.addEventListener("click", async () => {
   });
 
   if (expData.length > 0) {
-    const tabs = await browser.tabs.query({
-      currentWindow: true,
-      active: true,
-    });
-    const url = new URL(tabs[0].url);
+    const tab = await browser.tabs.get(TABID);
+    const url = new URL(tab.url);
 
     const content = JSON.stringify(expData, null, 4);
     let dl = document.createElement("a");
@@ -306,7 +316,13 @@ async function onDOMContentLoaded() {
 
   table = new Tabulator("#mainTable", {
     autoColumns: true,
-    height: "460px",
+    /*height: "460px",*/
+    //virtualDomBuffer:99999, //set virtual DOM buffer to 300px
+    //renderVertical:"basic", //disable virtual DOM rendering
+    //virtualDom:false, // also disable virtual DOM rending ??? wtf
+    height: "100%",
+    maxHeight: "100%",
+    virtualDom: false,
     placeholder: "No items found",
     layout: "fitDataStretch",
     pagination: false,
@@ -409,14 +425,14 @@ async function onDOMContentLoaded() {
         field: "value",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
-        editor: "textarea",
+        /*editor: "textarea",
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
           },
           verticalNavigation: "editor",
           shiftEnterSubmit: true,
-        },
+        },*/
         formatter: "plaintext",
       },
     ],
@@ -462,6 +478,39 @@ async function onDOMContentLoaded() {
 		unhighlightChange();
 	}
 	*/
+  });
+
+  table.on("cellClick", function (e, cell) {
+    //e - the click event object
+    //cell - cell component
+    //e - the click event object
+    //row - row component
+    const field = cell.getField();
+
+    if (field === "value") {
+      editorTempCell = cell;
+      const rowData = cell.getRow().getData();
+      textareaEl.value = rowData.value;
+      selectEl.value = rowData.store;
+      inputEl.value = rowData.key;
+      editDialog.showModal();
+      textareaEl.focus();
+    }
+  });
+
+  // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+  /*
+    editDialog.addEventListener("close", (e) => {
+        //if(editDialog.returnValue !== "default")
+        //console.debug(editDialog.returnValue);
+    });
+    */
+
+  // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
+  confirmBtn.addEventListener("click", (event) => {
+    event.preventDefault(); // We don't want to submit this fake form
+    editorTempCell.setValue(textareaEl.value, true);
+    editDialog.close(); // Have to send the select box value here.
   });
 }
 
@@ -518,10 +567,10 @@ function onChange(evt) {
   let el = document.getElementById(id);
   el.addEventListener("input", onChange);
 
-  browser.runtime.onMessage.addListener((data, sender) => {
+  /*browser.runtime.onMessage.addListener((data, sender) => {
     console.debug(data, sender);
     document.getElementById(data.cmd).click();
-  });
+  });*/
 });
 
 // init
