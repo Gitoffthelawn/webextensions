@@ -1,6 +1,7 @@
 body {
   background: lightgray;
-  /*width: 700px;*/
+  min-width: 640px;
+  min-height: 480px;
   padding: 3px;
 }
 

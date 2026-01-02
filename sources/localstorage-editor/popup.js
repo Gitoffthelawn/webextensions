@@ -28,6 +28,7 @@ const expbtn = document.getElementById("expbtn");
 const cpybtn = document.getElementById("cpybtn");
 const delbtn = document.getElementById("delbtn");
 const addbtn = document.getElementById("addbtn");
+//const detachbtn = document.getElementById("detachbtn");
 const log = document.getElementById("log");
 const tip = document.getElementById("tip");
 
@@ -39,7 +40,8 @@ const tips = [
   "Cell validation erros get shown, when hovering over a cell",
   "Use the row handle to reorder rows to copy or download them",
   "Discard will drop all all not submitted changes and reload values from storage",
-  "Dont close the related tab or the editor wont work anymore.",
+  "Double Click a Value Cell to open it in a larger view",
+  "Middle Click on the toolbar icon to open the editor in a separate window",
 ];
 
 let validateAndHighlightTimer;
@@ -161,6 +163,22 @@ delbtn.addEventListener("click", () => {
 disbtn.addEventListener("click", () => {
   window.location.reload();
 });
+
+/*
+detachbtn.addEventListener("click", async () => {
+  const related_tab = await browser.tabs.get(TABID);
+
+  browser.windows.create({
+    height: 460,
+    width: 840,
+    titlePreface: new URL(related_tab.url).hostname,
+    type: "popup",
+    url: "popup.html?tabId=" + TABID,
+  });
+
+  window.close();
+});
+*/
 
 // save/commit changes
 savbtn.addEventListener("click", async () => {
@@ -311,6 +329,14 @@ var uniqueKey = function (cell, value, parameters) {
   return true;
 };
 
+/*
+//custom formatter definition
+var printIcon = function (cell, formatterParams, onRendered) {
+  //plain text value
+  return "<i class='fa fa-print'></i>";
+};
+*/
+
 async function onDOMContentLoaded() {
   tip.innerText = "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 
@@ -322,7 +348,7 @@ async function onDOMContentLoaded() {
     //virtualDom:false, // also disable virtual DOM rending ??? wtf
     height: "100%",
     maxHeight: "100%",
-    virtualDom: false,
+    //virtualDom: false,
     placeholder: "No items found",
     layout: "fitDataStretch",
     pagination: false,
@@ -420,19 +446,44 @@ async function onDOMContentLoaded() {
           },
         },
       },
+
+      /*
+      {
+        formatter: printIcon,
+        width: 40,
+        hozAlign: "center",
+        cellClick: function (e, cell) {
+          //alert("Printing row data for: " + cell.getRow().getData().name);
+
+          const row = cell.getRow();
+
+          const value_cell = row.getCell(5);
+
+          editorTempCell = value_cell;
+          const rowData = row.getData();
+          textareaEl.value = rowData.value;
+          selectEl.value = rowData.store;
+          inputEl.value = rowData.key;
+          editDialog.showModal();
+          textareaEl.focus();
+          textareaEl.setSelectionRange(0, 0);
+        },
+      },
+        */
       {
         title: "Value",
         field: "value",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
-        /*editor: "textarea",
+        editor: "textarea",
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
           },
           verticalNavigation: "editor",
+          variableHeight: true,
           shiftEnterSubmit: true,
-        },*/
+        },
         formatter: "plaintext",
       },
     ],
@@ -480,7 +531,7 @@ async function onDOMContentLoaded() {
 	*/
   });
 
-  table.on("cellClick", function (e, cell) {
+  table.on("cellDblClick", function (e, cell) {
     //e - the click event object
     //cell - cell component
     //e - the click event object
@@ -495,6 +546,7 @@ async function onDOMContentLoaded() {
       inputEl.value = rowData.key;
       editDialog.showModal();
       textareaEl.focus();
+      textareaEl.setSelectionRange(0, 0);
     }
   });
 

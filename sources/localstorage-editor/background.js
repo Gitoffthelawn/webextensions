@@ -16,12 +16,19 @@ browser.runtime.onMessage.addListener((data, sender) => {
 
 browser.browserAction.disable();
 
-browser.browserAction.onClicked.addListener((tab) => {
-  browser.windows.create({
-    height: 460,
-    width: 640,
-    titlePreface: new URL(tab.url).hostname,
-    type: "popup",
-    url: "popup.html?tabId=" + tab.id,
-  });
+browser.browserAction.onClicked.addListener(async (tab, clickData) => {
+  if (clickData.button === 1) {
+    browser.windows.create({
+      height: 460,
+      width: 840,
+      titlePreface: new URL(tab.url).hostname,
+      type: "popup",
+      url: "popup.html?tabId=" + tab.id,
+    });
+  } else {
+    browser.browserAction.setPopup({
+      popup: "/popup.html" + "?tabId=" + tab.id,
+    });
+    browser.browserAction.openPopup();
+  }
 });
