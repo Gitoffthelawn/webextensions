@@ -15,6 +15,9 @@ browser.runtime.onMessage.addListener((data, sender) => {
 });
 
 browser.browserAction.disable();
+browser.browserAction.setPopup({
+  popup: "/popup.html",
+});
 
 browser.browserAction.onClicked.addListener(async (tab, clickData) => {
   if (clickData.button === 1) {
@@ -26,9 +29,6 @@ browser.browserAction.onClicked.addListener(async (tab, clickData) => {
       url: "popup.html?tabId=" + tab.id,
     });
   } else {
-    browser.browserAction.setPopup({
-      popup: "/popup.html" + "?tabId=" + tab.id,
-    });
     browser.browserAction.openPopup();
   }
 });

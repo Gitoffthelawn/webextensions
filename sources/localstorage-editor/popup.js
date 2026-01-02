@@ -8,9 +8,7 @@ async function getFromStorage(type, id, fallback) {
 let table = null;
 let tableData = null;
 
-const TABID = parseInt(
-  new URLSearchParams(window.location.search).get("tabId"),
-);
+let TABID = parseInt(new URLSearchParams(window.location.search).get("tabId"));
 
 const editDialog = document.getElementById("editDialog");
 const confirmBtn = editDialog.querySelector("#confirmBtn");
@@ -338,6 +336,11 @@ var printIcon = function (cell, formatterParams, onRendered) {
 */
 
 async function onDOMContentLoaded() {
+  if (isNaN(TABID)) {
+    TABID = (await browser.tabs.query({ currentWindow: true, active: true }))[0]
+      .id;
+  }
+
   tip.innerText = "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 
   table = new Tabulator("#mainTable", {
