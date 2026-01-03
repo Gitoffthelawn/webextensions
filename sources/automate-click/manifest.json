@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/automate-click",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/automate-click",
   "description": "automate some click actions when visiting a website",
   "browser_action": {
     "default_area": "navbar"
