@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: detach-same-site-tabs 
+name: link-to-text 
 
 # Controls when the workflow will run
 on:
@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     paths:
-       'sources/detach-same-site-tabs/**'
+       'sources/link-to-text/**'
 
   # Allows to run this workflow manually
   workflow_dispatch:
