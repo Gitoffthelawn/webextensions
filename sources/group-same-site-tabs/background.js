@@ -2,64 +2,71 @@
 
 let collapsed = true;
 
-async function grpTabsBySite(all_tabs, sites) {
-  sites.forEach(async (site) => {
-    const tabIds = all_tabs
-      .filter((t) => {
-        const turl = new URL(t.url);
-        return turl.hostname === site;
-      })
-      .map((t) => t.id);
-
-    const grpId = await browser.tabs.group({ tabIds });
-
-    site = site.startsWith("www.") ? site.slice(4) : site;
-    browser.tabGroups.update(grpId, {
-      title: site,
-      collapsed,
-    });
-  });
+async function grpTabsForSites(tabs, sites) {
+  (tabs = tabs.filter((t) => sites.has(new URL(t.url).hostname))),
+    grpTabs(tabs);
 }
 
 async function grpSingleSite(site) {
-  const all_tabs = await browser.tabs.query({
+  const tabs = await browser.tabs.query({
     currentWindow: true,
     pinned: false,
     hidden: false,
   });
-  grpTabsBySite(all_tabs, [site]);
+  grpTabsForSites(tabs, new Set([site]));
 }
 
 async function grpSelectedSites() {
-  const all_tabs = await browser.tabs.query({
+  const tabs = await browser.tabs.query({
     currentWindow: true,
     pinned: false,
     hidden: false,
   });
-
   const sites = new Set(
-    all_tabs.filter((t) => t.highlighted).map((t) => new URL(t.url).hostname),
+    tabs.filter((t) => t.highlighted).map((t) => new URL(t.url).hostname),
   );
-
-  grpTabsBySite(all_tabs, [...sites]);
+  grpTabsForSites(tabs, sites);
 }
 
 async function grpAllSites() {
-  const all_tabs = await browser.tabs.query({
+  const tabs = await browser.tabs.query({
     currentWindow: true,
     pinned: false,
     hidden: false,
   });
+  grpTabs(tabs);
+}
 
+async function grpTabs(tabs) {
   const hostname_tabIds_map = new Map(); // str => set(ints)
 
-  all_tabs.forEach((t) => {
+  const storage = await import("./storage.js");
+  const subdomain_list_mode = await storage.get(
+    "boolean",
+    "subdomain_list_mode",
+    false,
+  );
+  const subdomain_list = (
+    await storage.get("string", "subdomain_list", "")
+  ).split("\n");
+
+  tabs.forEach((t) => {
     if (typeof t.url !== "string" || !t.url.startsWith("http")) {
       return;
     }
 
     const t_urlobj = new URL(t.url);
-    const t_hostname = t_urlobj.hostname;
+    let t_hostname = t_urlobj.hostname;
+
+    const foundIdx = subdomain_list.indexOf(t_hostname);
+
+    // blacklist + on list  OR  whitelist + not on list
+    if (
+      (subdomain_list_mode && foundIdx > -1) ||
+      (!subdomain_list_mode && foundIdx === -1)
+    ) {
+      t_hostname = t_hostname.split(".").slice(-2).join(".");
+    }
 
     tmp = hostname_tabIds_map.get(t_hostname);
 
@@ -78,7 +85,6 @@ async function grpAllSites() {
       tabIds: [...v],
     });
 
-    k = k.startsWith("www.") ? k.slice(4) : k;
     browser.tabGroups.update(grpId, {
       title: k,
       collapsed,
@@ -87,7 +93,7 @@ async function grpAllSites() {
 }
 
 browser.menus.create({
-  title: "Selected Sites",
+  title: "Group by Site(s)",
   contexts: ["tab"],
   onclick: async (clickdata, atab) => {
     if (clickdata.button === 1) {
@@ -100,19 +106,6 @@ browser.menus.create({
     } else {
       grpSelectedSites();
     }
-  },
-});
-
-browser.menus.create({
-  title: "All Sites",
-  contexts: ["tab"],
-  onclick: async (clickdata, tab) => {
-    if (clickdata.button === 1) {
-      collapsed = false;
-    } else {
-      collapsed = true;
-    }
-    grpAllSites();
   },
 });
 

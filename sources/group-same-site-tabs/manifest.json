@@ -5,6 +5,7 @@
     "scripts": ["background.js"]
   },
   "browser_action": {
+    "default_title": "Group All Tabs by Site",
     "default_area": "navbar"
   },
   "commands": {
@@ -22,9 +23,12 @@
     }
   },
   "icons": {},
-  "description": "Move same site/domain tabs into named collapsed or unclollapsed native tabgroups",
+  "description": "Move same site/domain tabs into named collapsed or uncollapsed native tabgroups",
   "manifest_version": 2,
   "name": "Group Same Site Tabs",
-  "permissions": ["tabs", "menus", "tabGroups"],
+  "options_ui": {
+    "page": "options.html"
+  },
+  "permissions": ["tabs", "menus", "tabGroups", "storage"],
   "version": "1.0.0"
 }

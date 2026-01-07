@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <title>options</title>
+    <style>
+      body {
+        padding: 3px;
+      }
+      textarea {
+        overflow-wrap: normal;
+        overflow-x: scroll;
+      }
+      #savebtn {
+        text-align: center;
+        margin-left: 40%;
+        width: 20%;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>
+        <b>Subdomain Black/Whitelist </b>
+        <input type="checkbox" id="subdomain_list_mode" />
+        <abbr title="toggle black(checked)/white(unchecked)-list mode"
+          >(?)</abbr
+        >
+      </legend>
+      <textarea
+        id="subdomain_list"
+        style="resize: none; float: left; width: 99%; height: 15em"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="#Add subdomains here
+subdomain1.example.org
+mail.google.com
+addons.mozilla.org
+"
+      ></textarea>
+    </fieldset>
+    <button id="savebtn">Save</button>
+    <script src="options.js"></script>
+  </body>
+</html>
