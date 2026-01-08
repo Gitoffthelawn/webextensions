@@ -7,37 +7,39 @@
 <body>
   <dialog id="editDialog" style="width: 99%; height: 99%">
     <form>
-      <div style="float: right">
-        <button value="cancel" formmethod="dialog">Discard</button>
-        <button id="confirmBtn" value="default">Save</button>
-      </div>
+      <fieldset>
+        <div style="float: right">
+          <button value="cancel" formmethod="dialog">Discard</button>
+          <button id="confirmBtn" value="default">Save</button>
+        </div>
 
-      <p>
-        <label>
-          Storage:
-          <select disabled>
-            <option value="Local">Local</option>
-            <option value="Session">Session</option>
-          </select>
-        </label>
-      </p>
+        <p>
+          <label>
+            Storage:
+            <select disabled>
+              <option value="Local">Local</option>
+              <option value="Session">Session</option>
+            </select>
+          </label>
+        </p>
 
-      <p>
-        <label>
-          Key:
-          <input style="width: 100%" value="" disabled />
-        </label>
-      </p>
+        <p>
+          <label>
+            Key:
+            <input style="width: 100%" value="" disabled />
+          </label>
+        </p>
 
-      <p>
-        <label>
-          Value:
-          <textarea
-            style="width: 100%; min-height: 20em; height: 100%"
-            spellcheck="false"
-          ></textarea>
-        </label>
-      </p>
+        <p>
+          <label>
+            Value:
+            <textarea
+              style="width: 100%; height: 380px"
+              spellcheck="false"
+            ></textarea>
+          </label>
+        </p>
+      </fieldset>
     </form>
   </dialog>
 
@@ -57,7 +59,7 @@
   <fieldset>
     <div id="log"></div>
   </fieldset>
-  <div id="mainTable" border="0" style="width: 98%"></div>
+  <div id="mainTable" border="0" style="width: 99%"></div>
   <fieldset>
     <div id="tip"></div>
   </fieldset>

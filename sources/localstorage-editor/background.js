@@ -22,7 +22,7 @@ browser.browserAction.setPopup({
 browser.browserAction.onClicked.addListener(async (tab, clickData) => {
   if (clickData.button === 1) {
     browser.windows.create({
-      height: 460,
+      height: 640,
       width: 840,
       titlePreface: new URL(tab.url).hostname,
       type: "popup",

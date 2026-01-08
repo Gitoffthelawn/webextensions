@@ -329,11 +329,29 @@ var uniqueKey = function (cell, value, parameters) {
 
 /*
 //custom formatter definition
-var printIcon = function (cell, formatterParams, onRendered) {
+var editValueButton = function (cell, formatterParams, onRendered) {
   //plain text value
-  return "<i class='fa fa-print'></i>";
+  //return "<i class='fa fa-print'></i>";
+  return '<button title="open value edit view">&#9998;</button>';
+};
+
+
+var editValueTextarea = function (cell, formatterParams, onRendered) {
+  //plain text value
+  //return "<i class='fa fa-print'></i>";
+    const lines = cell.getValue().split(/\r\n|\r|\n/);
+  if (lines.length < 10) {
+     return cell.getValue().replaceAll(/\r\n|\r|\n/g,"");
+  }
+  return cell.getValue();
 };
 */
+
+var editCheck = function (cell) {
+  //cell - the cell component for the editable cell
+  const lines = cell.getValue().split(/\r\n|\r|\n/);
+  return lines.length < 10;
+};
 
 async function onDOMContentLoaded() {
   if (isNaN(TABID)) {
@@ -345,18 +363,25 @@ async function onDOMContentLoaded() {
 
   table = new Tabulator("#mainTable", {
     autoColumns: true,
-    /*height: "460px",*/
+    height: "460px",
     //virtualDomBuffer:99999, //set virtual DOM buffer to 300px
     //renderVertical:"basic", //disable virtual DOM rendering
     //virtualDom:false, // also disable virtual DOM rending ??? wtf
-    height: "100%",
-    maxHeight: "100%",
+    //renderVertical:"basic", //disable virtual DOM rendering
+    //maxheight: "50em",
+    //maxHeight: "100%",
     //virtualDom: false,
+    //resizableRowGuide:true,
+    //resizableColumnGuide:true,
+    columnDefaults: {
+      resizable: false,
+    },
     placeholder: "No items found",
     layout: "fitDataStretch",
     pagination: false,
     movableRows: true,
     validationMode: "highlight",
+    headerSortClickElement: "icon",
     initialSort: [
       { column: "key", dir: "asc" },
       { column: "store", dir: "asc" },
@@ -369,6 +394,7 @@ async function onDOMContentLoaded() {
         frozen: true,
         width: 30,
         minWidth: 30,
+        headerSort: false,
       },
       {
         formatter: "rowSelection",
@@ -413,6 +439,7 @@ async function onDOMContentLoaded() {
       {
         title: "Key",
         field: "key",
+        headerSort: true,
         validator: [
           "required",
           {
@@ -450,35 +477,14 @@ async function onDOMContentLoaded() {
         },
       },
 
-      /*
-      {
-        formatter: printIcon,
-        width: 40,
-        hozAlign: "center",
-        cellClick: function (e, cell) {
-          //alert("Printing row data for: " + cell.getRow().getData().name);
-
-          const row = cell.getRow();
-
-          const value_cell = row.getCell(5);
-
-          editorTempCell = value_cell;
-          const rowData = row.getData();
-          textareaEl.value = rowData.value;
-          selectEl.value = rowData.store;
-          inputEl.value = rowData.key;
-          editDialog.showModal();
-          textareaEl.focus();
-          textareaEl.setSelectionRange(0, 0);
-        },
-      },
-        */
       {
         title: "Value",
         field: "value",
+        //width: "42%",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
         editor: "textarea",
+        editable: editCheck,
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
@@ -487,8 +493,52 @@ async function onDOMContentLoaded() {
           variableHeight: true,
           shiftEnterSubmit: true,
         },
+        //formatter: "textarea",
         formatter: "plaintext",
+        //formatter: editValueTextarea,
+
+        cellClick: function (e, cell) {
+          const rowData = cell.getRow().getData();
+
+          if (!(rowData.value.split(/\r\n|\r|\n/).length < 10)) {
+            editorTempCell = cell;
+            textareaEl.value = rowData.value;
+            selectEl.value = rowData.store;
+            inputEl.value = rowData.key;
+            editDialog.showModal();
+            textareaEl.focus();
+            textareaEl.setSelectionRange(0, 0);
+            //textareaEl.style.height = "";
+            //textareaEl.style.height = textareaEl.scrollHeight + "px";
+          }
+        },
       },
+
+      /*
+      {
+        title: "&#9998;",
+        formatter: editValueButton,
+        headerSort: false,
+        headerHozAlign: "center",
+        width: 0,
+        hozAlign: "center",
+        cellClick: function (e, cell) {
+          const row = cell.getRow();
+          const value_cell = row.getCell(5);
+          editorTempCell = value_cell;
+          const rowData = row.getData();
+          textareaEl.value = rowData.value;
+          selectEl.value = rowData.store;
+          inputEl.value = rowData.key;
+          editDialog.showModal();
+          textareaEl.focus();
+          textareaEl.setSelectionRange(0, 0);
+          we want to keep the buttons visible so no
+          //textareaEl.style.height = "";
+          //textareaEl.style.height = textareaEl.scrollHeight + "px";
+        },
+      },
+        */
     ],
   });
 
@@ -534,7 +584,9 @@ async function onDOMContentLoaded() {
 	*/
   });
 
-  table.on("cellDblClick", function (e, cell) {
+  /**/
+  /*
+  table.on("cellClick", function (e, cell) {
     //e - the click event object
     //cell - cell component
     //e - the click event object
@@ -542,16 +594,22 @@ async function onDOMContentLoaded() {
     const field = cell.getField();
 
     if (field === "value") {
-      editorTempCell = cell;
-      const rowData = cell.getRow().getData();
-      textareaEl.value = rowData.value;
-      selectEl.value = rowData.store;
-      inputEl.value = rowData.key;
-      editDialog.showModal();
-      textareaEl.focus();
-      textareaEl.setSelectionRange(0, 0);
+        console.debug(cell.getValue());
+      if (cell.getValue().split(/\r\n|\r|\n/).length > 5) {
+        editorTempCell = cell;
+        const rowData = cell.getRow().getData();
+        textareaEl.value = rowData.value;
+        selectEl.value = rowData.store;
+        inputEl.value = rowData.key;
+        editDialog.showModal();
+        textareaEl.focus();
+        textareaEl.setSelectionRange(0, 0);
+        textareaEl.style.height = "";
+        textareaEl.style.height = textareaEl.scrollHeight + "px";
+      }
     }
   });
+  */
 
   // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
   /*

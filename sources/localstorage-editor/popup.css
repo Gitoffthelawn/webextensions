@@ -2,7 +2,8 @@ body {
   background: lightgray;
   min-width: 640px;
   min-height: 480px;
-  padding: 3px;
+  padding: 0px;
+  overflow: hidden;
 }
 
 button {
