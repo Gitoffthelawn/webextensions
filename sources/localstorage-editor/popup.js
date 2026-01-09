@@ -26,20 +26,18 @@ const expbtn = document.getElementById("expbtn");
 const cpybtn = document.getElementById("cpybtn");
 const delbtn = document.getElementById("delbtn");
 const addbtn = document.getElementById("addbtn");
-//const detachbtn = document.getElementById("detachbtn");
 const log = document.getElementById("log");
 const tip = document.getElementById("tip");
 
 const tips = [
-  "Use Copy & Import to quickly duplicate items",
-  "Filtering doenst not change the item selection",
-  "Copy & Download actions only take selected items into account",
-  "Imported items get autoselected",
-  "Cell validation erros get shown, when hovering over a cell",
-  "Use the row handle to reorder rows to copy or download them",
-  "Discard will drop all all not submitted changes and reload values from storage",
-  "Double Click a Value Cell to open it in a larger view",
-  "Middle Click on the toolbar icon to open the editor in a separate window",
+  "Duplicate items with Copy & Import quickly",
+  "Filter do not change selections",
+  "Copy & Download act on selected items",
+  "Imported items become selected after Import",
+  "Hover Cells to show validation errors",
+  "Reorder rows before Copy or Download",
+  "Discard to drop all not submitted changes",
+  "Middle click the toolbar button to open detached",
 ];
 
 let validateAndHighlightTimer;
@@ -67,8 +65,6 @@ function showLogMessage(msg) {
 }
 
 function dataDifferentFromInital(newTableData) {
-  //const newTableData = table.getData();
-
   if (tableData.length !== newTableData.length) {
     return true;
   }
@@ -135,48 +131,19 @@ addbtn.addEventListener("click", async () => {
       key: "",
       value: "",
     },
-    true,
-  ); // add at the top
-  //highlightChange();
+    true, // <- add at the top
+  );
 });
 
 // delete selected items
 delbtn.addEventListener("click", () => {
-  //let changed = false;
-  /*
-    table.getSelectedRows().forEach( (row) =>  {
-	row.delete();
-	//changed = true;
-    });
-	*/
   table.deleteRow(table.getSelectedRows());
-  /*
-    if(changed){
-	highlightChange();
-    }
-    */
 });
 
 // discard changes / reload
 disbtn.addEventListener("click", () => {
   window.location.reload();
 });
-
-/*
-detachbtn.addEventListener("click", async () => {
-  const related_tab = await browser.tabs.get(TABID);
-
-  browser.windows.create({
-    height: 460,
-    width: 840,
-    titlePreface: new URL(related_tab.url).hostname,
-    type: "popup",
-    url: "popup.html?tabId=" + TABID,
-  });
-
-  window.close();
-});
-*/
 
 // save/commit changes
 savbtn.addEventListener("click", async () => {
@@ -188,18 +155,11 @@ savbtn.addEventListener("click", async () => {
     return;
   }
   const data = table.getData();
-  /*const tabs = await browser.tabs.query({
-    currentWindow: true,
-    active: true,
-  });*/
-  //browser.tabs.sendMessage(tabs[0].id, data);
   browser.tabs.sendMessage(TABID, data);
-  //unhighlightChange();
   table.alert("Syncing Storage ... ", "msg");
   setTimeout(function () {
-    //table.clearAlert();
     window.location.reload(); // keep it simple
-  }, 1000);
+  }, 3000); // TODO: add a real mechanic to determine if/when sync is done
 });
 
 // export/download as file
@@ -290,11 +250,6 @@ impbtn.addEventListener("click", async () => {
         import_count++;
       }
     });
-    /*
-		if(import_count  > 0) {
-		    highlightChange();
-		}
-		*/
     showLogMessage("Imported " + import_count + " items");
   } catch (e) {
     showLogMessage("Import failed: \n" + e.toString());
@@ -306,15 +261,7 @@ function storeHeaderFilter(headerValue, rowValue /*, rowData, filterParams*/) {
 }
 
 var uniqueKey = function (cell, value, parameters) {
-  //cell - the cell component for the edited cell
-  //value - the new input value of the cell
-  //parameters - the parameters passed in with the validator
-
-  //return value % parameters.divisor; //don't allow values divisible by divisor ;
-
-  //const val = cell.getValue();
-  let tmp; // undefined
-
+  let tmp;
   for (let row of table.getData()) {
     if (row.key === value) {
       if (tmp === row.store) {
@@ -327,28 +274,7 @@ var uniqueKey = function (cell, value, parameters) {
   return true;
 };
 
-/*
-//custom formatter definition
-var editValueButton = function (cell, formatterParams, onRendered) {
-  //plain text value
-  //return "<i class='fa fa-print'></i>";
-  return '<button title="open value edit view">&#9998;</button>';
-};
-
-
-var editValueTextarea = function (cell, formatterParams, onRendered) {
-  //plain text value
-  //return "<i class='fa fa-print'></i>";
-    const lines = cell.getValue().split(/\r\n|\r|\n/);
-  if (lines.length < 10) {
-     return cell.getValue().replaceAll(/\r\n|\r|\n/g,"");
-  }
-  return cell.getValue();
-};
-*/
-
 var editCheck = function (cell) {
-  //cell - the cell component for the editable cell
   const lines = cell.getValue().split(/\r\n|\r|\n/);
   return lines.length < 10;
 };
@@ -364,15 +290,6 @@ async function onDOMContentLoaded() {
   table = new Tabulator("#mainTable", {
     autoColumns: true,
     height: "460px",
-    //virtualDomBuffer:99999, //set virtual DOM buffer to 300px
-    //renderVertical:"basic", //disable virtual DOM rendering
-    //virtualDom:false, // also disable virtual DOM rending ??? wtf
-    //renderVertical:"basic", //disable virtual DOM rendering
-    //maxheight: "50em",
-    //maxHeight: "100%",
-    //virtualDom: false,
-    //resizableRowGuide:true,
-    //resizableColumnGuide:true,
     columnDefaults: {
       resizable: false,
     },
@@ -386,6 +303,7 @@ async function onDOMContentLoaded() {
       { column: "key", dir: "asc" },
       { column: "store", dir: "asc" },
     ],
+    resizableColumnFit: true,
     columns: [
       {
         rowHandle: true,
@@ -414,8 +332,6 @@ async function onDOMContentLoaded() {
         title: "Storage",
         field: "store",
         cellMouseOver: function (e, cell) {
-          //e - the event object
-          //cell - cell component
           const valid = cell.validate();
           if (valid !== true) {
             showLogMessage(
@@ -439,6 +355,7 @@ async function onDOMContentLoaded() {
       {
         title: "Key",
         field: "key",
+        resizable: "header",
         headerSort: true,
         validator: [
           "required",
@@ -448,11 +365,12 @@ async function onDOMContentLoaded() {
           },
         ],
         cellMouseOver: function (e, cell) {
-          //e - the event object
-          //cell - cell component
+          // show key-value on hover via title attribute
+          const cellElement = cell.getElement();
+          cellElement.setAttribute("title", cell.getValue());
+
           const valid = cell.validate();
           if (valid !== true) {
-            //console.debug(JSON.stringify(valid,null,4));
             showLogMessage(
               "Cell Validation Errors: " +
                 valid
@@ -480,7 +398,6 @@ async function onDOMContentLoaded() {
       {
         title: "Value",
         field: "value",
-        //width: "42%",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
         editor: "textarea",
@@ -493,13 +410,9 @@ async function onDOMContentLoaded() {
           variableHeight: true,
           shiftEnterSubmit: true,
         },
-        //formatter: "textarea",
         formatter: "plaintext",
-        //formatter: editValueTextarea,
-
         cellClick: function (e, cell) {
           const rowData = cell.getRow().getData();
-
           if (!(rowData.value.split(/\r\n|\r|\n/).length < 10)) {
             editorTempCell = cell;
             textareaEl.value = rowData.value;
@@ -508,37 +421,9 @@ async function onDOMContentLoaded() {
             editDialog.showModal();
             textareaEl.focus();
             textareaEl.setSelectionRange(0, 0);
-            //textareaEl.style.height = "";
-            //textareaEl.style.height = textareaEl.scrollHeight + "px";
           }
         },
       },
-
-      /*
-      {
-        title: "&#9998;",
-        formatter: editValueButton,
-        headerSort: false,
-        headerHozAlign: "center",
-        width: 0,
-        hozAlign: "center",
-        cellClick: function (e, cell) {
-          const row = cell.getRow();
-          const value_cell = row.getCell(5);
-          editorTempCell = value_cell;
-          const rowData = row.getData();
-          textareaEl.value = rowData.value;
-          selectEl.value = rowData.store;
-          inputEl.value = rowData.key;
-          editDialog.showModal();
-          textareaEl.focus();
-          textareaEl.setSelectionRange(0, 0);
-          we want to keep the buttons visible so no
-          //textareaEl.style.height = "";
-          //textareaEl.style.height = textareaEl.scrollHeight + "px";
-        },
-      },
-        */
     ],
   });
 
@@ -572,58 +457,13 @@ async function onDOMContentLoaded() {
   // hlchange any values changed
   // and call validate afterwards
   table.on("dataChanged", function (data) {
-    //data - the updated table data
     delayedValidateAndHighlight(data);
-    /*
-	setTimeout(() => { table.validate() }, 1000);
-	if(dataDifferentFromInital(data)){
-		highlightChange();
-	}else{
-		unhighlightChange();
-	}
-	*/
   });
 
-  /**/
-  /*
-  table.on("cellClick", function (e, cell) {
-    //e - the click event object
-    //cell - cell component
-    //e - the click event object
-    //row - row component
-    const field = cell.getField();
-
-    if (field === "value") {
-        console.debug(cell.getValue());
-      if (cell.getValue().split(/\r\n|\r|\n/).length > 5) {
-        editorTempCell = cell;
-        const rowData = cell.getRow().getData();
-        textareaEl.value = rowData.value;
-        selectEl.value = rowData.store;
-        inputEl.value = rowData.key;
-        editDialog.showModal();
-        textareaEl.focus();
-        textareaEl.setSelectionRange(0, 0);
-        textareaEl.style.height = "";
-        textareaEl.style.height = textareaEl.scrollHeight + "px";
-      }
-    }
-  });
-  */
-
-  // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
-  /*
-    editDialog.addEventListener("close", (e) => {
-        //if(editDialog.returnValue !== "default")
-        //console.debug(editDialog.returnValue);
-    });
-    */
-
-  // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
   confirmBtn.addEventListener("click", (event) => {
-    event.preventDefault(); // We don't want to submit this fake form
+    event.preventDefault(); // dont submit fake form
     editorTempCell.setValue(textareaEl.value, true);
-    editDialog.close(); // Have to send the select box value here.
+    editDialog.close();
   });
 }
 
@@ -634,7 +474,6 @@ function onChange(evt) {
   let value = el.type === "checkbox" ? el.checked : el.value;
   let obj = {};
 
-  //console.log(id,value, el.type,el.min);
   if (value === "") {
     return;
   }
@@ -654,7 +493,6 @@ function onChange(evt) {
 
   obj[id] = value;
 
-  //console.log(id, value);
   browser.storage.local.set(obj).catch(console.error);
 }
 
@@ -679,11 +517,6 @@ function onChange(evt) {
 
   let el = document.getElementById(id);
   el.addEventListener("input", onChange);
-
-  /*browser.runtime.onMessage.addListener((data, sender) => {
-    console.debug(data, sender);
-    document.getElementById(data.cmd).click();
-  });*/
 });
 
 // init
