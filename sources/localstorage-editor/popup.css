@@ -2,7 +2,7 @@ body {
   background: lightgray;
   min-width: 640px;
   min-height: 480px;
-  padding: 0px;
+  padding: 5px;
   overflow: hidden;
 }
 
@@ -16,4 +16,10 @@ button {
 
 #tip {
   font-size: 0.8em;
+}
+
+.tabulator-cell.tabulator-editable textarea {
+  min-height: calc(2 * 22px) !important;
+  max-height: calc(10 * 22px) !important;
+  white-space: nowrap !important;
 }

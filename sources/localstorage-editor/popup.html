@@ -16,7 +16,7 @@
         <p>
           <label>
             Storage:
-            <select disabled>
+            <select>
               <option value="Local">Local</option>
               <option value="Session">Session</option>
             </select>
@@ -26,15 +26,20 @@
         <p>
           <label>
             Key:
-            <input style="width: 100%" value="" disabled />
+            <input style="width: 100%" value="" />
           </label>
         </p>
 
         <p>
           <label>
             Value:
+            <abbr title="toggle line wrap">
+              <input type="checkbox" checked />
+              (?)
+            </abbr>
             <textarea
-              style="width: 100%; height: 380px"
+              style="width: 100%; height: 380px; white-space: nowrap; resize: none;"
+              ;
               spellcheck="false"
             ></textarea>
           </label>
@@ -51,10 +56,9 @@
     <button id="impbtn" title="clipboard import">&darr;Import</button>
     <button id="cpybtn" title="copy selected">&uarr;Copy</button>
     <button id="expbtn" title="download selected">&uarr;Download</button>
-    <abbr title="toggle inital check state"
+    <abbr title="inital check state"
       ><input type="checkbox" id="checkState" />(?)</abbr
     >
-    <!-- button id="detachbtn" title="detach">Detach &#x21ea;</button -->
   </fieldset>
   <fieldset>
     <div id="log"></div>

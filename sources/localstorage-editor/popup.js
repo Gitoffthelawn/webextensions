@@ -15,8 +15,9 @@ const confirmBtn = editDialog.querySelector("#confirmBtn");
 const selectEl = editDialog.querySelector("select"); // store
 const inputEl = editDialog.querySelector("input"); // key
 const textareaEl = editDialog.querySelector("textarea"); // value
+const wrapCheckboxEl = editDialog.querySelector('input[type="checkbox"]'); // key
 
-let editorTempCell = null;
+let editorTempRow = null;
 
 // button refs
 const impbtn = document.getElementById("impbtn");
@@ -30,14 +31,15 @@ const log = document.getElementById("log");
 const tip = document.getElementById("tip");
 
 const tips = [
-  "Duplicate items with Copy & Import quickly",
-  "Filter do not change selections",
+  "Duplicate items with Copy & Import",
+  "Filter dont change selections",
   "Copy & Download act on selected items",
-  "Imported items become selected after Import",
-  "Hover Cells to show validation errors",
-  "Reorder rows before Copy or Download",
-  "Discard to drop all not submitted changes",
-  "Middle click the toolbar button to open detached",
+  "Imported items become selected",
+  "Hover cells to show validation errors",
+  "Reorder before Copy or Download",
+  "Discard drops all not submitted changes",
+  "Middle click the toolbar button to open it detached",
+  "Double click on a value cell to open the row editor",
 ];
 
 let validateAndHighlightTimer;
@@ -274,10 +276,12 @@ var uniqueKey = function (cell, value, parameters) {
   return true;
 };
 
+/*
+// when it contains linebreaks, we go into full editor mode
 var editCheck = function (cell) {
-  const lines = cell.getValue().split(/\r\n|\r|\n/);
-  return lines.length < 10;
+  return cell.getValue().split(/\r\n|\r|\n/).length < 10;
 };
+*/
 
 async function onDOMContentLoaded() {
   if (isNaN(TABID)) {
@@ -293,7 +297,7 @@ async function onDOMContentLoaded() {
     columnDefaults: {
       resizable: false,
     },
-    placeholder: "No items found",
+    placeholder: "No items",
     layout: "fitDataStretch",
     pagination: false,
     movableRows: true,
@@ -342,12 +346,13 @@ async function onDOMContentLoaded() {
         hozAlign: "left",
         headerFilter: "list",
         editor: "list",
+        //verticalNavigation: "hybrid",
         editorParams: { values: ["Local", "Session"] },
         headerFilterPlaceholder: "Select",
         headerFilterFunc: storeHeaderFilter,
         headerFilterParams: {
+          clearable: true,
           values: ["Local", "Session"],
-          verticalNavigation: "hybrid",
           multiselect: true,
         },
         validator: ["in:Local|Session", "required"],
@@ -387,11 +392,13 @@ async function onDOMContentLoaded() {
         width: "25%",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
+        formatter: "plaintext",
         editor: "input",
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
           },
+          shiftEnterSubmit: true,
         },
       },
 
@@ -401,28 +408,32 @@ async function onDOMContentLoaded() {
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
         editor: "textarea",
-        editable: editCheck,
+        //editable: editCheck,
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
+            wrap: "off",
           },
           verticalNavigation: "editor",
           variableHeight: true,
           shiftEnterSubmit: true,
         },
         formatter: "plaintext",
-        cellClick: function (e, cell) {
+        /**/
+        cellDblClick: function (e, cell) {
+          //if(!editCheck(cell)){
+          editDialog.showModal();
+          editDialog.focus(); // focus something else first !!
           const rowData = cell.getRow().getData();
-          if (!(rowData.value.split(/\r\n|\r|\n/).length < 10)) {
-            editorTempCell = cell;
-            textareaEl.value = rowData.value;
-            selectEl.value = rowData.store;
-            inputEl.value = rowData.key;
-            editDialog.showModal();
-            textareaEl.focus();
-            textareaEl.setSelectionRange(0, 0);
-          }
+          editorTempRow = cell.getRow();
+          textareaEl.value = rowData.value;
+          selectEl.value = rowData.store;
+          inputEl.value = rowData.key;
+          textareaEl.focus();
+          textareaEl.setSelectionRange(0, 0);
+          //}
         },
+        /**/
       },
     ],
   });
@@ -438,6 +449,7 @@ async function onDOMContentLoaded() {
   });
 
   // load data
+  table.alert("Loading data");
   const data = await getTblData();
   data.forEach(async (e, index) => {
     table.addRow(e, true);
@@ -451,6 +463,8 @@ async function onDOMContentLoaded() {
     }
   });
 
+  table.clearAlert();
+
   tableData = table.getData();
 
   // do this after the inital data load
@@ -462,10 +476,26 @@ async function onDOMContentLoaded() {
 
   confirmBtn.addEventListener("click", (event) => {
     event.preventDefault(); // dont submit fake form
-    editorTempCell.setValue(textareaEl.value, true);
+
+    editorTempRow.update({
+      store: selectEl.value,
+      key: inputEl.value,
+      value: textareaEl.value,
+    });
+
     editDialog.close();
   });
-}
+
+  //table.getColumn("store").setHeaderFilterValue(["Local","Session"]);
+
+  wrapCheckboxEl.addEventListener("click", (evt) => {
+    if (evt.target.checked) {
+      textareaEl.style.whiteSpace = "nowrap";
+    } else {
+      textareaEl.style.whiteSpace = "wrap";
+    }
+  });
+} // onDOMContentLoaded
 
 function onChange(evt) {
   let id = evt.target.id;
