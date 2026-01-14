@@ -105,9 +105,11 @@ function getTimeStampStr() {
 async function getTblData() {
   let data = [];
   try {
-    data = await browser.tabs.executeScript(TABID, {
-      file: "getStorage.js",
-    });
+    data = (
+      await browser.tabs.executeScript(TABID, {
+        file: "getStorage.js",
+      })
+    )[0];
   } catch (e) {
     data = [];
   }
@@ -298,7 +300,8 @@ async function onDOMContentLoaded() {
       resizable: false,
     },
     placeholder: "No items",
-    layout: "fitDataStretch",
+    //layout: "fitDataStretch",
+    layout: "fitColumns",
     pagination: false,
     movableRows: true,
     validationMode: "highlight",
@@ -310,31 +313,38 @@ async function onDOMContentLoaded() {
     resizableColumnFit: true,
     columns: [
       {
-        rowHandle: true,
         formatter: "handle",
-        headerSort: false,
         frozen: true,
-        width: 30,
-        minWidth: 30,
         headerSort: false,
+        hozAlign: "center",
+        rowHandle: true,
+        width: 10,
       },
       {
         formatter: "rowSelection",
+        frozen: true,
+        headerSort: false,
+        hozAlign: "center",
+        headerHozAlign: "center",
         titleFormatter: "rowSelection",
+        width: 10,
         titleFormatterParams: {
           rowRange: "active", //only toggle the values of the active filtered rows
         },
-        hozAlign: "left",
-        headerSort: false,
         cellClick: (e, cell) => {
           cell.getRow().toggleSelect();
         },
-        width: 30,
-        minWidth: 30,
       },
       {
-        title: "Storage",
+        title: '<abbr title="Storage Area">SA</abbr>',
         field: "store",
+        frozen: true,
+        width: 60,
+        hozAlign: "center",
+        headerFilter: "list",
+        editor: "list",
+        editorParams: { values: ["Local", "Session"] },
+        headerFilterPlaceholder: "Filter",
         cellMouseOver: function (e, cell) {
           const valid = cell.validate();
           if (valid !== true) {
@@ -343,12 +353,6 @@ async function onDOMContentLoaded() {
             );
           }
         },
-        hozAlign: "left",
-        headerFilter: "list",
-        editor: "list",
-        //verticalNavigation: "hybrid",
-        editorParams: { values: ["Local", "Session"] },
-        headerFilterPlaceholder: "Select",
         headerFilterFunc: storeHeaderFilter,
         headerFilterParams: {
           clearable: true,
@@ -356,12 +360,32 @@ async function onDOMContentLoaded() {
           multiselect: true,
         },
         validator: ["in:Local|Session", "required"],
+        formatter: function (cell, formatterParams, onRendered) {
+          //cell - the cell component
+          //formatterParams - parameters set for the column
+          //onRendered - function to call when the formatter has been rendered
+          const val = cell.getValue();
+          if (["Session", "Local"].includes(val)) {
+            return '<abbr title="' + val + '" >' + val[0] + "</abbr>";
+          }
+          return "";
+        },
       },
+
+      /*
+      {
+        title: "",
+        field: "ksize",
+        headerSort: true,
+        hozAlign : "right",
+      },
+    */
       {
         title: "Key",
         field: "key",
         resizable: "header",
         headerSort: true,
+        widthGrow: 2,
         validator: [
           "required",
           {
@@ -389,7 +413,6 @@ async function onDOMContentLoaded() {
             );
           }
         },
-        width: "25%",
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
         formatter: "plaintext",
@@ -398,13 +421,21 @@ async function onDOMContentLoaded() {
           elementAttributes: {
             spellcheck: "false",
           },
+          selectContents: true,
           shiftEnterSubmit: true,
         },
+        /*
+        cellEdited: function (cell) {
+          // update the size column
+          cell.getRow().update({ ksize: cell.getValue().length });
+        },
+        */
       },
 
       {
         title: "Value",
         field: "value",
+        widthGrow: 4,
         headerFilter: "input",
         headerFilterPlaceholder: "Filter",
         editor: "textarea",
@@ -414,9 +445,10 @@ async function onDOMContentLoaded() {
             spellcheck: "false",
             wrap: "off",
           },
-          verticalNavigation: "editor",
+          verticalNavigation: "hybrid",
           variableHeight: true,
           shiftEnterSubmit: true,
+          selectContents: true,
         },
         formatter: "plaintext",
         /**/
@@ -433,7 +465,26 @@ async function onDOMContentLoaded() {
           textareaEl.setSelectionRange(0, 0);
           //}
         },
+        cellEdited: function (cell) {
+          // update the size column
+          cell.getRow().update({ vsize: cell.getValue().length });
+        },
+
+        cellMouseOver: function (e, cell) {
+          cell.getElement().setAttribute("title", cell.getValue());
+        },
         /**/
+      },
+      {
+        title: '<abbr title="Value Length">VL</abbr>',
+        field: "vsize",
+        headerSort: true,
+        hozAlign: "left",
+        frozen: true,
+        minWidth: 50,
+        cellMouseOver: function (e, cell) {
+          cell.getElement().setAttribute("title", cell.getValue());
+        },
       },
     ],
   });
@@ -452,6 +503,8 @@ async function onDOMContentLoaded() {
   table.alert("Loading data");
   const data = await getTblData();
   data.forEach(async (e, index) => {
+    e["vsize"] = e.value.length;
+    //e['ksize'] = e.key.length;
     table.addRow(e, true);
 
     // after processing the last element
@@ -481,6 +534,8 @@ async function onDOMContentLoaded() {
       store: selectEl.value,
       key: inputEl.value,
       value: textareaEl.value,
+      vsize: textareaEl.value.length,
+      //ksize: inputEl.value.length,
     });
 
     editDialog.close();
