@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/load-background-tabs-on-select",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/load-background-tabs-on-select",
   "description": "Prevents background tabs from loading until they have been activated",
   "background": {
     "scripts": ["background.js"]
