@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: import-urls 
+name: detach-same-site-tabs 
 permissions: {}
 
 # Controls when the workflow will run
@@ -9,7 +9,7 @@ on:
   push:
     branches: [ main ]
     paths:
-       'sources/import-urls/**'
+       'sources/detach-same-site-tabs/**'
 
   # Allows to run this workflow manually
   workflow_dispatch:
