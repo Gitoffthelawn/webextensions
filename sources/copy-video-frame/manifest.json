@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/copy-video-frame",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/copy-video-frame",
   "background": {
     "scripts": ["background.js"]
   },
