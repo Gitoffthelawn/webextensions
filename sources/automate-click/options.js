@@ -39,8 +39,6 @@ tgladv.addEventListener("click", async function (evt) {
   table.toggleColumn("repeatdelay");
   table.toggleColumn("maxrepeats");
   table.toggleColumn("randomrepeatvariance");
-  table.toggleColumn("xclickpos");
-  table.toggleColumn("yclickpos");
 });
 
 function addNewRowWithData(regex) {
@@ -57,8 +55,6 @@ function addNewRowWithData(regex) {
       maxrepeats: 0,
       randomrepeatvariance: 0,
       urlregex: regex,
-      xclickpos: 0,
-      yclickpos: 0,
     },
     true,
   );
@@ -79,8 +75,6 @@ addbtn.addEventListener("click", async function (evt) {
       maxrepeats: 0,
       randomrepeatvariance: 0,
       urlregex: "",
-      xclickpos: 0,
-      yclickpos: 0,
     },
     true,
   );
@@ -130,8 +124,6 @@ savbtn.addEventListener("click", (evt) => {
     data[i].initaldelay = parseInt(data[i].initaldelay);
     data[i].repeatdelay = parseInt(data[i].repeatdelay);
     data[i].maxrepeats = parseInt(data[i].maxrepeats);
-    data[i].xclickpos = parseInt(data[i].xclickpos);
-    data[i].yclickpos = parseInt(data[i].yclickpos);
     data[i].randomrepeatvariance = parseInt(data[i].randomrepeatvariance);
     data[i].idx = i;
   }
@@ -204,8 +196,6 @@ impbtn.addEventListener("input", function (evt) {
               selector.rvariance || selector.randomrepeatvariance || 0,
             ),
             urlregex: selector.url_regex || selector.urlregex || "",
-            xclickpos: 0,
-            yclickpos: 0,
           },
           false,
         );
@@ -353,26 +343,6 @@ async function onDOMContentLoaded() {
         field: "randomrepeatvariance",
         sorter: "number",
         editor: "input",
-        validator: ["required", "min:0", "integer"],
-        visible: false,
-      },
-      {
-        title: "X-Click<br/>Position",
-        width: 80,
-        field: "xclickpos",
-        sorter: "number",
-        editor: "input",
-        headerSort: false,
-        validator: ["required", "min:0", "integer"],
-        visible: false,
-      },
-      {
-        title: "Y-Click<br/>Position",
-        width: 80,
-        field: "yclickpos",
-        sorter: "number",
-        editor: "input",
-        headerSort: false,
         validator: ["required", "min:0", "integer"],
         visible: false,
       },

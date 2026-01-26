@@ -21,7 +21,6 @@ automate click actions that users might have to perform when visiting a website.
 - Repeat Delay: ( number >= 0 ) if a value greater than zero is entered, the action will be executed continuously with the given values as a millisecond delay between the repeats
 - Max Repeats: (number >=0) Defines an upper limit how often the "Repeats" should be done until the action is stopped (kind of like a failsafe, to not continue forever)
 - RRV (Random Repeat Variance): adds a random millisecond variance to the Repeat Delay, the number is the MAX variance offset so if you want the variance to randomly fluctuate between 10 seconds, you have to set it to 10000 and each cylce a random number from 0-10000 is picked as an offset for the Repeat Delay
-- X/Y-Position: if any of these is set to a value > 0, then the selector is ignored and instead the click is done on the absolute pageOffset position (i'd advice against using this)
 - CSS Selector: everything you can put into document.querySelectorAll (ref. https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll)
 - URL Regular Expression: RE to match the URLs where the rules should trigger (ref. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions )
 

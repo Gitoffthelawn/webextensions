@@ -30,18 +30,6 @@ function waitFor(selector) {
     selector.maxrepeats--;
   }
 
-  if (selector.xclickpos > 0 || selector.yclickpos > 0) {
-    const elem = document.elementFromPoint(
-      selector.xclickpos,
-      selector.yclickpos,
-    );
-    if (typeof elem.click === "function") {
-      elem.click();
-      log("debug", "item by coordinates clicked");
-    } else {
-      log("warn", "item by coordinates has no click function");
-    }
-  } else {
     for (const item of document.querySelectorAll(selector.cssselector)) {
       if (item) {
         if (typeof item.click === "function") {
@@ -52,7 +40,6 @@ function waitFor(selector) {
         }
       }
     }
-  }
 
   if (selector.repeatdelay > 0) {
     const min = selector.repeatdelay - selector.randomrepeatvariance;
