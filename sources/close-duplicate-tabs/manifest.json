@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/close-duplicate-tabs",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs",
   "background": {
     "scripts": ["background.js"]
   },
