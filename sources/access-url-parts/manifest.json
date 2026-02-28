@@ -2,7 +2,7 @@
   "author": "igorlogius",
   "browser_specific_settings": {
     "gecko": {
-      "id": "access-url-parts@igorlogius",
+      "id": "{2d032faa-68c7-47b7-9d33-aa9eb1ef5da4}",
       "data_collection_permissions": {
         "required": ["none"]
       }
