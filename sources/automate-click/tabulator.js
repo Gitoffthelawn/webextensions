@@ -23961,7 +23961,7 @@
               passive: true,
             },
           );
-          this.moving, this.toRow, this.toRowAfter;
+          (this.moving, this.toRow, this.toRowAfter);
           element.addEventListener("touchmove", function (e) {
             var diff, moveToRow;
 
