@@ -1,6 +1,6 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/import-urls",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/import-urls",
   "background": {
     "scripts": ["background.js"]
   },
