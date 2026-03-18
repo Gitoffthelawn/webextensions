@@ -1,6 +1,13 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/export-bookmarks-as-text",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/export-bookmarks-as-text",
   "background": {
     "scripts": ["background.js"]
   },
@@ -14,6 +21,10 @@
   },
   "manifest_version": 2,
   "name": "Export Bookmarks as Text",
-  "permissions": ["menus", "bookmarks"],
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "export.html"
+  },
+  "permissions": ["bookmarks"],
   "version": "1.2.8"
 }

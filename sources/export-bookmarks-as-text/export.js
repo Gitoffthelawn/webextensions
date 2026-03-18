@@ -1,3 +1,5 @@
+const folders = document.getElementById("folder");
+
 function getTimeStampStr() {
   const d = new Date();
   let ts = "";
@@ -34,6 +36,27 @@ function exportData(urls) {
 }
 
 async function onDOMContentLoaded() {
+  await initSelect();
+
+  document.title = getTimeStampStr() + " Full Bookmarks Export";
+  const tmp = (await browser.bookmarks.getTree())[0];
+  exportData(recGetBookmarkUrls(tmp, 1));
+
+  folders.addEventListener("input", async () => {
+    if (folders.value !== "") {
+      const bmId = folder.value;
+      const tmp = (await browser.bookmarks.getSubTree(bmId))[0];
+      document.title =
+        getTimeStampStr() + " Partial Bookmarks Export: " + tmp.title;
+      exportData(recGetBookmarkUrls(tmp, 0));
+    } else {
+      document.title = getTimeStampStr() + " Full Bookmarks Export";
+      const tmp = (await browser.bookmarks.getTree())[0];
+      exportData(recGetBookmarkUrls(tmp, 1));
+    }
+  });
+
+  /*
   const params = new URL(document.location.href).searchParams;
   const bmId = params.get("bmId");
   if (bmId === null) {
@@ -46,6 +69,7 @@ async function onDOMContentLoaded() {
       getTimeStampStr() + " Partial Bookmarks Export: " + tmp.title;
     exportData(recGetBookmarkUrls(tmp, 0));
   }
+*/
 
   document.getElementById("save").addEventListener("click", save);
 }
@@ -63,6 +87,34 @@ function save() {
   dl.click();
   document.body.removeChild(dl);
   document.getElementById("output").select();
+}
+
+function recGetFolders(node, depth = 0) {
+  let out = new Map();
+  if (typeof node.url !== "string") {
+    if (node.id !== "root________") {
+      out.set(node.id, { depth: depth, title: node.title });
+    }
+    if (node.children) {
+      for (let child of node.children) {
+        out = new Map([...out, ...recGetFolders(child, depth + 1)]);
+      }
+    }
+  }
+  return out;
+}
+
+async function initSelect() {
+  const nodes = await browser.bookmarks.getTree();
+  let out = new Map();
+  let depth = 1;
+  for (const node of nodes) {
+    out = new Map([...out, ...recGetFolders(node, depth)]);
+  }
+  for (const [k, v] of out) {
+    folders.add(new Option("-".repeat(v.depth) + " " + v.title, k));
+  }
+  folders.value = "";
 }
 
 document.addEventListener("DOMContentLoaded", onDOMContentLoaded);
