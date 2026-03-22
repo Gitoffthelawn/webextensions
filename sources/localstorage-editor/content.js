@@ -20,14 +20,14 @@
     localStorage.clear();
     sessionStorage.clear();
 
-    let el, store, key, value;
-    let i = 0;
-    for (i = 0; i < data.length; i++) {
-      el = data[i];
-      store = el.store;
-      key = el.key;
-      value = el.value;
-      try {
+    try {
+      let el, store, key, value;
+      let i = 0;
+      for (i = 0; i < data.length; i++) {
+        el = data[i];
+        store = el.store;
+        key = el.key;
+        value = el.value;
         switch (store) {
           case "Local":
             localStorage.setItem(key, value);
@@ -36,10 +36,10 @@
             sessionStorage.setItem(key, value);
             break;
         }
-      } catch (e) {
-        // setItem can throw an QuotaExceededError
-        window.alert("Failed to Sync Storage Data", e);
       }
+    } catch (e) {
+      // setItem can throw an QuotaExceededError
+      window.alert("Failed to Sync Storage Data", e);
     }
   });
 

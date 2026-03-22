@@ -1,16 +1,16 @@
 # NAME
 
-**localstorage-editor** - adds toolbar button to view and modify the localstorage for the current active tab
+**localstorage-editor**
 
 # SYNOPSIS
 
-click the toolbar button to open an storage editor view for the currently active tab which is mostly just big table that shows each storage item in a row.
-you can filter, search, copy, export, modify, add , import items and sync or discard your changes. 
+adds a toolbar button to view and modify the localstorage for the current active tab
+click the toolbar button to open a storage editor for the currently active tab which is mostly just a big table that shows each storage item in a row where you can filter, search, copy, export, modify, add,  import items and sync or discard your changes. 
 
 # USER INPUTS
 
 - the active tab when the toolbar button is clicked
-- storage data to add or modify
+- storage data to add, modify or delete
 
 # OPTIONS
 
@@ -34,14 +34,12 @@ https://github.com/user-attachments/assets/fd09a71d-a14e-443e-9cc2-6b4896871ac2
 
 # FAQ / COMMON ISSUES
 
-**Why do you require the clipboard permissions? Why arent they optional?**
+**Why do you require the clipboard permissions?**
 
-Strictly speaking the copboard permissions are not 100% necessary and i have replaced these in other addons of mine with simpler textareas where users can copy the data themself. 
-The difference to these addons and this one is simply that they dont already require a much more powerful permission which this addon already needs to just work. 
-Or to say it in laymans terms: If the addon wanted to be malicious - which it isnt - the **<all_urls>** permission would by more than enough for that, so worrying about the extra clipboard permissions is kind of a moot point.
+Strictly speaking the clipboard permissions could be replaced with textareas as i've done with some other addons. 
+The difference to these addons and this one is that they dont already require a much more powerful permission to just work, which makes worrying about the clipboard permissions just a mood point.
 
-**Why doenst the addon work on some sites?**
+**Why doesnt the addon work on some mozilla sites?**
 
 Some sites are protected by firefox internal addon restrictions, so out of the box addons can not function on those sites. 
 There are workarounds for this. Search around and you'll likely be able to find them. Not adding specifics here, since i dont wanna play catch up when things change.
-
