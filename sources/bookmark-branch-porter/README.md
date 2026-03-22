@@ -1,6 +1,6 @@
 # NAME
 
-**toolbar-countdown** 
+**bookmark-branch-porter** 
 
 # SYNOPSIS
 
@@ -28,3 +28,14 @@ none
 # DEMO VIDEO
 
 tbd.
+
+
+# FAQ/COMMON ISSUES
+
+**Where are my tags/keywords?**
+
+The current API provided by the browser does not allow access to this information so these can not be exported or imported at the current time
+
+**Why are the creation times after import all wrong not retained?**
+
+Same reason as with the tags/keywords. The API doest not allow to set the creation time when a bookmark node is created at the moment.

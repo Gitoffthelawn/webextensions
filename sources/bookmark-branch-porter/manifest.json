@@ -25,5 +25,5 @@
     "page": "port.html"
   },
   "permissions": ["bookmarks"],
-  "version": "1.6.23"
+  "version": "1.5.23"
 }
