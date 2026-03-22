@@ -1,8 +1,18 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/bookmark-branch-porter",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-branch-porter",
   "background": {
     "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
   },
   "icons": {
     "128": "icon.png"
@@ -10,6 +20,10 @@
   "manifest_version": 2,
   "description": "Import or Export a branch of the bookmark tree as a JSON or HTML file",
   "name": "Bookmark Branch Porter",
-  "permissions": ["menus", "bookmarks"],
-  "version": "1.5.23"
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "port.html"
+  },
+  "permissions": ["bookmarks"],
+  "version": "1.6.23"
 }

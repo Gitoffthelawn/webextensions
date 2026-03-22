@@ -1,0 +1,80 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <title></title>
+  <style>
+    #output {
+      width: 99%;
+      height: 85vh;
+      white-space: nowrap;
+      overflow-wrap: normal;
+      overflow-x: scroll;
+      overflow-y: scroll;
+    }
+    #actions {
+      float: right;
+    }
+    #save {
+      float: right;
+    }
+    button {
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <p id="message"></p>
+
+  [1] Select Folder:
+  <select id="folder">
+    <option value="">Entire Bookmark Tree</option>
+  </select>
+
+  [2] Select Format:
+  <select id="format">
+    <option value="json">JSON</option>
+    <option value="html">HTML</option>
+  </select>
+
+  [3]
+  <span id="spnoroot"
+    ><input type="checkbox" id="noroot" /> (check to strip root node on
+    import)</span
+  >
+
+  <div id="actions">
+    <span> [4] Select Action: </span>
+
+    <button id="doexport">Export</button>
+
+    <button id="doimport">Import</button>
+  </div>
+
+  <hr />
+
+  <textarea id="output" spellcheck="false" wrap="no">
+
+--- How to Export ---
+
+[1] Select Folder (The Folder/Branch to Export)
+[2] Select Export Format ( {json} or &lt;html&gt; )
+[3] Click the Export Button
+
+Note: All exported Data will have one singular Root node, but you can skip/exclude it on import
+
+
+--- How to Import ---
+
+[1] Select Folder (The Folder/Branch where to Import into)
+[2] Select Import Format ( {json} or &lt;html&gt; )
+[3] Check if you want to skip/exclude the root node on import
+[4] Click the Import Button
+
+Note: Import into the root of the bookmark Tree is not allowed/possible because of technical limitations.
+
+</textarea
+  >
+
+  <script src="port.js"></script>
+</body>
