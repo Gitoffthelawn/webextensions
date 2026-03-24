@@ -51,22 +51,6 @@ async function importData(bookmarkId, data, noroot) {
   return importJSON(data, bookmarkId, noroot);
 }
 
-function getTimeStampStr() {
-  const d = new Date();
-  let ts = "";
-  [
-    d.getFullYear(),
-    d.getMonth() + 1,
-    d.getDate() + 1,
-    d.getHours(),
-    d.getMinutes(),
-    d.getSeconds(),
-  ].forEach((t, i) => {
-    ts = ts + (i !== 3 ? "-" : "_") + (t < 10 ? "0" : "") + t;
-  });
-  return ts.substring(1);
-}
-
 function exportData(data) {
   document.getElementById("output").value = data;
 }
@@ -187,7 +171,6 @@ async function onDOMContentLoaded() {
     const bmId = folders.value;
     const type = document.getElementById("format").value;
     if (bmId === "") {
-      document.title = getTimeStampStr() + " Full Bookmarks Export." + type;
       const tmp = (await browser.bookmarks.getTree())[0];
       if (type === "html") {
         exportData(unescape(encodeURIComponent(rec2HtmlStr(tmp))));
@@ -197,12 +180,6 @@ async function onDOMContentLoaded() {
       }
     } else {
       const tmp = (await browser.bookmarks.getSubTree(bmId))[0];
-      document.title =
-        getTimeStampStr() +
-        " Partial Bookmarks Export: " +
-        tmp.title +
-        "." +
-        type;
       if (type === "html") {
         exportData(rec2HtmlStr(tmp));
       }
@@ -240,23 +217,6 @@ async function onDOMContentLoaded() {
         "ERROR: Import failed, " + e.toString();
     }
   });
-
-  document.getElementById("save").addEventListener("click", save);
-}
-
-function save() {
-  let dl = document.createElement("a");
-  let textFileAsBlob = new Blob([document.getElementById("output").value], {
-    type: "text/plain",
-  });
-  dl.setAttribute("href", window.URL.createObjectURL(textFileAsBlob));
-  dl.setAttribute("download", document.title);
-  dl.setAttribute("visibility", "hidden");
-  dl.setAttribute("display", "none");
-  document.body.appendChild(dl);
-  dl.click();
-  document.body.removeChild(dl);
-  document.getElementById("output").select();
 }
 
 document.addEventListener("DOMContentLoaded", onDOMContentLoaded);

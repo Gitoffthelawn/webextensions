@@ -18,7 +18,7 @@
     "128": "icon.png"
   },
   "manifest_version": 2,
-  "description": "Import or Export a branch of the bookmark tree as a JSON or HTML file",
+  "description": "Import or Export a branch of your bookmark tree as JSON or HTML",
   "name": "Bookmark Branch Porter",
   "options_ui": {
     "open_in_tab": true,
