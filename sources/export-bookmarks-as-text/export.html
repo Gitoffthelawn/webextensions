@@ -2,37 +2,30 @@
 <head>
   <meta charset="utf-8" />
   <link rel="icon" type="image/png" href="icon.png" />
-  <title></title>
+  <title>Export Bookmarks as Text</title>
   <style>
     body {
       padding: 0;
       margin: 0;
       margin-left: 1%;
+      background-color: lightgray;
     }
     #output {
       padding: 0;
       margin: 0;
       width: 99%;
-      height: 93vh;
+      height: 90vh;
       white-space: nowrap;
       overflow-wrap: normal;
       overflow-x: scroll;
       overflow-y: scroll;
     }
-    #save,
-    #folder {
-      padding: 0;
-      margin: 0;
-      width: 99%;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
-  <select id="folder">
-    <option value="">All Bookmarks</option>
-  </select>
-  <button id="save">Save as File</button>
-  <textarea id="output" spellcheck="false" wrap="no">please wait </textarea>
+  <h3>Export Bookmarks as Text</h3>
+  <textarea id="output" spellcheck="false" wrap="no">
+loading please wait </textarea
+  >
   <script src="export.js"></script>
 </body>
