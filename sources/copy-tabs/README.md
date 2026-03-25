@@ -1,9 +1,10 @@
 # NAME
 
-**copy-tabs** - copy tab URLs as HTML hyperlinks or as plain text, similar to MS Edge, but better since this addons supports copying mutliple tabs at once
+copy-tabs
 
 # SYNOPSIS
 
+Copy tab URLs as HTML hyperlinks or as plain text, similar to MS Edge, but better since this addons supports copying mutliple tabs at once.
 click the toolbar button to access the copy modes, or select a set of tabs and use the context menu to invoke the copy action, or set a custom shortcut for each of the copy actions.
 
 1. Pick Copy Scope
@@ -31,9 +32,9 @@ click the toolbar button to access the copy modes, or select a set of tabs and u
 # REQUIRED PERMISSIONS
 
 - **clipboardWrite**: used to place the URLs into the clipboard 
-- **menus**: used to add the menu items
-- **storage**: used to store the timer name and end time.
-- **tabs**: used to access the URLs of the involved tabs 
+- **menus**: used to add the context menu entry
+- **storage**: used to store the MMB/LMB action state  and the custom parameter function
+- **tabs**: used to access the URLs of involved tabs 
 
 # OPTIONAL PERMISSIONS
 
@@ -47,8 +48,8 @@ https://github.com/user-attachments/assets/6ce15126-246d-450f-b10f-3d201274d9a9
 
 **After copy Some parameters are missing**
 
-The clean copy mode removes all url parameters. This can be fruther customize to only remove certain paramters on specified URLs via the preferences page where the processing function is exposed and can be edited.
+The clean copy mode removes all url parameters. This can be customize to only remove certain paramters on specified URLs via the options page where the processing function can be edited.
 
-**Can you function/feature XYZ?**
+**Can you add feature XYZ?**
 
-No. if you need more functionality, please take a look some of my other addons. The ones that allow you to do more but also require more permission are [Get Tabs Info](https://addons.mozilla.org/firefox/addon/get-tabs-infos/) and [Gather from Tabs](https://addons.mozilla.org/firefox/addon/gather-from-tabs/)
+Please take a look at [Get Tabs Info](https://addons.mozilla.org/firefox/addon/get-tabs-infos/) or [Gather from Tabs](https://addons.mozilla.org/firefox/addon/gather-from-tabs/) since it is likely that whatever you are missing is covered either already.

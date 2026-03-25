@@ -25,7 +25,7 @@ Feel free to take or use them however you like.
 | [limit-active-tabs](https://github.com/igorlogius/webextensions/tree/main/sources/limit-active-tabs) | Limits number of active tabs, unloading older (determined by last activation) | [link](https://addons.mozilla.org/firefox/addon/limit-active-tabs) |
 | [history-porter](https://github.com/igorlogius/webextensions/tree/main/sources/history-porter) | Import or export your browsing history | [link](https://addons.mozilla.org/firefox/addon/history-porter) |
 | [tabs-porter](https://github.com/igorlogius/webextensions/tree/main/sources/tabs-porter) | Import or Export Tabs |  |
-| [bookmark-branch-porter](https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-branch-porter) | Import or Export a branch of the bookmark tree as a JSON or HTML file | [link](https://addons.mozilla.org/firefox/addon/bookmark-branch-porter) |
+| [bookmark-branch-porter](https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-branch-porter) | Import or Export a branch of your bookmark tree as JSON or HTML | [link](https://addons.mozilla.org/firefox/addon/bookmark-branch-porter) |
 | [get-tabs-infos](https://github.com/igorlogius/webextensions/tree/main/sources/get-tabs-infos) | Get tabs information in custom formats | [link](https://addons.mozilla.org/firefox/addon/get-tabs-infos) |
 | [find-in-tabs](https://github.com/igorlogius/webextensions/tree/main/sources/find-in-tabs) | Find text in all your active open tabs | [link](https://addons.mozilla.org/firefox/addon/find-in-tabs) |
 | [find-feeds](https://github.com/igorlogius/webextensions/tree/main/sources/find-feeds) | Find RSS, ATOM and JSON feeds | [link](https://addons.mozilla.org/firefox/addon/find-feeds) |
