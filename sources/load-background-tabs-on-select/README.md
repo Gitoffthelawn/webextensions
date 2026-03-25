@@ -1,9 +1,10 @@
 # NAME
 
-**load-background-tabs-on-select** - prevents tabs opened in the background from loading until the user selects (aka. activates/focuses) them 
+load-background-tabs-on-select
 
 # SYNOPSIS
 
+Prevents tabs opened in the background from loading until the user selects (aka. activates/focuses) them 
 After installation tabs which are opend in the background for example via CTRL+LMB will be stopped from loading and instead idle in a discarded state until the user brings them to the foreground. On the option page the textarea allows to add regular expressions to define whitelist entries (tabs allowed to load if they match the given Pattern)  or when the backlist mode is toggled the patterns will act as a blacklist blocking only matching tabs from loading
 
 # USER INPUTS
@@ -29,3 +30,9 @@ none
 # DEMO VIDEO
 
 https://github.com/user-attachments/assets/188f9c78-e7e7-4437-9444-ba10f1bad348
+
+# FAQ / COMMON ISSUES
+
+**How do i use the black/whitelist?**
+
+Check or Uncheck the checkbox on the options page depending on what you want, then enter Regular Expressions that match the URLs you want to match with line by line into the textarea below 
