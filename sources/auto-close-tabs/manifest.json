@@ -1,6 +1,13 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/auto-close-tabs",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/auto-close-tabs",
   "background": {
     "scripts": ["background.js"]
   },
