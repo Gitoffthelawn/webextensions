@@ -9,7 +9,7 @@
 
   let tableStyleSheet = document.createElement("style");
   document.head.appendChild(tableStyleSheet);
-  const highlightCSS = `.divTbl, ol, ul, table { border: 3px dotted red !important; padding:1px !important; margin:1px !important; }`;
+  const highlightCSS = `.divTbl, table { border: 3px dotted red !important; padding:1px !important; margin:1px !important; }`;
   tableStyleSheet.sheet.insertRule(highlightCSS, 0);
   tableStyleSheet.disabled = true;
 
@@ -37,8 +37,6 @@
   const convert = {
     div: div2csv,
     table: table2csv,
-    ul: list2csv,
-    ol: list2csv,
   };
 
   function getDataFromNode(node) {
@@ -93,15 +91,6 @@
     return csv.join(CRLF);
   }
 
-  function list2csv(ul) {
-    let csv = [];
-    ul.querySelectorAll("li").forEach((li) => {
-      const data = getDataFromNode(li);
-      csv.push('"' + data + '"');
-    });
-    return csv.join(CRLF);
-  }
-
   function getClosestExportableParent(node) {
     while (
       node !== null &&
@@ -120,17 +109,6 @@
     }
     return node;
   }
-
-  /*
-  function simulateClick(elem) {
-    const evt = new MouseEvent("click", {
-      bubbles: false,
-      cancelable: false,
-      view: window,
-    });
-    elem.dispatchEvent(evt);
-  }
-    */
 
   function highlightDivTables() {
     document.querySelectorAll("div").forEach((div) => {
@@ -166,9 +144,9 @@
           doOnce = false;
           highlightDivTables();
         }
-        tableStyleSheet.disabled = false; // toggle stylesheet
+        tableStyleSheet.disabled = false;
       } else {
-        tableStyleSheet.disabled = true; // togglestylesheet
+        tableStyleSheet.disabled = true;
       }
     }
 
@@ -184,18 +162,6 @@
         ("No exportable target found!\nHint: Click the toolbar icon to highlight exportable targets");
       }
       return convert[exportableTarget.tagName.toLowerCase()](exportableTarget);
-
-      /*
-      if (mode.startsWith("export")) {
-        link.setAttribute(
-          "href",
-          "data:text/csv;charset=utf-8," + encodeURIComponent(str),
-        );
-        simulateClick(link);
-      } else {
-        navigator.clipboard.writeText(str);
-      }
-      */
     }
   });
 })();

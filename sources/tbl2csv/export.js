@@ -15,23 +15,6 @@ async function onDOMContentLoaded() {
     mode,
   });
   exportData(data);
-  document.getElementById("save").addEventListener("click", save);
-}
-
-async function save() {
-  let dl = document.createElement("a");
-  const utils = await import("./utils.js");
-  let textFileAsBlob = new Blob([document.getElementById("output").value], {
-    type: "text/plain",
-  });
-  dl.setAttribute("href", window.URL.createObjectURL(textFileAsBlob));
-  dl.setAttribute("download", utils.getTimeStampStr() + ".csv");
-  dl.setAttribute("visibility", "hidden");
-  dl.setAttribute("display", "none");
-  document.body.appendChild(dl);
-  dl.click();
-  document.body.removeChild(dl);
-  document.getElementById("output").select();
 }
 
 document.addEventListener("DOMContentLoaded", onDOMContentLoaded);

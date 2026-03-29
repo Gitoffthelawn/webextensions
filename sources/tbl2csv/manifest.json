@@ -1,5 +1,12 @@
 {
   "author": "igorlogius",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/tbl2csv",
   "background": {
     "scripts": ["background.js"]
@@ -13,7 +20,7 @@
   },
   "manifest_version": 2,
   "name": "Table to CSV",
-  "description": "Export HTML Tables, CSS Pseudo/DIV Tables or Lists (UL/OL) as a comma seperated values (CSV) file which can be opened with any spreadsheet processor (e.g. excel, libreoffice-calc,gnumeric) for further processing and conversion (e.g. to xls or ods)",
+  "description": "Export HTML Tables as Comma Seperated Values which can be opend and further processed with many common spreadsheet processors like microsoft excel, libreoffice-calc or gnumeric",
   "permissions": ["menus", "activeTab"],
   "version": "1.4.25"
 }
