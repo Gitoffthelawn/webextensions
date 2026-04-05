@@ -15,20 +15,14 @@
     "default_area": "navbar"
   },
   "commands": {
-    "_execute_browser_action": {},
-    "ignore-set": {
-      "description": "Ignore selected tabs"
-    },
-    "ignore-clear": {
-      "description": "Clear ignored tabs"
-    }
+    "_execute_browser_action": {}
   },
   "icons": {
     "128": "icon.png"
   },
   "manifest_version": 2,
   "name": "Close Duplicate Tabs",
-  "description": "Shows the amount of duplicate tabs and close them when you want",
-  "permissions": ["storage", "cookies", "tabs", "menus"],
+  "description": "Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact",
+  "permissions": ["cookies", "tabs"],
   "version": "1.0.28"
 }
