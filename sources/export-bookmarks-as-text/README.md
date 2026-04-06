@@ -1,6 +1,6 @@
 # NAME
 
-**export-bookmarks-as-text**
+export-bookmarks-as-text
 
 # SYNOPSIS
 

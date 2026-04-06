@@ -1,31 +1,31 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="icon.png" />
-  <title>Export Bookmarks as Text</title>
-  <style>
-    body {
-      padding: 0;
-      margin: 0;
-      margin-left: 1%;
-      background-color: lightgray;
-    }
-    #output {
-      padding: 0;
-      margin: 0;
-      width: 99%;
-      height: 90vh;
-      white-space: nowrap;
-      overflow-wrap: normal;
-      overflow-x: scroll;
-      overflow-y: scroll;
-    }
-  </style>
-</head>
-<body>
-  <h3>Export Bookmarks as Text</h3>
-  <textarea id="output" spellcheck="false" wrap="no">
-loading please wait </textarea
-  >
-  <script src="export.js"></script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Export Bookmarks as Text</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+      }
+      textarea {
+        width: 100%;
+        height: 100%;
+        border: none;
+        margin: 0;
+        padding: 0;
+        background-color: white;
+        white-space: nowrap;
+        outline: none;
+        overflow: auto;
+        resize: none;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="output">loading, please wait</textarea>
+    <script src="export.js"></script>
+  </body>
+</html>

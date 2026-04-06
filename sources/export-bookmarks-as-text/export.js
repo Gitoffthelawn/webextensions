@@ -1,40 +1,76 @@
-function recGetBookmarkUrls(bookmarkItem, depth) {
-  let urls = [];
-  if (bookmarkItem.url) {
-    urls.push(
-      " ".repeat(depth) + " " + bookmarkItem.title + " : " + bookmarkItem.url,
-    );
-  } else if (bookmarkItem.children) {
-    urls.push(" ".repeat(depth) + "> " + bookmarkItem.title);
-    for (var child of bookmarkItem.children) {
-      urls = urls.concat(recGetBookmarkUrls(child, depth + 1));
+// Recursively collect bookmark lines (folders and URLs)
+function collectBookmarkLines(node, depth = 0) {
+  const lines = [];
+
+  if (node.url) {
+    lines.push(`${" ".repeat(depth)} ${node.title} : ${node.url}`);
+    return lines;
+  }
+
+  // Treat non-leaf as folder
+  if (depth === 1) {
+    const date = new Date();
+    const title = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} Export Bookmarks as Text`;
+    document.title = title;
+    lines.push(`${" ".repeat(depth)}> ${title}`);
+  } else {
+    lines.push(`${" ".repeat(depth)}> ${node.title || "(no title)"}`);
+  }
+
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      lines.push(...collectBookmarkLines(child, depth + 1));
     }
   }
-  return urls;
+
+  return lines;
 }
 
-function exportData(urls) {
-  document.getElementById("output").value = urls.join("\n");
+// Export collected lines into textarea#output
+function exportData(lines) {
+  const out = document.getElementById("output");
+  if (out) out.value = lines.join("\n");
 }
 
+// Entry point after DOM is ready (async to await browser API)
 async function onDOMContentLoaded() {
-  const tmp = (await browser.bookmarks.getTree())[0];
-  exportData(recGetBookmarkUrls(tmp, 1));
+  refresh();
+  let myPort = browser.runtime.connect({ name: "port-from-cs" });
+  myPort.onMessage.addListener((m) => {
+    refresh();
+  });
 }
 
-function recGetFolders(node, depth = 0) {
-  let out = new Map();
+async function refresh() {
+  try {
+    const tree = await browser.bookmarks.getTree();
+    const root = Array.isArray(tree) ? tree[0] : tree;
+    const lines = collectBookmarkLines(root, 1);
+    exportData(lines);
+  } catch (err) {
+    const msg = "Failed to load bookmarks: " + err;
+    console.error(msg);
+    const out = document.getElementById("output");
+    out.value = msg;
+  }
+}
+
+// Recursively collect folders into a Map { id => { depth, title } }
+function collectFolders(node, depth = 0, map = new Map()) {
+  // Treat nodes without a url as folders
   if (typeof node.url !== "string") {
     if (node.id !== "root________") {
-      out.set(node.id, { depth: depth, title: node.title });
+      map.set(node.id, { depth, title: node.title || "" });
     }
-    if (node.children) {
-      for (let child of node.children) {
-        out = new Map([...out, ...recGetFolders(child, depth + 1)]);
+
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        collectFolders(child, depth + 1, map);
       }
     }
   }
-  return out;
+
+  return map;
 }
 
 document.addEventListener("DOMContentLoaded", onDOMContentLoaded);
