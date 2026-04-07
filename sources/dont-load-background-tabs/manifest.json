@@ -1,9 +1,18 @@
 {
   "author": "igorlogius",
   "browser_specific_settings": {
-    "gecko_android": {}
+    "gecko_android": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    },
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
   },
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/dont-load-background-tabs",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/dont-load-background-tabs",
   "description": "Prevents background tabs from loading until activated",
   "background": {
     "scripts": ["background.js"]
@@ -11,8 +20,7 @@
   "browser_action": {
     "default_area": "navbar"
   },
-  "icons": {
-  },
+  "icons": {},
   "manifest_version": 2,
   "name": "Dont Load Background Tabs",
   "options_ui": {

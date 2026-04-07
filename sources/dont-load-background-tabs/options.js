@@ -1,40 +1,39 @@
 /*global browser */
 
+let storage;
+
 function onChange(evt) {
   const id = evt.target.id;
   let el = document.getElementById(id);
 
   let value = el.type === "checkbox" ? el.checked : el.value;
-  let obj = {};
   if (typeof value === "string") {
     value = value.trim(); // strip whitespace
   }
-  obj[id] = value;
-
-  browser.storage.local.set(obj);
+  storage.set(id, value);
 }
 
 async function onLoad() {
-  ["matchers", "mode", "doPreload"].map((id) => {
-    browser.storage.local
-      .get(id)
-      .then((obj) => {
-        let el = document.getElementById(id);
-        let val = obj[id];
+  storage = await import("./storage.js");
+  [
+    { id: "matchers", type: "string", fallback: "" },
+    { id: "mode", type: "boolean", fallback: false },
+  ].forEach(async (elobj) => {
+    let val = await storage.get(elobj.id, elobj.type, elboj.fallback);
+    let el = document.getElementById(elobj.id);
 
-        if (typeof val !== "undefined") {
-          if (el.type === "checkbox") {
-            el.checked = val;
-          } else {
-            el.value = val;
-          }
-        }
-      })
-      .catch(console.error);
-
-    let el = document.getElementById(id);
-    el.addEventListener("click", onChange);
-    el.addEventListener("input", onChange);
+    switch (elobj.type) {
+      case "boolean":
+        el.checked = val;
+        el.addEventListener("click", onChange);
+        break;
+      case "string":
+        el.value = val;
+        el.addEventListener("input", onChange);
+        break;
+      default:
+        break;
+    }
   });
 }
 

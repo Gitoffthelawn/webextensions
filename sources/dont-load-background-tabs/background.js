@@ -1,139 +1,117 @@
 /* global browser */
 
-let wasActive = new Set();
-let awaitsActivation = new Map();
-let regexList;
-let mode;
+const activeTabs = new Set();
+const awaitingTabs = new Map();
+let regexPatterns;
+let isBlacklistMode;
+let storage;
 
-async function getFromStorage(type, id, fallback) {
-  let tmp = await browser.storage.local.get(id);
-  return typeof tmp[id] === type ? tmp[id] : fallback;
-}
+async function getRegexPatterns() {
+  const patterns = [];
+  const rawPatterns = await storage.get("string", "matchers", "");
 
-async function setToStorage(id, value) {
-  let obj = {};
-  obj[id] = value;
-  return browser.storage.local.set(obj);
-}
-
-async function getRegexList() {
-  let out = [];
-  let tmp = await getFromStorage("string", "matchers", "");
-  tmp.split("\n").forEach((line) => {
+  rawPatterns.split("\n").forEach((line) => {
     line = line.trim();
-    if (line !== "") {
+    if (line) {
       try {
-        line = new RegExp(line.trim());
-        out.push(line);
-      } catch (e) {
-        console.error(e);
+        patterns.push(new RegExp(line));
+      } catch (error) {
+        console.error("Regex error:", error);
       }
     }
   });
-  return out;
+  return patterns;
 }
 
-function matchesRegEx(url) {
-  for (let i = 0; i < regexList.length; i++) {
-    if (regexList[i].test(url)) {
-      return true;
-    }
-  }
-  return false;
+function isUrlMatched(url) {
+  return regexPatterns.some((pattern) => pattern.test(url));
 }
 
-function onRemoved(tabId) {
-  if (wasActive.has(tabId)) {
-    wasActive.delete(tabId);
-  }
-  if (awaitsActivation.has(tabId)) {
-    awaitsActivation.delete(tabId);
-  }
+function handleTabRemoval(tabId) {
+  activeTabs.delete(tabId);
+  awaitingTabs.delete(tabId);
 }
 
-async function onActivated(activeInfo) {
-  if (!wasActive.has(activeInfo.tabId)) {
-    wasActive.add(activeInfo.tabId);
-    const url = awaitsActivation.get(activeInfo.tabId);
-    if (url) {
-      awaitsActivation.delete(activeInfo.tabId);
-      browser.tabs.update(activeInfo.tabId, {
-        url,
-      });
+async function handleTabActivation({ tabId }) {
+  if (!activeTabs.has(tabId)) {
+    activeTabs.add(tabId);
+    const urlToRedirect = awaitingTabs.get(tabId);
+    if (urlToRedirect) {
+      awaitingTabs.delete(tabId);
+      await browser.tabs.update(tabId, { url: urlToRedirect });
     }
   }
 }
 
-async function onBeforeRequest(e) {
-  if (!wasActive.has(e.tabId)) {
-    const mre = matchesRegEx(e.url);
+async function handleBeforeRequest({ tabId, url }) {
+  if (!activeTabs.has(tabId)) {
+    const matches = isUrlMatched(url);
 
     if (
-      (mode && mre) || // blacklist(true) => matches are not allowed to load
-      (!mode && !mre) // whitelist(false) => matches are allowed to load <=> no match => not allowed
+      (isBlacklistMode && matches) || // blacklist mode: matches are disallowed
+      (!isBlacklistMode && !matches) // whitelist mode: non-matches are disallowed
     ) {
-      awaitsActivation.set(e.tabId, e.url);
+      awaitingTabs.set(tabId, url);
       return { cancel: true };
     }
-    wasActive.add(e.tabId);
+    activeTabs.add(tabId);
   }
 }
 
-async function onStorageChange() {
-  // shutdown
+async function handleStorageChange() {
+  // Shutdown listeners
+  browser.tabs.onActivated.removeListener(handleTabActivation);
+  browser.webRequest.onBeforeRequest.removeListener(handleBeforeRequest);
+  browser.tabs.onRemoved.removeListener(handleTabRemoval);
 
-  browser.tabs.onActivated.removeListener(onActivated);
-  browser.webRequest.onBeforeRequest.removeListener(onBeforeRequest);
-  browser.tabs.onRemoved.removeListener(onRemoved);
+  activeTabs.clear();
+  awaitingTabs.clear();
 
-  wasActive.clear();
-  awaitsActivation.clear();
+  updateBrowserAction("off", [115, 0, 0, 115]);
 
-  browser.browserAction.setBadgeText({ text: "off" });
-  browser.browserAction.setBadgeBackgroundColor({
-    color: [115, 0, 0, 115],
-  });
-
-  // startup
-
-  const manually_disabled = await getFromStorage(
+  // Startup process
+  const isDisabledManually = await storage.get(
     "boolean",
     "manually_disabled",
     false,
   );
 
-  if (!manually_disabled) {
-    mode = await getFromStorage("boolean", "mode", false);
-    regexList = await getRegexList();
+  if (!isDisabledManually) {
+    isBlacklistMode = await storage.get("boolean", "mode", false);
+    regexPatterns = await getRegexPatterns();
 
-    for (const tab of await browser.tabs.query({})) {
-      wasActive.add(tab.id);
-    }
-    browser.browserAction.setBadgeText({ text: "on" });
-    browser.browserAction.setBadgeBackgroundColor({
-      color: [0, 115, 0, 115],
-    });
+    const allTabs = await browser.tabs.query({});
+    allTabs.forEach((tab) => activeTabs.add(tab.id));
 
-    browser.tabs.onRemoved.addListener(onRemoved);
+    updateBrowserAction("on", [0, 115, 0, 115]);
 
-    browser.tabs.onActivated.addListener(onActivated);
+    browser.tabs.onRemoved.addListener(handleTabRemoval);
+    browser.tabs.onActivated.addListener(handleTabActivation);
     browser.webRequest.onBeforeRequest.addListener(
-      onBeforeRequest,
+      handleBeforeRequest,
       { urls: ["<all_urls>"], types: ["main_frame"] },
       ["blocking"],
     );
   }
 }
 
+function updateBrowserAction(status, color) {
+  browser.browserAction.setBadgeText({ text: status });
+  browser.browserAction.setBadgeBackgroundColor({ color });
+}
+
 (async () => {
-  await onStorageChange();
+  storage = await import("./storage.js");
+  await handleStorageChange();
 
   browser.browserAction.onClicked.addListener(async () => {
-    setToStorage(
+    const currentState = await storage.get(
+      "boolean",
       "manually_disabled",
-      !(await getFromStorage("boolean", "manually_disabled", false)),
+      false,
     );
+    storage.set("manually_disabled", !currentState);
   });
 
-  browser.storage.onChanged.addListener(onStorageChange);
+  browser.storage.onChanged.addListener(handleStorageChange);
 })();
