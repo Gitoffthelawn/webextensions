@@ -7,8 +7,8 @@ Feel free to take or use them however you like.
 EOF
 
 echo ""
-echo "| Source | Description | AMO Link |"
-echo "| ---  | --- | --- |"
+echo "| Src | Description | AMO |"
+echo "| ---:  | --- | --- |"
 
 if [ -d ./sources ];then 
     for x in ./sources/*;do 
@@ -20,12 +20,13 @@ if [ -d ./sources ];then
 
             CODE=$(curl -sL -I "$AMOLURL" -w "%{http_code}" -o /dev/null)
             if [ $CODE -eq 200 ];then 
-                echo "| [$EXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC | [link](https://addons.mozilla.org/firefox/addon/$EXTID) |"
+                MDEXTID=$(echo -n "$EXTID" | sed 's/-/\&nbsp;/g')
+                echo "| [$MDEXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC | [link](https://addons.mozilla.org/firefox/addon/$EXTID) |"
             #else
-            #    echo "| [$EXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC |  |"
+            #    echo "| [$TMPEXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC |  |"
             fi
         fi
-    done | sort -r -t'|' -k3,3
+    done | sort -t'|' -k1,1
 fi
 echo ""
 
