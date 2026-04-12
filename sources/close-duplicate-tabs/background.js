@@ -6,8 +6,7 @@ const TAB_QUERY_OPTIONS = {
   currentWindow: true,
   hidden: false,
   pinned: false,
-  status: "complete",
-  discarded: false,
+  status: "complete"
 };
 
 const actionAPI = browser.browserAction;
