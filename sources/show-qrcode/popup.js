@@ -131,8 +131,8 @@ async function onLoad() {
     if (m.bookmarkId) {
       value = (await browser.bookmarks.get(m.bookmarkId))[0].url;
     } else {
-      //  1. text, 2. linkUrl (a) , 3. srcUrl (img)
-      for (let b of ["selectionText", "linkUrl", "srcUrl"]) {
+      //  1. text, 2. linkUrl (a) , 3. srcUrl (img), 4. pageUrl
+      for (let b of ["selectionText", "linkUrl", "srcUrl", "pageUrl"]) {
         if (typeof m[b] === "string" && m[b].trim() !== "") {
           value = m[b].trim();
           if (b === "selectionText" && m.type) {
@@ -149,7 +149,20 @@ async function onLoad() {
       active: true,
       currentWindow: true,
     });
-    value = tabs[0].url;
+    const res_selected_text = await browser.tabs.executeScript({
+      code: `window.getSelection().toString()`,
+    });
+
+    if (
+      Array.isArray(res_selected_text) &&
+      res_selected_text.length === 1 &&
+      typeof res_selected_text[0] === "string" &&
+      res_selected_text[0].trim() !== ""
+    ) {
+      value = res_selected_text[0];
+    } else {
+      value = tabs[0].url;
+    }
   }
 
   const qrtext = document.getElementById("qrtext");

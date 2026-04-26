@@ -1,5 +1,12 @@
 {
   "author": "igorlogius",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/show-qrcode",
   "background": {
     "scripts": ["background.js"]
@@ -7,7 +14,7 @@
   "commands": {
     "_execute_browser_action": {}
   },
-  "description": "Show qrcodes for any tab url, any selected link, text or bookmark",
+  "description": "Show quick response codes for any tab url, any selected link, text or bookmark",
   "icons": {
     "15": "icon.png"
   },

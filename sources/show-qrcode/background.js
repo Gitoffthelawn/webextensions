@@ -17,7 +17,7 @@ types.set("geo","Geo Location (float,float)");
 browser.menus.create({
   id: extname,
   title: extname,
-  contexts: ["bookmark", "selection", "link", "image"],
+  contexts: ["bookmark", "selection", "link", "image", "tab", "page"],
   onclick: function (clickData /*,tab*/) {
     clickDataStore = clickData;
 
