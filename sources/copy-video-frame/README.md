@@ -1,14 +1,15 @@
 # NAME
 
-**copy-video-frame** - adds a context menu entry that allows to capture a still frame image from a html video element
+**copy-video-frame** 
 
 # SYNOPSIS
 
-Hold shift and right click on a html video element to open the context menu. If the element you clicked on is a html video element the context menu will contain the "Copy Video Frame" entry. Clicking on the entry, will take a snapshot of the current video frame and save it to a popup window or to the clipboard the addon is given the permission todo so.
+This addon adds a context menu entry that allows to capture a still frame image from a html video element.
+Hold shift and right click on a html video element to open the context menu. If the element you clicked on is a html video element the context menu will contain the "Copy Video Frame" entry. Clicking on the entry, will take a snapshot of the current video frame and save it to a popup window or to the clipboard if the addon is given the permission todo so.
 
 # USER INPUTS
 
-- the html video element 
+- video element 
 
 # OPTIONS
 
@@ -21,7 +22,7 @@ Granting the addon the optional clipboardWrite permissions will change its behav
 
 # OPTIONAL PERMISSIONS
 
-- **clipboardWrite**: when given, skips the opening of the screenshot into a tab and direclty copies it into the clipboard instead 
+- **clipboardWrite**: when given, skips the opening of the screenshot into a popup and direclty copies it into the clipboard instead 
 
 # DEMO VIDEO
 
