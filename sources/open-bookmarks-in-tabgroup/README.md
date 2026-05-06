@@ -1,14 +1,14 @@
 # NAME
 
-**open-bookmarks-in-tabgroup** - adds a context menu entry on a bookmark folder which allows to open all containing tabs into a tabgroup with the same name as the folder
+open-bookmarks-in-tabgroup
 
 # SYNOPSIS
 
-right click on a bookmark folder and in the context menu click on the "Open Tabgroup" entry
+adds a context menu entry on a bookmark folder which allows to open all containing tabs into a tabgroup with the same name as the folder. Right click on a bookmark folder and in the context menu click on the "Open Tabgroup" entry
 
 # USER INPUTS
 
-select the bookmark folder
+- bookmark folder
 
 # OPTIONS
 
@@ -16,9 +16,8 @@ none
 
 # REQUIRED PERMISSIONS
 
-
 - **bookmarks** : used to read the bookmark folder name and its child bookmark urls
-- **menus**: used to create the context menu entry
+- **menus**: used to add the context menu entry
 - **tabGroups** : used to create the tabgroup
 
 # OPTIONAL PERMISSIONS

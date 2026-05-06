@@ -1,6 +1,14 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/open-bookmarks-in-tabgroup",
+  "browser_specific_settings": {
+    "gecko": {
+      "strict_min_version": "139.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/open-bookmarks-in-tabgroup",
   "background": {
     "scripts": ["background.js"]
   },
@@ -11,10 +19,5 @@
   "manifest_version": 2,
   "name": "Open Bookmarks in Tabgroup",
   "permissions": ["bookmarks", "menus", "tabGroups"],
-  "version": "1.0.6",
-  "browser_specific_settings": {
-    "gecko": {
-      "strict_min_version": "139.0"
-    }
-  }
+  "version": "1.0.6"
 }
