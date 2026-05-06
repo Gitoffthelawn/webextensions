@@ -1,9 +1,10 @@
 # NAME
 
-**collapse-tabgroups** - adds shortcut, toolbar button and context menu entry to toggle the collapse state of tabgroups
+collapse-tabgroups
 
 # SYNOPSIS
 
+adds shortcut, toolbar button and context menu entry to toggle the collapse state of tabgroups
 click the toolbar button or set and use the shortcut toggle the collapse state of all or selected tabgroups 
 
 # USER INPUTS
@@ -17,12 +18,12 @@ none
 # REQUIRED PERMISSIONS
 
 - **menus**: used to add the context menu to the tabs
-- **tabs**: used to iterate and gather all existing tabgroups
-- **tabGroups**: used to access tabGroup settings 
+- **tabs**: used to access and assign tab properties
+- **tabGroups**: used to create and assign tabGroups 
 
 # OPTIONAL PERMISSIONS
 
-- **notifications**: when given, shows a notification when the timer ends.
+none
 
 # DEMO VIDEO
 
