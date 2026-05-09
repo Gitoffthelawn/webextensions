@@ -1,8 +1,6 @@
-This repository contains the sources of the following [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions)
+This repository contains the sources of simple [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions). Some are published on AMO. 
 
-Feel free to take or use them however you like.
-
-| Src | Description | AMO |
+| Source-Link | Description | AMO Link |
 | ---:  | --- | --- |
 | [automate&nbsp;click](https://github.com/igorlogius/webextensions/tree/main/sources/automate-click) | automate some click actions when visiting a website | [link](https://addons.mozilla.org/firefox/addon/automate-click) |
 | [auto&nbsp;close&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/auto-close-tabs) | automatically close tabs which have not been accessed for a time | [link](https://addons.mozilla.org/firefox/addon/auto-close-tabs) |
@@ -17,7 +15,6 @@ Feel free to take or use them however you like.
 | [group&nbsp;same&nbsp;site&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/group-same-site-tabs) | Move same site/domain tabs into named collapsed or uncollapsed native tabgroups | [link](https://addons.mozilla.org/firefox/addon/group-same-site-tabs) |
 | [history&nbsp;porter](https://github.com/igorlogius/webextensions/tree/main/sources/history-porter) | Import or export your browsing history | [link](https://addons.mozilla.org/firefox/addon/history-porter) |
 | [import&nbsp;urls](https://github.com/igorlogius/webextensions/tree/main/sources/import-urls) | Extract URLs from text and import them as tabs or bookmarks | [link](https://addons.mozilla.org/firefox/addon/import-urls) |
-| [link&nbsp;to&nbsp;text](https://github.com/igorlogius/webextensions/tree/main/sources/link-to-text) | Create links that point to a fragment of text on a page | [link](https://addons.mozilla.org/firefox/addon/link-to-text) |
 | [load&nbsp;background&nbsp;tabs&nbsp;on&nbsp;select](https://github.com/igorlogius/webextensions/tree/main/sources/load-background-tabs-on-select) | Prevents background tabs from loading until they have been activated | [link](https://addons.mozilla.org/firefox/addon/load-background-tabs-on-select) |
 | [localstorage&nbsp;editor](https://github.com/igorlogius/webextensions/tree/main/sources/localstorage-editor) | Add, edit, copy, remove, export and import local- and session- storage data | [link](https://addons.mozilla.org/firefox/addon/localstorage-editor) |
 | [mute&nbsp;unfocused&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/mute-unfocused-tabs) | Automatically mute unfocused tabs | [link](https://addons.mozilla.org/firefox/addon/mute-unfocused-tabs) |
@@ -27,4 +24,3 @@ Feel free to take or use them however you like.
 | [show&nbsp;qrcode](https://github.com/igorlogius/webextensions/tree/main/sources/show-qrcode) | Show quick response codes for any tab url, any selected link, text or bookmark | [link](https://addons.mozilla.org/firefox/addon/show-qrcode) |
 | [tabs&nbsp;media&nbsp;controller](https://github.com/igorlogius/webextensions/tree/main/sources/tabs-media-controller) | Control audio and video elements from all tabs via the toolbar button popup menu | [link](https://addons.mozilla.org/firefox/addon/tabs-media-controller) |
 | [tbl2csv](https://github.com/igorlogius/webextensions/tree/main/sources/tbl2csv) | Export HTML Tables as Comma Seperated Values which can be opend and further processed with many common spreadsheet processors like microsoft excel, libreoffice-calc or gnumeric | [link](https://addons.mozilla.org/firefox/addon/tbl2csv) |
-
