@@ -1,6 +1,8 @@
-This repository contains the sources of simple [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions). Some are published on AMO. 
+This repository contains the sources of some [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions). 
 
-| Source-Link | Description | AMO Link |
+The following are published on AMO:  
+
+| Extension | Description | AMO |
 | ---:  | --- | --- |
 | [automate&nbsp;click](https://github.com/igorlogius/webextensions/tree/main/sources/automate-click) | automate some click actions when visiting a website | [link](https://addons.mozilla.org/firefox/addon/automate-click) |
 | [auto&nbsp;close&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/auto-close-tabs) | automatically close tabs which have not been accessed for a time | [link](https://addons.mozilla.org/firefox/addon/auto-close-tabs) |
