@@ -13,18 +13,13 @@
       color: light-dark(black, white);
       background-color: light-dark(white, black);
     }
-    #noURLParamsFunction {
+    #allowedParams {
       color: light-dark(black, white);
       background-color: light-dark(white, black);
       height: 40em;
       resize: vertical;
       white-space: pre-wrap;
       width: 99%;
-    }
-    #reset {
-      text-align: center;
-      margin-left: 25%;
-      width: 50%;
     }
     button {
       color: light-dark(black, black);
@@ -48,11 +43,17 @@
       >(?)</abbr
     >
   </fieldset>
+
   <fieldset>
-    <b>Customize the strip parameter function:</b><br />
-    <textarea spellcheck="false" id="noURLParamsFunction"></textarea>
+    <b>Clean Copy Exceptions (aka. allow parameters for hosts)</b><br />
+    <pre>
+# Examples:
+  mozilla.org utm_source utm_medium
+  w3c.org page lang
+</pre
+    >
+    <textarea spellcheck="false" id="allowedParams"></textarea>
   </fieldset>
 
-  <button id="reset">Reset to default</button>
   <script src="options.js"></script>
 </body>

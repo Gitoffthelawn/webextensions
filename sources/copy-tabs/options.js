@@ -1,9 +1,6 @@
 /* global browser */
 
 async function onDOMContentLoaded() {
-  let noURLParamsFunction = document.getElementById("noURLParamsFunction");
-  let reset = document.getElementById("reset");
-
   const storage = await import("./storage.js");
 
   function onChange(evt) {
@@ -35,7 +32,7 @@ async function onDOMContentLoaded() {
 
   [
     /* add individual settings here */
-    { id: "noURLParamsFunction", type: "string" },
+    { id: "allowedParams", type: "string" },
     { id: "popupmode", type: "boolean" },
   ].map(async (obj) => {
     let el = document.getElementById(obj.id);
@@ -50,21 +47,6 @@ async function onDOMContentLoaded() {
     }
 
     el.addEventListener("input", onChange);
-  });
-
-  reset.addEventListener("click", async () => {
-    if (
-      !confirm(
-        "Are you sure?\nThe current data will be lost when you click on ok.",
-      )
-    ) {
-      return;
-    }
-
-    let tmp = await fetch(browser.runtime.getURL("noURLParamsFunction.js"));
-    tmp = await tmp.text();
-    noURLParamsFunction.value = tmp;
-    storage.set("noURLParamsFunction", tmp);
   });
 }
 

@@ -5,8 +5,10 @@ const manifest = browser.runtime.getManifest();
 
 let toolbarAction = "cpyalllnk";
 let noURLParams = false;
-let runtab = null;
 let popupmode = false;
+
+// string(hostname) => Set(p1(string),p2,p3,..,pN)
+let allowedHostParams = new Map();
 
 //const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -18,34 +20,39 @@ function iconReset() {
   }, 450);
 }
 
+function removeParams(url) {
+  let old_urlobj = new URL(url);
+
+  let old_params = new URLSearchParams(old_urlobj.search);
+  let new_params = [];
+
+  if (allowedHostParams.has(old_urlobj.hostname)) {
+    const hostparams = allowedHostParams.get(old_urlobj.hostname);
+
+    for (const [key, val] of old_params) {
+      if (hostparams.has(key)) {
+        new_params.push([key, val]);
+      }
+    }
+  }
+  new_params = new URLSearchParams(new_params);
+
+  url = old_urlobj.origin + old_urlobj.pathname;
+
+  if (new_params.size > 0) {
+    url = url + "?" + new_params;
+  }
+  return url;
+}
+
 async function copyTabsAsText(tabs) {
   browser.browserAction.disable();
 
-  runtab = await browser.tabs.create({
-    active: false,
-    url: "empty.html",
-  });
-
   const text = (
     await Promise.all(
-      tabs.map(async (t) => {
-        if (noURLParams) {
-          try {
-            tmp = await browser.tabs.executeScript(runtab.id, {
-              code: `((url) => { ${noURLParamsFunctionCode} ;return url;})("${t.url}")`,
-            });
-            if (Array.isArray(tmp) && typeof tmp[0] === "string") {
-              return tmp[0].replace(/\s+/g, "");
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        return t.url;
-      }),
+      tabs.map(async (t) => (noURLParams ? removeParams(t.url) : t.url)),
     )
   ).join("\n");
-  browser.tabs.remove(runtab.id);
 
   navigator.clipboard.writeText(text);
 
@@ -54,11 +61,6 @@ async function copyTabsAsText(tabs) {
 
 async function copyTabsAsHtml(tabs) {
   browser.browserAction.disable();
-
-  runtab = await browser.tabs.create({
-    active: false,
-    url: "empty.html",
-  });
 
   let fallbackTextClipboardItem = "";
   let span = document.createElement("span"); // needs to be a <span> to prevent the final linebreak
@@ -71,21 +73,7 @@ async function copyTabsAsHtml(tabs) {
     let t = tabs[i];
     let a = document.createElement("a");
 
-    if (noURLParams) {
-      try {
-        tmp = await browser.tabs.executeScript(runtab.id, {
-          code: `((url) => { ${noURLParamsFunctionCode} ;return url;})("${t.url}")`,
-        });
-
-        if (Array.isArray(tmp) && typeof tmp[0] === "string") {
-          a.href = tmp[0].replace(/\s+/g, "");
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      a.href = t.url;
-    }
+    a.href = noURLParams ? removeParams(t.url) : t.url;
     a.textContent = t.title;
     span.append(a);
     fallbackTextClipboardItem += a.href;
@@ -95,8 +83,6 @@ async function copyTabsAsHtml(tabs) {
       fallbackTextClipboardItem += "\n";
     }
   }
-
-  browser.tabs.remove(runtab.id);
 
   if (
     typeof navigator.clipboard.write === "undefined" ||
@@ -167,6 +153,22 @@ async function onCommand(cmd) {
 async function onStorageChange() {
   const storage = await import("./storage.js");
   toolbarAction = await storage.get("string", "toolbarAction", "cpyalllnk");
+  allowedHostParams.clear();
+  (await storage.get("string", "allowedParams", ""))
+    .split("\n")
+    .forEach((line) => {
+      line = line.trim();
+      if (line.length > 0) {
+        if (line[0] !== "#") {
+          const lparts = line.split(/[\s,]+/);
+          if (lparts.length > 1) {
+            const host = lparts.shift();
+            allowedHostParams.set(host, new Set(lparts));
+          }
+        }
+      }
+    });
+
   popupmode = await storage.get("boolean", "popupmode", false);
 
   if (popupmode) {
@@ -182,12 +184,6 @@ async function onStorageChange() {
         "LMB: open panel\nMMB: " + manifest.commands[toolbarAction].description,
     });
   }
-
-  noURLParamsFunctionCode = await storage.get(
-    "string",
-    "noURLParamsFunction",
-    "",
-  );
 }
 
 // proxy toolbar button click
@@ -217,21 +213,6 @@ function onBAClicked(tab, info) {
   browser.browserAction.setPopup({
     popup: "",
   });
-}
-
-async function onInstalled(details) {
-  const storage = await import("./storage.js");
-  noURLParamsFunctionCode = await storage.get(
-    "string",
-    "noURLParamsFunction",
-    "",
-  );
-  if (details.reason === "install" || noURLParamsFunctionCode === "") {
-    let tmp = await fetch("noURLParamsFunction.js");
-    noURLParamsFunctionCode = await tmp.text();
-
-    storage.set("noURLParamsFunction", noURLParamsFunctionCode);
-  }
 }
 
 async function onMessage(req) {
@@ -433,8 +414,8 @@ async function onMenuShown(info, tab) {
   browser.browserAction.onClicked.addListener(onBAClicked);
   browser.commands.onCommand.addListener(onCommand);
   browser.storage.onChanged.addListener(onStorageChange);
+
+  await onStorageChange();
 })();
 
-//
-browser.runtime.onInstalled.addListener(onInstalled);
 // EOF
