@@ -6,7 +6,7 @@ const TAB_QUERY_OPTIONS = {
   currentWindow: true,
   hidden: false,
   pinned: false,
-  status: "complete"
+  status: "complete",
 };
 
 const actionAPI = browser.browserAction;
@@ -43,7 +43,8 @@ async function findDuplicateTabIds() {
   const toClose = [];
 
   for (const t of tabs) {
-    const key = `${t.cookieStoreId}|${t.url}`;
+    const normalizedUrl = normalizeUrl(t.url);
+    const key = `${t.cookieStoreId}|${normalizedUrl}`;
     if (seen.has(key)) {
       toClose.push(t.id);
     } else {
@@ -52,6 +53,35 @@ async function findDuplicateTabIds() {
   }
 
   return toClose;
+}
+
+function normalizeUrl(url) {
+  const urlObj = new URL(url);
+  const params = new URLSearchParams(urlObj.search);
+
+  // Build the normalized URL directly
+  let normalizedUrl = `${urlObj.origin}${urlObj.pathname}`;
+
+  // Check if there are no parameters and return the URL immediately
+  if (params.size === 0) {
+    return normalizedUrl; // Return immediately if no params
+  }
+
+  // Handle the case with one parameter by simply using toString
+  if (params.size === 1) {
+    normalizedUrl += `?${params.toString()}`;
+  } else {
+    // Sort the parameters if there are multiple
+    const sortedParams = new URLSearchParams();
+    Array.from(params.entries())
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .forEach(([key, value]) => sortedParams.append(key, value));
+
+    // Extend the normalized URL with sorted parameters
+    normalizedUrl += `?${sortedParams.toString()}`;
+  }
+
+  return normalizedUrl; // Return the final normalized URL
 }
 
 function disableBadge() {
