@@ -10,24 +10,6 @@ let emojis = [];
 let emojisoffset = 0;
 let usecolor = "turquoise";
 
-function isOnRegexList(url) {
-  for (let i = 0; i < regexList.length; i++) {
-    if (regexList[i].test(url)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isOnIngoreList(url) {
-  for (let i = 0; i < ignoredRegexList.length; i++) {
-    if (ignoredRegexList[i].test(url)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   if (typeof tmp[id] === type) {

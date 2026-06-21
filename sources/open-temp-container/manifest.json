@@ -1,19 +1,28 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/open-temp-container",
-  "background": { "scripts": ["background.js"] },
+  "background": {
+    "scripts": ["background.js"]
+  },
   "browser_action": {
     "default_area": "navbar"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "commands": {
-    "opennewtab": {
-      "description": "Open TC with about:newtab"
-    },
     "openinsame": {
       "description": "Open TC with active URL"
+    },
+    "opennewtab": {
+      "description": "Open TC with about:newtab"
     }
   },
   "description": "Open bookmarks, links or tabs in temporary containers",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/open-temp-container",
   "icons": {
     "512": "icon.png"
   },
