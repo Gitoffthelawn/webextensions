@@ -1,5 +1,11 @@
 {
   "author": "igorlogius",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar"
+  },
   "browser_specific_settings": {
     "gecko": {
       "data_collection_permissions": {
@@ -7,22 +13,16 @@
       }
     }
   },
-  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs",
-  "background": {
-    "scripts": ["background.js"]
-  },
-  "browser_action": {
-    "default_area": "navbar"
-  },
   "commands": {
     "_execute_browser_action": {}
   },
+  "description": "Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact",
+  "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs",
   "icons": {
     "128": "icon.png"
   },
   "manifest_version": 2,
   "name": "Close Duplicate Tabs",
-  "description": "Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact",
   "permissions": ["cookies", "tabs"],
   "version": "1.0.28"
 }

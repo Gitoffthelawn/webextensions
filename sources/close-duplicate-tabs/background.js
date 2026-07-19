@@ -1,41 +1,28 @@
 /* global browser */
 
-let debounceTimer = null;
-const DEFAULT_DEBOUNCE_MS = 1500;
-const TAB_QUERY_OPTIONS = {
-  currentWindow: true,
-  hidden: false,
-  pinned: false,
-  status: "complete",
-};
-
+const DEFAULT_DEBOUNCE_MS = 5000;
 const actionAPI = browser.browserAction;
 const tabsAPI = browser.tabs;
+let dupIds = [];
 
-async function scheduleUpdateBadge(delayMs = DEFAULT_DEBOUNCE_MS) {
-  //console.debug("scheduleUpdateBadge", Date.now());
-
-  disableBadge();
-  clearTimeout(debounceTimer);
-
-  return new Promise((resolve) => {
-    debounceTimer = setTimeout(async () => {
-      //console.debug("scheduleUpdateBadge -> setTimeout", Date.now());
-      resolve(await updateBadge());
-    }, delayMs);
+// find duplicate Tabs in a window
+async function findDuplicateTabIds(winId) {
+  const tabs = await tabsAPI.query({
+    windowId: winId,
+    hidden: false,
+    pinned: false,
+    status: "complete",
   });
-}
-
-async function findDuplicateTabIds() {
-  const tabs = await tabsAPI.query(TAB_QUERY_OPTIONS);
 
   tabs.sort((a, b) => {
+    // active tab goes first
     if (a.active && !b.active) {
       return -1;
     }
     if (!a.active && b.active) {
       return 1;
     }
+    // otherwise we order from left to right => closing order
     return b.index - a.index;
   });
 
@@ -43,11 +30,14 @@ async function findDuplicateTabIds() {
   const toClose = [];
 
   for (const t of tabs) {
+    // container + (normlized)url
     const normalizedUrl = normalizeUrl(t.url);
     const key = `${t.cookieStoreId}|${normalizedUrl}`;
     if (seen.has(key)) {
+      // we've seen this before, so this is a duplicate that can be closed
       toClose.push(t.id);
     } else {
+      // first seen doenst get added
       seen.add(key);
     }
   }
@@ -55,19 +45,20 @@ async function findDuplicateTabIds() {
   return toClose;
 }
 
+// normalize a URL igonore positional parameter changes and hashes
 function normalizeUrl(url) {
   const urlObj = new URL(url);
   const params = new URLSearchParams(urlObj.search);
 
-  // Build the normalized URL directly
+  // Build base of normalized URL directly
   let normalizedUrl = `${urlObj.origin}${urlObj.pathname}`;
 
-  // Check if there are no parameters and return the URL immediately
+  // Handle case with no parameters
   if (params.size === 0) {
-    return normalizedUrl; // Return immediately if no params
+    return normalizedUrl; // return immediately
   }
 
-  // Handle the case with one parameter by simply using toString
+  // Handle case with one parameter
   if (params.size === 1) {
     normalizedUrl += `?${params.toString()}`;
   } else {
@@ -81,63 +72,42 @@ function normalizeUrl(url) {
     normalizedUrl += `?${sortedParams.toString()}`;
   }
 
-  return normalizedUrl; // Return the final normalized URL
+  return normalizedUrl;
 }
 
-function disableBadge() {
-  actionAPI.disable();
-  actionAPI.setTitle({ title: null });
-  actionAPI.setBadgeText({ text: null });
+// hide the badge
+function hideBadge(winId) {
+  actionAPI.setTitle({ windowId: winId, title: null });
+  actionAPI.setBadgeText({ windowId: winId, text: null });
 }
 
-async function removeDuplicates() {
-  const dupIds = await findDuplicateTabIds();
+// update the Badge in the last focused window
+async function updateBadge() {
+  const win = await browser.windows.getLastFocused({ populate: false });
+  const winId = win.id;
+
+  dupIds = await findDuplicateTabIds(winId);
   if (dupIds.length > 0) {
+    actionAPI.setBadgeText({ windowId: winId, text: String(dupIds.length) });
+    actionAPI.setTitle({
+      windowId: winId,
+      title: `Close ${dupIds.length} Duplicates`,
+    });
+  } else {
+    hideBadge(winId);
+  }
+  setTimeout(updateBadge, DEFAULT_DEBOUNCE_MS);
+}
+
+actionAPI.onClicked.addListener(async (tab) => {
+  if (dupIds.length > 0) {
+    hideBadge(tab.windowId);
     await tabsAPI.remove(dupIds);
   }
-  disableBadge();
-}
-
-async function updateBadge() {
-  //console.debug("updateBadge");
-  const dupIds = await findDuplicateTabIds();
-  if (dupIds.length > 0) {
-    actionAPI.enable();
-    actionAPI.setBadgeText({ text: String(dupIds.length) });
-    actionAPI.setTitle({ title: `Close ${dupIds.length} Duplicates` });
-    actionAPI.setBadgeBackgroundColor({ color: "orange" });
-  } else {
-    disableBadge();
-  }
-}
-
-actionAPI.onClicked.addListener(async () => {
-  await removeDuplicates();
 });
 
-["Removed", "Detached", "Attached", "Created"].forEach((e) => {
-  tabsAPI[`on${e}`].addListener(async () => {
-    await scheduleUpdateBadge();
-  });
-});
-
-tabsAPI.onUpdated.addListener(
-  async (tabId, changeInfo, tabInfo) => {
-    if (typeof changeInfo.status === "string") {
-      if (changeInfo.status === "complete") {
-        await scheduleUpdateBadge();
-      }
-    } else {
-      await scheduleUpdateBadge();
-    }
-  },
-  {
-    properties: ["url", "status", "pinned", "hidden"],
-  },
-);
+// nicer contrast
+actionAPI.setBadgeBackgroundColor({ color: "orange" });
 
 // init
-
-(async () => {
-  await scheduleUpdateBadge();
-})();
+updateBadge();
