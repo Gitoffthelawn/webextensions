@@ -149,18 +149,23 @@ async function onLoad() {
       active: true,
       currentWindow: true,
     });
-    const res_selected_text = await browser.tabs.executeScript({
-      code: `window.getSelection().toString()`,
-    });
+    try {
+      const res_selected_text = await browser.tabs.executeScript({
+        code: `window.getSelection().toString()`,
+      });
 
-    if (
-      Array.isArray(res_selected_text) &&
-      res_selected_text.length === 1 &&
-      typeof res_selected_text[0] === "string" &&
-      res_selected_text[0].trim() !== ""
-    ) {
-      value = res_selected_text[0];
-    } else {
+      if (
+        Array.isArray(res_selected_text) &&
+        res_selected_text.length === 1 &&
+        typeof res_selected_text[0] === "string" &&
+        res_selected_text[0].trim() !== ""
+      ) {
+        value = res_selected_text[0];
+      } else {
+        value = tabs[0].url;
+      }
+    } catch (e) {
+      console.error(e);
       value = tabs[0].url;
     }
   }
