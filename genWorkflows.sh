@@ -16,8 +16,12 @@ if [ -f ./workflow-template.yml ];then
 
                     CODE=$(curl -sL -I "https://addons.mozilla.org/en-US/firefox/addon/$EXTID" -w "%{http_code}" -o /dev/null)
                     if [ $CODE -eq 200 ];then 
-                        sed "s/PLACEHOLDER/$EXTID/g" ./workflow-template.yml > ./.github/workflows/$EXTID.yml
-                        echo .github/workflows/$EXTID.yml
+                        AMO_AUTHOR=$(curl -sL --url "https://addons.mozilla.org//api/v4/addons/addon/$EXTID" | jq -r '.authors[0]|.name')
+                        #echo "AMO_AUTHOR: $AMO_AUTHOR"
+                        if [ "$AMO_AUTHOR" = "igorlogius" ];then
+                            sed "s/PLACEHOLDER/$EXTID/g" ./workflow-template.yml > ./.github/workflows/$EXTID.yml
+                            echo .github/workflows/$EXTID.yml
+                        fi
                     fi
                 fi
 

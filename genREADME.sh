@@ -19,9 +19,15 @@ if [ -d ./sources ];then
             AMOLURL="https://addons.mozilla.org/firefox/addon/$EXTID"
 
             CODE=$(curl -sL -I "$AMOLURL" -w "%{http_code}" -o /dev/null)
+            # DAILY USERS + other details 
+            # curl -H "Accept: application/json" -sL https://addons.mozilla.org//api/v5/addons/addon/copy-tabs  | jq '.average_daily_users' 
             if [ $CODE -eq 200 ];then 
-                MDEXTID=$(echo -n "$EXTID" | sed 's/-/\&nbsp;/g')
-                echo "| [$MDEXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC | [link](https://addons.mozilla.org/firefox/addon/$EXTID) |"
+                AMO_AUTHOR=$(curl -sL --url "https://addons.mozilla.org//api/v4/addons/addon/$EXTID" | jq -r '.authors[0]|.name')
+                #echo "AMO_AUTHOR: $AMO_AUTHOR"
+                if [ "$AMO_AUTHOR" = "igorlogius" ];then
+                    MDEXTID=$(echo -n "$EXTID" | sed 's/-/\&nbsp;/g')
+                    echo "| [$MDEXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC | [link](https://addons.mozilla.org/firefox/addon/$EXTID) |"
+                fi
             #else
             #    echo "| [$TMPEXTID](https://github.com/igorlogius/webextensions/tree/main/sources/$EXTID) | $DESC |  |"
             fi
