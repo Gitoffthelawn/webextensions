@@ -1,14 +1,14 @@
-This repository contains the sources of some [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions). 
+This repository contains the sources of the following [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions)
 
-The following are published on AMO:  
+The following are published on AMO:
 
-| Extension | Description | AMO |
+| Source | Description | AMO link |
 | ---:  | --- | --- |
 | [automate&nbsp;click](https://github.com/igorlogius/webextensions/tree/main/sources/automate-click) | automate some click actions when visiting a website | [link](https://addons.mozilla.org/firefox/addon/automate-click) |
 | [auto&nbsp;close&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/auto-close-tabs) | automatically close tabs which have not been accessed for a time | [link](https://addons.mozilla.org/firefox/addon/auto-close-tabs) |
 | [bookmark&nbsp;branch&nbsp;porter](https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-branch-porter) | Import or Export a branch of your bookmark tree as JSON or HTML | [link](https://addons.mozilla.org/firefox/addon/bookmark-branch-porter) |
+| [bookmark&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-tabs) | Saves selected or all tabs into a timestamped bookmark folder | [link](https://addons.mozilla.org/firefox/addon/bookmark-tabs) |
 | [close&nbsp;duplicate&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs) | Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact | [link](https://addons.mozilla.org/firefox/addon/close-duplicate-tabs) |
-| [collapse&nbsp;tabgroups](https://github.com/igorlogius/webextensions/tree/main/sources/collapse-tabgroups) | Control the collapse state of tabgroups | [link](https://addons.mozilla.org/firefox/addon/collapse-tabgroups) |
 | [copy&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/copy-tabs) | Copy the URLs of all window tabs or a selection of tabs as plain text or as html hyperlinks with or without parameters | [link](https://addons.mozilla.org/firefox/addon/copy-tabs) |
 | [copy&nbsp;video&nbsp;frame](https://github.com/igorlogius/webextensions/tree/main/sources/copy-video-frame) | Adds a context menu entry that allows to capture a still frame image from a html video element | [link](https://addons.mozilla.org/firefox/addon/copy-video-frame) |
 | [dont&nbsp;load&nbsp;background&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/dont-load-background-tabs) | Prevents background tabs from loading until activated | [link](https://addons.mozilla.org/firefox/addon/dont-load-background-tabs) |
@@ -22,7 +22,8 @@ The following are published on AMO:
 | [mute&nbsp;unfocused&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/mute-unfocused-tabs) | Automatically mute unfocused tabs | [link](https://addons.mozilla.org/firefox/addon/mute-unfocused-tabs) |
 | [open&nbsp;bookmarks&nbsp;in&nbsp;tabgroup](https://github.com/igorlogius/webextensions/tree/main/sources/open-bookmarks-in-tabgroup) | Open a bookmark folder as a tabgroup | [link](https://addons.mozilla.org/firefox/addon/open-bookmarks-in-tabgroup) |
 | [open&nbsp;temp&nbsp;container](https://github.com/igorlogius/webextensions/tree/main/sources/open-temp-container) | Open bookmarks, links or tabs in temporary containers | [link](https://addons.mozilla.org/firefox/addon/open-temp-container) |
-| [save&nbsp;website&nbsp;as&nbsp;image](https://github.com/igorlogius/webextensions/tree/main/sources/save-website-as-image) | Save full website snapshots as a series of images | [link](https://addons.mozilla.org/firefox/addon/save-website-as-image) |
+| [save&nbsp;website&nbsp;as&nbsp;image](https://github.com/igorlogius/webextensions/tree/main/sources/save-website-as-image) | Make full website snapshots | [link](https://addons.mozilla.org/firefox/addon/save-website-as-image) |
 | [show&nbsp;qrcode](https://github.com/igorlogius/webextensions/tree/main/sources/show-qrcode) | Show quick response codes for any tab url, any selected link, text or bookmark | [link](https://addons.mozilla.org/firefox/addon/show-qrcode) |
 | [tabs&nbsp;media&nbsp;controller](https://github.com/igorlogius/webextensions/tree/main/sources/tabs-media-controller) | Control audio and video elements from all tabs via the toolbar button popup menu | [link](https://addons.mozilla.org/firefox/addon/tabs-media-controller) |
 | [tbl2csv](https://github.com/igorlogius/webextensions/tree/main/sources/tbl2csv) | Export HTML Tables as Comma Seperated Values which can be opend and further processed with many common spreadsheet processors like microsoft excel, libreoffice-calc or gnumeric | [link](https://addons.mozilla.org/firefox/addon/tbl2csv) |
+
