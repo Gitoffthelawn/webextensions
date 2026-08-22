@@ -111,3 +111,40 @@ actionAPI.setBadgeBackgroundColor({ color: "orange" });
 
 // init
 updateBadge();
+
+// Restore icon when extension is installed
+browser.runtime.onInstalled.addListener(async () => {
+  await restoreIcon();
+});
+
+// Restore icon when browser starts
+browser.runtime.onStartup.addListener(async () => {
+  await restoreIcon();
+});
+
+async function restoreIcon() {
+  try {
+    const data = await browser.storage.local.get("savedIconData");
+    if (data.savedIconData) {
+      // Convert the stored Array back into a Uint8ClampedArray
+      const clampedArray = new Uint8ClampedArray(data.savedIconData);
+      const imageData = new ImageData(clampedArray, 128, 128);
+
+      await browser.browserAction.setIcon({ imageData: imageData });
+    }
+  } catch (e) {
+    //console.error(e);
+  }
+}
+
+// Restore icon when re-enable addon
+restoreIcon();
+
+browser.menus.create({
+  title: "Set custom icon",
+  contexts: ["browser_action"],
+  // The onclick callback is supported directly in the browser.menus API
+  onclick: () => {
+    browser.runtime.openOptionsPage();
+  },
+});

@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Icon Settings</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f9;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        margin: 0;
+      }
+      .card {
+        background: white;
+        max-width: 500px;
+        width: 100%;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 1.5rem;
+        color: #1a73e8;
+      }
+      .instructions {
+        text-align: left;
+        background: #e8f0fe;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 25px;
+        border-left: 4px solid #1a73e8;
+      }
+      .upload-section {
+        border: 2px dashed #ccc;
+        padding: 30px;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+        position: relative;
+      }
+      .upload-section:hover {
+        border-color: #1a73e8;
+      }
+      input[type="file"] {
+        cursor: pointer;
+      }
+      .preview-container {
+        margin-top: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      #previewCanvas {
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        background: #eee;
+        display: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        margin-top: 15px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        min-height: 1.2em;
+      }
+      .hint {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 10px;
+      }
+
+      .custom-file-upload {
+        display: inline-block;
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #1a73e8;
+        color: white;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        margin-bottom: 15px;
+      }
+
+      .custom-file-upload:hover {
+        background-color: #1557b0;
+      }
+
+      .file-name {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 10px;
+
+        /* These three lines prevent the layout overflow */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        /* Ensure the container has a maximum width to trigger the ellipsis */
+        max-width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Custom Extension Icon</h1>
+
+      <div class="instructions">
+        <strong>How to customize your icon:</strong><br />
+        1. Upload a <b>JPG</b> or <b>PNG</b> image.<br />
+        2. The image will be automatically resized to
+        <b>128x128 pixels</b>.<br />
+        3. Once uploaded, your extension's toolbar icon will update immediately
+        and persist after restart.
+      </div>
+
+      <div class="upload-section">
+        <!-- The native input is hidden -->
+        <input
+          type="file"
+          id="imageInput"
+          accept="image/png, image/jpeg"
+          style="display: none"
+        />
+
+        <!-- Custom button that triggers the hidden input -->
+        <label for="imageInput" class="custom-file-upload">
+          Choose Image
+        </label>
+
+        <!-- This area will show the filename and handle overflow -->
+        <div id="fileNameDisplay" class="file-name">No file chosen</div>
+
+        <div class="hint">
+          Recommended: Use a square image to avoid stretching.
+        </div>
+      </div>
+
+      <div class="preview-container">
+        <div id="status" class="status"></div>
+        <canvas id="previewCanvas" width="128" height="128"></canvas>
+        <div
+          id="previewLabel"
+          style="display: none; font-size: 0.8rem; color: #888"
+        >
+          Preview (128x128)
+        </div>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

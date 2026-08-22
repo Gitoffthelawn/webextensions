@@ -19,10 +19,14 @@
   "description": "Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs",
   "icons": {
-    "128": "icon.png"
+    "512": "icon.png"
   },
   "manifest_version": 2,
   "name": "Close Duplicate Tabs",
-  "permissions": ["cookies", "tabs"],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "permissions": ["cookies", "tabs", "storage", "menus"],
   "version": "1.0.28"
 }
