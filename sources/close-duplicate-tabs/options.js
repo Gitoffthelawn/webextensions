@@ -16,7 +16,10 @@ async function fileToImageData(file, targetWidth = 128, targetHeight = 128) {
     canvas.height = targetHeight;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-    return ctx.getImageData(0, 0, targetWidth, targetHeight);
+    return {
+      imageData: ctx.getImageData(0, 0, targetWidth, targetHeight),
+      dataUrl: canvas.toDataURL("image/png"),
+    };
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -33,16 +36,15 @@ document.getElementById("imageInput").addEventListener("change", async (e) => {
 
   try {
     status.textContent = "Processing...";
-    const imageData = await fileToImageData(file, 128, 128);
+    const { imageData, dataUrl } = await fileToImageData(file, 128, 128);
 
     // Preview on options page
     ctx.putImageData(imageData, 0, 0);
     canvas.style.display = "block";
     document.getElementById("previewLabel").style.display = "block";
 
-    // Convert Uint8ClampedArray to Array for JSON serialization in storage
-    const pixelArray = Array.from(imageData.data);
-    await browser.storage.local.set({ savedIconData: pixelArray });
+    // Store as a compact PNG data URL instead of a raw pixel array
+    await browser.storage.local.set({ savedIconData: dataUrl });
 
     // Update toolbar icon
     await browser.browserAction.setIcon({ imageData: imageData });

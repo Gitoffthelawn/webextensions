@@ -126,14 +126,20 @@ async function restoreIcon() {
   try {
     const data = await browser.storage.local.get("savedIconData");
     if (data.savedIconData) {
-      // Convert the stored Array back into a Uint8ClampedArray
-      const clampedArray = new Uint8ClampedArray(data.savedIconData);
-      const imageData = new ImageData(clampedArray, 128, 128);
+      // savedIconData is a PNG data URL; decode it back into ImageData
+      const res = await fetch(data.savedIconData);
+      const blob = await res.blob();
+      const bitmap = await createImageBitmap(blob);
+
+      const canvas = new OffscreenCanvas(128, 128);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, 128, 128);
+      const imageData = ctx.getImageData(0, 0, 128, 128);
 
       await browser.browserAction.setIcon({ imageData: imageData });
     }
   } catch (e) {
-    //console.error(e);
+    console.error(e);
   }
 }
 
