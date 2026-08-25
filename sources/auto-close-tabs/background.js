@@ -47,8 +47,8 @@ async function rebuildIgnoreRules(
 
   for (let i = 0; i < container_regexs.length && i < url_regexs.length; i++) {
     try {
-      left = container_regexs[i].trim();
-      right = url_regexs[i].trim();
+      let left = container_regexs[i].trim();
+      let right = url_regexs[i].trim();
 
       if (!left.startsWith("#") && !right.startsWith("#")) {
         const containerNameMatcher = left === "" ? null : new RegExp(left);
@@ -88,7 +88,7 @@ async function rebuildIntervalHandlers(
         right !== "" &&
         left !== ""
       ) {
-        left_parts = left.split(",");
+        let left_parts = left.split(",");
         if (left_parts.length < 2) {
           continue;
         }
@@ -174,7 +174,7 @@ async function tabCleanUp(input) {
       },
     )
   ).sort((a, b) => {
-    a.lastAccessed - b.lastAccessed;
+    return a.lastAccessed - b.lastAccessed;
   });
 
   //console.debug(all_tabs.map( t => t.cookieStoreId + "_" + t.url ));

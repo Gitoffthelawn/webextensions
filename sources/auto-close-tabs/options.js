@@ -3,9 +3,26 @@
 const saveFolderEl = document.getElementById("saveFolder");
 const closeThresholdEl = document.getElementById("closeThreshold");
 const savebtn = document.getElementById("savebtn");
+const resetbtn = document.getElementById("resetbtn");
 const statusEl = document.getElementById("status");
 const closeRulesListEl = document.getElementById("closeRulesList");
 const ignoreRulesListEl = document.getElementById("ignoreRulesList");
+const closeRulesSection = document.getElementById("closeRulesSection");
+const ignoreRulesSection = document.getElementById("ignoreRulesSection");
+const closeRulesToggle = document.getElementById("closeRulesToggle");
+const ignoreRulesToggle = document.getElementById("ignoreRulesToggle");
+const closeRulesCountEl = document.getElementById("closeRulesCount");
+const ignoreRulesCountEl = document.getElementById("ignoreRulesCount");
+const statusPillEl = document.getElementById("statusPill");
+const toggleAutostartBtn = document.getElementById("toggleAutostart");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFileEl = document.getElementById("importFile");
+const importExportMsgEl = document.getElementById("importExportMsg");
+
+// Full URLs of currently open tabs, used for the "matches N open tabs"
+// live hint next to each URL regex field. Populated by loadOpenTabSuggestions.
+let openTabUrls = [];
 
 // Units offered for the idle-time input. Value = milliseconds per unit.
 // Seconds is the smallest granularity offered — nothing below 1s.
@@ -23,6 +40,7 @@ let isDirty = false;
 let isLoading = true; // suppress dirty-marking while populating the form on load
 
 const unsavedBannerEl = document.getElementById("unsavedBanner");
+const bannerResetBtn = document.getElementById("bannerResetBtn");
 
 function markDirty() {
   if (isLoading) return;
@@ -30,6 +48,7 @@ function markDirty() {
   unsavedBannerEl.classList.add("show");
   document.body.classList.add("has-unsaved-banner");
   savebtn.classList.add("dirty");
+  resetbtn.disabled = false;
 }
 
 function markClean() {
@@ -37,6 +56,7 @@ function markClean() {
   unsavedBannerEl.classList.remove("show");
   document.body.classList.remove("has-unsaved-banner");
   savebtn.classList.remove("dirty");
+  resetbtn.disabled = true;
 }
 
 window.addEventListener("beforeunload", (evt) => {
@@ -52,6 +72,41 @@ function regex101Url(regexStr) {
   params.set("flavor", "javascript");
   return `https://regex101.com/?${params.toString()}`;
 }
+
+// --- autostart status pill / toggle --------------------------------------
+// Mirrors clicking the toolbar button — reads/writes storage directly and
+// notifies background.js, without going through the Save button (this is
+// an instant action, same as the toolbar icon, not a pending edit).
+
+async function refreshAutostartStatus() {
+  let autostart = false;
+  try {
+    const obj = await browser.storage.local.get("autostart");
+    autostart = obj.autostart === true;
+  } catch (e) {
+    console.error(e);
+  }
+  statusPillEl.textContent = autostart
+    ? "Auto-close is ON"
+    : "Auto-close is OFF";
+  statusPillEl.classList.toggle("on", autostart);
+  statusPillEl.classList.toggle("off", !autostart);
+  return autostart;
+}
+
+toggleAutostartBtn.addEventListener("click", async () => {
+  toggleAutostartBtn.disabled = true;
+  try {
+    const current = await refreshAutostartStatus();
+    await browser.storage.local.set({ autostart: !current });
+    browser.runtime.sendMessage({ cmd: "storageChanged" });
+    await refreshAutostartStatus();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    toggleAutostartBtn.disabled = false;
+  }
+});
 
 // --- bookmark folder select --------------------------------------------
 
@@ -141,9 +196,7 @@ function parseIgnoreRulesStorage(leftStr, rightStr) {
 
 function serializeCloseRules(rows) {
   return {
-    left: rows
-      .map((r) => `${Math.round(r.value * r.unitMs)},${r.container}`)
-      .join("\n"),
+    left: rows.map((r) => `${Math.round(r.value * r.unitMs)},${r.container}`).join("\n"),
     right: rows.map((r) => r.url).join("\n"),
   };
 }
@@ -165,6 +218,57 @@ function isValidRegexOrEmpty(str) {
   } catch (e) {
     return false;
   }
+}
+
+// --- collapsible rule sections ---------------------------------------
+
+function setSectionExpanded(section, toggleEl, expanded) {
+  section.classList.toggle("expanded", expanded);
+  toggleEl.setAttribute("aria-expanded", String(expanded));
+}
+
+function toggleSection(section, toggleEl, otherSection, otherToggleEl) {
+  const willExpand = !section.classList.contains("expanded");
+  setSectionExpanded(section, toggleEl, willExpand);
+  // only one section open at a time, to keep the page short
+  if (willExpand) setSectionExpanded(otherSection, otherToggleEl, false);
+}
+
+function sectionHasErrors(section) {
+  return [...section.querySelectorAll(".rule-row-error")].some(
+    (el) => el.textContent.trim() !== "",
+  );
+}
+
+closeRulesToggle.addEventListener("click", () =>
+  toggleSection(
+    closeRulesSection,
+    closeRulesToggle,
+    ignoreRulesSection,
+    ignoreRulesToggle,
+  ),
+);
+ignoreRulesToggle.addEventListener("click", () =>
+  toggleSection(
+    ignoreRulesSection,
+    ignoreRulesToggle,
+    closeRulesSection,
+    closeRulesToggle,
+  ),
+);
+
+[closeRulesToggle, ignoreRulesToggle].forEach((el) => {
+  el.addEventListener("keydown", (evt) => {
+    if (evt.key === "Enter" || evt.key === " ") {
+      evt.preventDefault();
+      el.click();
+    }
+  });
+});
+
+function updateRuleCountBadges() {
+  closeRulesCountEl.textContent = `${closeRules.length} rule${closeRules.length === 1 ? "" : "s"}`;
+  ignoreRulesCountEl.textContent = `${ignoreRules.length} rule${ignoreRules.length === 1 ? "" : "s"}`;
 }
 
 // --- rendering ------------------------------------------------------------
@@ -244,16 +348,86 @@ function buildUrlField(rule) {
   input.value = rule.url;
   wrapper.appendChild(input);
 
+  const matchHint = document.createElement("div");
+  matchHint.className = "rule-url-match-hint";
+  wrapper.appendChild(matchHint);
+
   return wrapper;
 }
 
-function buildRemoveButton() {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "rule-remove";
-  btn.title = "Remove rule";
-  btn.textContent = "✕";
-  return btn;
+// Updates the "matches N open tabs" hint for a rule row's URL field.
+function updateMatchHint(row, urlStr) {
+  const hintEl = row.querySelector(".rule-url-match-hint");
+  if (!hintEl) return;
+
+  if (!urlStr || !isValidRegexOrEmpty(urlStr)) {
+    hintEl.textContent = "";
+    return;
+  }
+  if (openTabUrls.length === 0) {
+    hintEl.textContent = "";
+    return;
+  }
+
+  let re;
+  try {
+    re = new RegExp(urlStr);
+  } catch (e) {
+    hintEl.textContent = "";
+    return;
+  }
+
+  const count = openTabUrls.filter((u) => re.test(u)).length;
+  hintEl.textContent =
+    count === 0
+      ? "Matches none of your open tabs"
+      : `Matches ${count} of your ${openTabUrls.length} open tab${openTabUrls.length === 1 ? "" : "s"}`;
+}
+
+function refreshAllMatchHints() {
+  document.querySelectorAll(".rule-row").forEach((row) => {
+    const kind = row.dataset.kind;
+    const rules = kind === "close" ? closeRules : ignoreRules;
+    const rule = rules[Number(row.dataset.index)];
+    if (rule) updateMatchHint(row, rule.url);
+  });
+}
+
+function buildRuleActions(index, total) {
+  const wrap = document.createElement("div");
+  wrap.className = "rule-actions";
+
+  const up = document.createElement("button");
+  up.type = "button";
+  up.className = "rule-move-up";
+  up.title = "Move rule up";
+  up.textContent = "↑";
+  up.disabled = index === 0;
+  wrap.appendChild(up);
+
+  const down = document.createElement("button");
+  down.type = "button";
+  down.className = "rule-move-down";
+  down.title = "Move rule down";
+  down.textContent = "↓";
+  down.disabled = index === total - 1;
+  wrap.appendChild(down);
+
+  const dup = document.createElement("button");
+  dup.type = "button";
+  dup.className = "rule-duplicate";
+  dup.title = "Duplicate rule";
+  dup.textContent = "⧉";
+  wrap.appendChild(dup);
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "rule-remove";
+  remove.title = "Remove rule";
+  remove.textContent = "✕";
+  wrap.appendChild(remove);
+
+  return wrap;
 }
 
 function renderCloseRules() {
@@ -268,6 +442,7 @@ function renderCloseRules() {
   closeRules.forEach((rule, index) => {
     closeRulesListEl.appendChild(renderCloseRuleRow(rule, index));
   });
+  updateRuleCountBadges();
   validateAll();
 }
 
@@ -283,6 +458,7 @@ function renderIgnoreRules() {
   ignoreRules.forEach((rule, index) => {
     ignoreRulesListEl.appendChild(renderIgnoreRuleRow(rule, index));
   });
+  updateRuleCountBadges();
   validateAll();
 }
 
@@ -338,11 +514,13 @@ function renderCloseRuleRow(rule, index) {
   fields.appendChild(buildUrlField(rule));
 
   row.appendChild(fields);
-  row.appendChild(buildRemoveButton());
+  row.appendChild(buildRuleActions(index, closeRules.length));
 
   const errEl = document.createElement("div");
   errEl.className = "rule-row-error";
   row.appendChild(errEl);
+
+  updateMatchHint(row, rule.url);
 
   return row;
 }
@@ -378,11 +556,13 @@ function renderIgnoreRuleRow(rule, index) {
   fields.appendChild(buildUrlField(rule));
 
   row.appendChild(fields);
-  row.appendChild(buildRemoveButton());
+  row.appendChild(buildRuleActions(index, ignoreRules.length));
 
   const errEl = document.createElement("div");
   errEl.className = "rule-row-error";
   row.appendChild(errEl);
+
+  updateMatchHint(row, rule.url);
 
   return row;
 }
@@ -409,6 +589,7 @@ function attachListHandlers(listEl) {
       rule.url = evt.target.value;
       const helpLink = row.querySelector(".regex-help");
       if (helpLink) helpLink.href = regex101Url(rule.url);
+      updateMatchHint(row, rule.url);
     }
     markDirty();
     validateAll();
@@ -442,18 +623,33 @@ function attachListHandlers(listEl) {
   });
 
   listEl.addEventListener("click", (evt) => {
-    if (!evt.target.classList.contains("rule-remove")) return;
     const row = evt.target.closest(".rule-row");
     if (!row) return;
     const index = Number(row.dataset.index);
-    if (listEl === closeRulesListEl) {
-      closeRules.splice(index, 1);
-      renderCloseRules();
-    } else {
-      ignoreRules.splice(index, 1);
-      renderIgnoreRules();
+    const rules = getRuleArrayForList(listEl);
+    const rerender =
+      listEl === closeRulesListEl ? renderCloseRules : renderIgnoreRules;
+
+    if (evt.target.classList.contains("rule-remove")) {
+      if (!window.confirm("Remove this rule?")) return;
+      rules.splice(index, 1);
+      rerender();
+      markDirty();
+    } else if (evt.target.classList.contains("rule-duplicate")) {
+      rules.splice(index + 1, 0, structuredClone(rules[index]));
+      rerender();
+      markDirty();
+    } else if (evt.target.classList.contains("rule-move-up")) {
+      if (index === 0) return;
+      [rules[index - 1], rules[index]] = [rules[index], rules[index - 1]];
+      rerender();
+      markDirty();
+    } else if (evt.target.classList.contains("rule-move-down")) {
+      if (index === rules.length - 1) return;
+      [rules[index + 1], rules[index]] = [rules[index], rules[index + 1]];
+      rerender();
+      markDirty();
     }
-    markDirty();
   });
 }
 
@@ -483,10 +679,7 @@ function validateAll() {
       !isValidRegexOrEmpty(rule.container)
     ) {
       msg = "Container pattern is not a valid regular expression.";
-    } else if (
-      kind === "close" &&
-      (!Number.isInteger(rule.value) || rule.value < 1)
-    ) {
+    } else if (kind === "close" && (!Number.isInteger(rule.value) || rule.value < 1)) {
       msg = "Idle time must be a whole number of at least 1.";
     }
 
@@ -559,6 +752,38 @@ saveFolderEl.addEventListener("change", () => {
   markDirty();
 });
 
+// --- discard-changes snapshot -------------------------------------------
+// Captures the last known persisted state (on load, and again after every
+// successful save) so "Discard changes" can restore it without a reload.
+
+let lastSavedState = null;
+
+function snapshotSavedState() {
+  lastSavedState = {
+    closeThreshold: normalizeNumberField(closeThresholdEl),
+    saveFolder: saveFolderEl.value,
+    closeRules: structuredClone(closeRules),
+    ignoreRules: structuredClone(ignoreRules),
+  };
+}
+
+resetbtn.addEventListener("click", () => {
+  if (!lastSavedState) return;
+  if (isDirty && !window.confirm("Discard all unsaved changes?")) return;
+
+  closeThresholdEl.value = lastSavedState.closeThreshold;
+  saveFolderEl.value = lastSavedState.saveFolder;
+  closeRules = structuredClone(lastSavedState.closeRules);
+  ignoreRules = structuredClone(lastSavedState.ignoreRules);
+
+  renderCloseRules();
+  renderIgnoreRules();
+  markClean();
+  flashStatus("Changes discarded", false);
+});
+
+bannerResetBtn.addEventListener("click", () => resetbtn.click());
+
 // --- save / status ----------------------------------------------------
 
 let statusTimeout = null;
@@ -574,6 +799,12 @@ function flashStatus(text, isError) {
 
 async function saveAll() {
   if (!validateAll()) {
+    if (sectionHasErrors(closeRulesSection)) {
+      setSectionExpanded(closeRulesSection, closeRulesToggle, true);
+    }
+    if (sectionHasErrors(ignoreRulesSection)) {
+      setSectionExpanded(ignoreRulesSection, ignoreRulesToggle, true);
+    }
     flashStatus("Fix the highlighted rules before saving", true);
     return;
   }
@@ -592,10 +823,122 @@ async function saveAll() {
 
   browser.runtime.sendMessage({ cmd: "storageChanged" });
   markClean();
+  snapshotSavedState();
   flashStatus("Saved", false);
 }
 
 savebtn.addEventListener("click", saveAll);
+
+// --- import / export config as JSON ---------------------------------------
+
+const CONFIG_FORMAT_VERSION = 1;
+
+function buildExportObject() {
+  return {
+    version: CONFIG_FORMAT_VERSION,
+    closeThreshold: normalizeNumberField(closeThresholdEl),
+    saveFolder: saveFolderEl.value,
+    closeRules: closeRules.map((r) => ({
+      value: r.value,
+      unitMs: r.unitMs,
+      container: r.container,
+      url: r.url,
+    })),
+    ignoreRules: ignoreRules.map((r) => ({
+      container: r.container,
+      url: r.url,
+    })),
+  };
+}
+
+function flashImportExportMsg(text, isError) {
+  importExportMsgEl.textContent = text;
+  importExportMsgEl.classList.toggle("error", !!isError);
+}
+
+exportBtn.addEventListener("click", () => {
+  const json = JSON.stringify(buildExportObject(), null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "auto-close-tabs-config.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  flashImportExportMsg("Config exported.", false);
+});
+
+importBtn.addEventListener("click", () => {
+  importFileEl.click();
+});
+
+importFileEl.addEventListener("change", async () => {
+  const file = importFileEl.files && importFileEl.files[0];
+  importFileEl.value = ""; // allow re-selecting the same file later
+  if (!file) return;
+
+  let data;
+  try {
+    const text = await file.text();
+    data = JSON.parse(text);
+  } catch (e) {
+    flashImportExportMsg("That file isn't valid JSON.", true);
+    return;
+  }
+
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !Array.isArray(data.closeRules) ||
+    !Array.isArray(data.ignoreRules)
+  ) {
+    flashImportExportMsg("That file doesn't look like a valid config.", true);
+    return;
+  }
+
+  const validUnit = (ms) => TIME_UNITS.some((u) => u.ms === ms);
+
+  closeRules = data.closeRules
+    .filter((r) => r && typeof r.url === "string")
+    .map((r) => ({
+      value:
+        Number.isInteger(r.value) && r.value >= 1 ? r.value : 10,
+      unitMs: validUnit(r.unitMs) ? r.unitMs : 60000,
+      container: typeof r.container === "string" ? r.container : "",
+      url: r.url,
+    }));
+
+  ignoreRules = data.ignoreRules
+    .filter((r) => r && typeof r.url === "string")
+    .map((r) => ({
+      container: typeof r.container === "string" ? r.container : "",
+      url: r.url,
+    }));
+
+  if (typeof data.closeThreshold === "number") {
+    closeThresholdEl.value = Math.max(0, Math.round(data.closeThreshold));
+  }
+  if (typeof data.saveFolder === "string") {
+    // only apply if it's a real option in the select (bookmark folder ids
+    // are user/profile-specific and may not exist here)
+    const hasOption = [...saveFolderEl.options].some(
+      (o) => o.value === data.saveFolder,
+    );
+    if (hasOption) saveFolderEl.value = data.saveFolder;
+  }
+
+  renderCloseRules();
+  renderIgnoreRules();
+  setSectionExpanded(closeRulesSection, closeRulesToggle, true);
+  setSectionExpanded(ignoreRulesSection, ignoreRulesToggle, true);
+  markDirty();
+  flashImportExportMsg(
+    "Config imported — review and click Save changes to apply.",
+    false,
+  );
+});
 
 // --- suggestions from currently open tabs ---------------------------------
 
@@ -615,6 +958,7 @@ async function loadOpenTabSuggestions() {
   }
 
   const hostnames = new Set();
+  const urls = [];
   for (const t of tabs) {
     if (!t.url) continue;
     let u;
@@ -624,24 +968,32 @@ async function loadOpenTabSuggestions() {
       continue;
     }
     if (u.protocol !== "http:" && u.protocol !== "https:") continue;
+    urls.push(t.url);
     const host = u.hostname.startsWith("www.")
       ? u.hostname.slice(4)
       : u.hostname;
     hostnames.add(host);
   }
+  openTabUrls = urls;
 
-  [...hostnames].sort().forEach((host) => {
-    const escaped = host.replace(/\./g, "\\.");
-    const opt = document.createElement("option");
-    opt.value = `^https?:\\/\\/(www\\.)?${escaped}\\/.*`;
-    opt.textContent = `open tab: ${host}`;
-    datalist.appendChild(opt);
-  });
+  [...hostnames]
+    .sort()
+    .forEach((host) => {
+      const escaped = host.replace(/\./g, "\\.");
+      const opt = document.createElement("option");
+      opt.value = `^https?:\\/\\/(www\\.)?${escaped}\\/.*`;
+      opt.textContent = `open tab: ${host}`;
+      datalist.appendChild(opt);
+    });
+
+  refreshAllMatchHints();
 }
 
 // --- load ---------------------------------------------------------------
 
 async function onLoad() {
+  refreshAutostartStatus();
+
   try {
     await initSaveFolderSelect();
   } catch (e) {
@@ -682,6 +1034,7 @@ async function onLoad() {
   renderCloseRules();
   renderIgnoreRules();
   isLoading = false;
+  snapshotSavedState();
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);

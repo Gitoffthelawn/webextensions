@@ -58,6 +58,87 @@
         font-size: 12.5px;
       }
 
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .status-pill::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+
+      .status-pill.on {
+        color: var(--ok);
+        border-color: #b7e4c7;
+        background: #eafaf1;
+      }
+      .status-pill.on::before {
+        background: var(--ok);
+      }
+
+      .status-pill.off {
+        color: var(--danger);
+        border-color: #f5c2c2;
+        background: #fdeaea;
+      }
+      .status-pill.off::before {
+        background: var(--danger);
+      }
+
+      button.secondary-btn {
+        background: white;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button.secondary-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      button.secondary-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        border-color: var(--border);
+        color: var(--muted);
+      }
+
+      .toolbar-spacer {
+        flex: 1;
+      }
+
+      #importExportMsg {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #importExportMsg.error {
+        color: var(--danger);
+      }
+
       section.card {
         background: var(--panel);
         border: 1px solid var(--border);
@@ -78,6 +159,72 @@
         margin: 0 0 12px 0;
         color: var(--muted);
         font-size: 12.5px;
+      }
+
+      /* --- collapsible rule sections --- */
+
+      .rule-section {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .card-header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 16px 18px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .card-header-toggle:hover {
+        background: #fafafd;
+      }
+
+      .card-header-toggle h2 {
+        margin: 0;
+      }
+
+      .card-header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .rule-count-badge {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--muted);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+      }
+
+      .card-chevron {
+        color: var(--muted);
+        font-size: 12px;
+        transition: transform 0.15s ease;
+        display: inline-block;
+      }
+
+      .rule-section.expanded .card-chevron {
+        transform: rotate(90deg);
+      }
+
+      .rule-section.expanded .card-header-toggle {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-body {
+        display: none;
+        padding: 14px 18px 18px 18px;
+      }
+
+      .rule-section.expanded .card-body {
+        display: block;
       }
 
       .help {
@@ -199,6 +346,13 @@
         width: 100%;
       }
 
+      .rule-url-match-hint {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 3px;
+        min-height: 1.3em;
+      }
+
       .time-inputs {
         display: flex;
         gap: 4px;
@@ -214,7 +368,14 @@
         width: 150px;
       }
 
-      .rule-remove {
+      .rule-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        align-self: center;
+      }
+
+      .rule-actions button {
         background: none;
         border: 1px solid var(--border);
         color: var(--muted);
@@ -222,13 +383,21 @@
         width: 26px;
         height: 26px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1;
-        flex-shrink: 0;
-        align-self: center;
       }
 
-      .rule-remove:hover {
+      .rule-actions button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .rule-actions button:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .rule-actions button.rule-remove:hover {
         background: #fdeaea;
         color: var(--danger);
         border-color: var(--danger);
@@ -304,7 +473,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 10px;
         background: #fff4e0;
         color: #8a5a00;
         border-bottom: 1px solid #f0c36d;
@@ -319,9 +488,24 @@
         display: flex;
       }
 
-      #unsavedBanner::before {
-        content: "●";
+      #unsavedBannerText::before {
+        content: "● ";
         font-size: 9px;
+      }
+
+      #bannerResetBtn {
+        background: none;
+        border: 1px solid #d9a441;
+        color: #8a5a00;
+        border-radius: 5px;
+        padding: 3px 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      #bannerResetBtn:hover {
+        background: #f7e2b3;
       }
 
       body.has-unsaved-banner {
@@ -362,7 +546,10 @@
   </head>
   <body>
     <div id="unsavedBanner">
-      You have unsaved changes — click Save changes to keep them
+      <span id="unsavedBannerText"
+        >You have unsaved changes — click Save changes to keep them</span
+      >
+      <button type="button" id="bannerResetBtn">Discard changes</button>
     </div>
 
     <header>
@@ -372,6 +559,27 @@
         <p>Configure how idle tabs get cleaned up automatically.</p>
       </div>
     </header>
+
+    <div class="toolbar">
+      <span class="status-pill" id="statusPill">Checking status…</span>
+      <button type="button" class="secondary-btn" id="toggleAutostart">
+        Turn on/off
+      </button>
+      <div class="toolbar-spacer"></div>
+      <button type="button" class="secondary-btn" id="exportBtn">
+        Export config
+      </button>
+      <button type="button" class="secondary-btn" id="importBtn">
+        Import config
+      </button>
+      <input
+        type="file"
+        id="importFile"
+        accept="application/json"
+        style="display: none"
+      />
+    </div>
+    <div id="importExportMsg"></div>
 
     <section class="card">
       <h2>
@@ -399,54 +607,88 @@
         >
       </h2>
       <p class="desc">
-        Optionally back up auto-closed tabs as bookmarks before they're closed.
+        Optionally back up auto-closed tabs as bookmarks before they're
+        closed.
       </p>
       <select id="saveFolder">
         <option value="">Don't save (just close)</option>
       </select>
     </section>
 
-    <section class="card">
-      <h2>
-        Close rules
-        <span
-          class="help"
-          title="A tab is eligible for closing once it has been idle longer than the given time AND matches both the container and URL pattern."
-          >?</span
-        >
-      </h2>
-      <p class="desc">
-        Tabs idle longer than the given time, matching both the container and
-        URL pattern, will be closed.
-      </p>
-      <div id="closeRulesList" class="rule-list"></div>
-      <button type="button" class="add-rule" id="addCloseRule">
-        + Add close rule
-      </button>
+    <section class="card rule-section" id="closeRulesSection">
+      <div
+        class="card-header-toggle"
+        id="closeRulesToggle"
+        role="button"
+        tabindex="0"
+        aria-expanded="false"
+        aria-controls="closeRulesBody"
+      >
+        <h2>
+          Close rules
+          <span
+            class="help"
+            title="A tab is eligible for closing once it has been idle longer than the given time AND matches both the container and URL pattern."
+            >?</span
+          >
+        </h2>
+        <span class="card-header-right">
+          <span class="rule-count-badge" id="closeRulesCount">0 rules</span>
+          <span class="card-chevron">▸</span>
+        </span>
+      </div>
+      <div class="card-body" id="closeRulesBody">
+        <p class="desc">
+          Tabs idle longer than the given time, matching both the container
+          and URL pattern, will be closed.
+        </p>
+        <div id="closeRulesList" class="rule-list"></div>
+        <button type="button" class="add-rule" id="addCloseRule">
+          + Add close rule
+        </button>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>
-        Ignore rules
-        <span
-          class="help"
-          title="Tabs matching both the container and URL pattern are never auto-closed, even if a close rule would otherwise apply."
-          >?</span
-        >
-      </h2>
-      <p class="desc">
-        Tabs matching both patterns here are always skipped, overriding close
-        rules.
-      </p>
-      <div id="ignoreRulesList" class="rule-list"></div>
-      <button type="button" class="add-rule" id="addIgnoreRule">
-        + Add ignore rule
-      </button>
+    <section class="card rule-section" id="ignoreRulesSection">
+      <div
+        class="card-header-toggle"
+        id="ignoreRulesToggle"
+        role="button"
+        tabindex="0"
+        aria-expanded="false"
+        aria-controls="ignoreRulesBody"
+      >
+        <h2>
+          Ignore rules
+          <span
+            class="help"
+            title="Tabs matching both the container and URL pattern are never auto-closed, even if a close rule would otherwise apply."
+            >?</span
+          >
+        </h2>
+        <span class="card-header-right">
+          <span class="rule-count-badge" id="ignoreRulesCount">0 rules</span>
+          <span class="card-chevron">▸</span>
+        </span>
+      </div>
+      <div class="card-body" id="ignoreRulesBody">
+        <p class="desc">
+          Tabs matching both patterns here are always skipped, overriding
+          close rules.
+        </p>
+        <div id="ignoreRulesList" class="rule-list"></div>
+        <button type="button" class="add-rule" id="addIgnoreRule">
+          + Add ignore rule
+        </button>
+      </div>
     </section>
 
     <div class="row-actions">
       <div class="row-actions-inner">
         <button id="savebtn">Save changes</button>
+        <button id="resetbtn" class="secondary-btn" disabled>
+          Discard changes
+        </button>
         <span id="status">Saved</span>
       </div>
     </div>
@@ -461,9 +703,9 @@
       <option value="^file:\/\/.*">local files</option>
       <option value="^https?:\/\/mail\.google\.com\/.*">Gmail</option>
       <option value="^https?:\/\/(www\.)?youtube\.com\/.*">YouTube</option>
-      <option value="^https?:\/\/.*\.(pdf|zip|dmg|exe)$">
-        direct downloads (pdf/zip/dmg/exe)
-      </option>
+      <option value="^https?:\/\/.*\.(pdf|zip|dmg|exe)$"
+        >direct downloads (pdf/zip/dmg/exe)</option
+      >
     </datalist>
 
     <script src="options.js"></script>
