@@ -164,28 +164,91 @@ function htmlDoc2Json(doc) {
   return out;
 }
 
+/* ---------- UI helpers (visual layer only — logic above is unchanged) ---------- */
+
+function setMessage(text, status) {
+  const el = document.getElementById("message");
+  el.innerText = text;
+  if (status) {
+    el.setAttribute("data-status", status);
+  } else {
+    el.removeAttribute("data-status");
+  }
+}
+
+function setBusy(isBusy) {
+  for (const id of ["doexport", "doimport"]) {
+    document.getElementById(id).disabled = isBusy;
+  }
+}
+
+function initFormatToggle() {
+  const hiddenSelect = document.getElementById("format");
+  const buttons = document.querySelectorAll(".format-toggle button");
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      buttons.forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      hiddenSelect.value = btn.dataset.format;
+    });
+  });
+}
+
+function initDataPanelActions() {
+  document.getElementById("docopy").addEventListener("click", async () => {
+    const output = document.getElementById("output");
+    try {
+      await navigator.clipboard.writeText(output.value);
+    } catch (e) {
+      output.select();
+      document.execCommand("copy");
+    }
+    setMessage("Copied to clipboard", "ok");
+  });
+
+  document.getElementById("doclear").addEventListener("click", () => {
+    document.getElementById("output").value = "";
+    setMessage("", null);
+  });
+}
+
 async function onDOMContentLoaded() {
   await initSelect();
+  initFormatToggle();
+  initDataPanelActions();
 
   document.getElementById("doexport").addEventListener("click", async () => {
-    const bmId = folders.value;
-    const type = document.getElementById("format").value;
-    if (bmId === "") {
-      const tmp = (await browser.bookmarks.getTree())[0];
-      if (type === "html") {
-        exportData(unescape(encodeURIComponent(rec2HtmlStr(tmp))));
+    setMessage("", null);
+    setBusy(true);
+    try {
+      const bmId = folders.value;
+      const type = document.getElementById("format").value;
+      if (bmId === "") {
+        const tmp = (await browser.bookmarks.getTree())[0];
+        if (type === "html") {
+          exportData(unescape(encodeURIComponent(rec2HtmlStr(tmp))));
+        }
+        if (type === "json") {
+          exportData(JSON.stringify(tmp, null, 4));
+        }
+      } else {
+        const tmp = (await browser.bookmarks.getSubTree(bmId))[0];
+        if (type === "html") {
+          exportData(rec2HtmlStr(tmp));
+        }
+        if (type === "json") {
+          exportData(JSON.stringify(tmp, null, 4));
+        }
       }
-      if (type === "json") {
-        exportData(JSON.stringify(tmp, null, 4));
-      }
-    } else {
-      const tmp = (await browser.bookmarks.getSubTree(bmId))[0];
-      if (type === "html") {
-        exportData(rec2HtmlStr(tmp));
-      }
-      if (type === "json") {
-        exportData(JSON.stringify(tmp, null, 4));
-      }
+      setMessage(
+        "Export finished — the data panel below is ready to copy",
+        "ok",
+      );
+    } catch (e) {
+      console.error(e);
+      setMessage("Export failed: " + e.toString(), "error");
+    } finally {
+      setBusy(false);
     }
   });
 
@@ -196,6 +259,8 @@ async function onDOMContentLoaded() {
 
     console.debug(bmId, type, noroot);
 
+    setMessage("", null);
+    setBusy(true);
     try {
       let data;
       if (type === "json") {
@@ -209,12 +274,15 @@ async function onDOMContentLoaded() {
         data = htmlDoc2Json(htmlDoc);
       }
       await importData(bmId, data, noroot);
-      document.getElementById("message").innerText =
-        "INFO: Import from file finished without errors, check the results then you can close this tab";
+      setMessage(
+        "Import finished without errors — check the results, then you can close this tab",
+        "ok",
+      );
     } catch (e) {
       console.error(e);
-      document.getElementById("message").innerText =
-        "ERROR: Import failed, " + e.toString();
+      setMessage("Import failed: " + e.toString(), "error");
+    } finally {
+      setBusy(false);
     }
   });
 }

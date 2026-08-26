@@ -1,77 +1,547 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="icon.png" />
-  <title></title>
-  <style>
-    #output {
-      width: 99%;
-      height: 85vh;
-      white-space: nowrap;
-      overflow-wrap: normal;
-      overflow-x: scroll;
-      overflow-y: scroll;
-    }
-    #actions {
-      float: right;
-    }
-    button {
-      margin-left: 5px;
-    }
-  </style>
-</head>
-<body>
-  <p id="message"></p>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <title>Bookmark Branch Porter</title>
+    <style>
+      :root {
+        --ink: #16302b;
+        --ink-soft: #4a625d;
+        --paper: #f6f8f7;
+        --surface: #ffffff;
+        --border: #dee6e3;
+        --spine: #1a7a6d;
+        --spine-dark: #12564d;
+        --spine-tint: #e6f2f0;
+        --export: #c8492f;
+        --export-tint: #fbeae5;
+        --import: #2f6fbf;
+        --import-tint: #e8f0fb;
+        --ok: #1a7a6d;
+        --ok-tint: #e6f2f0;
+        --err: #c8492f;
+        --err-tint: #fbeae5;
+        --radius: 10px;
+        --mono:
+          ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+      }
 
-  [1] Select Folder:
-  <select id="folder">
-    <option value="">Entire Bookmark Tree</option>
-  </select>
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e8efed;
+          --ink-soft: #a9bdb8;
+          --paper: #10201d;
+          --surface: #16302b;
+          --border: #234943;
+          --spine: #3ea393;
+          --spine-dark: #6cc4b6;
+          --spine-tint: #1a3934;
+          --export: #e2735b;
+          --export-tint: #3a201b;
+          --import: #6ea3e0;
+          --import-tint: #1a2a3a;
+          --ok: #3ea393;
+          --ok-tint: #1a3934;
+          --err: #e2735b;
+          --err-tint: #3a201b;
+        }
+      }
 
-  [2] Select Format:
-  <select id="format">
-    <option value="json">JSON</option>
-    <option value="html">HTML</option>
-  </select>
+      * {
+        box-sizing: border-box;
+      }
 
-  [3]
-  <span id="spnoroot"
-    ><input type="checkbox" id="noroot" /> (check to strip root node on
-    import)</span
-  >
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.5;
+      }
 
-  <div id="actions">
-    <span> [4] Select Action: </span>
+      body {
+        min-height: 100vh;
+        padding: 32px 20px 48px;
+      }
 
-    <button id="doexport">Export</button>
+      .page {
+        max-width: 880px;
+        margin: 0 auto;
+      }
 
-    <button id="doimport">Import</button>
-  </div>
+      /* ---------- Header ---------- */
+      .masthead {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
 
-  <hr />
+      .masthead img {
+        width: 44px;
+        height: 44px;
+        flex: none;
+      }
 
-  <textarea id="output" spellcheck="false" wrap="no">
+      .masthead h1 {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        margin: 0;
+        color: var(--ink);
+      }
 
+      .masthead p {
+        margin: 2px 0 0;
+        color: var(--ink-soft);
+        font-size: 13.5px;
+      }
+
+      /* ---------- Card / spine ---------- */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(16, 32, 29, 0.04);
+        position: relative;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 5px;
+        background: linear-gradient(var(--spine), var(--spine-dark));
+      }
+
+      .steps {
+        padding: 8px 28px 26px 32px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 14px;
+        padding: 20px 0;
+        border-bottom: 1px dashed var(--border);
+      }
+
+      .step:last-child {
+        border-bottom: none;
+      }
+
+      .step-num {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--spine);
+        background: var(--spine-tint);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2px;
+      }
+
+      .step-body label.step-title {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: var(--ink);
+      }
+
+      .step-hint {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin: 6px 0 0;
+      }
+
+      /* ---------- Form controls ---------- */
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 100%;
+        max-width: 440px;
+        font: inherit;
+        color: var(--ink);
+        background: var(--surface)
+          url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%234a625d"/></svg>')
+          no-repeat right 14px center;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 9px 34px 9px 12px;
+        cursor: pointer;
+      }
+
+      select:focus-visible,
+      button:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid var(--spine);
+        outline-offset: 2px;
+      }
+
+      .format-toggle {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        width: fit-content;
+      }
+
+      .format-toggle button {
+        font: inherit;
+        font-weight: 600;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        padding: 8px 20px;
+        border: none;
+        background: var(--surface);
+        color: var(--ink-soft);
+        cursor: pointer;
+      }
+
+      .format-toggle button + button {
+        border-left: 1px solid var(--border);
+      }
+
+      .format-toggle button[aria-pressed="true"] {
+        background: var(--spine-tint);
+        color: var(--spine-dark);
+      }
+
+      .checkline {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .checkline input[type="checkbox"] {
+        margin-top: 3px;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--spine);
+        cursor: pointer;
+      }
+
+      .checkline label {
+        cursor: pointer;
+        font-size: 13.5px;
+      }
+
+      .runbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn {
+        font: inherit;
+        font-weight: 600;
+        font-size: 13.5px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 10px 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition:
+          transform 0.05s ease,
+          filter 0.15s ease;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+      }
+
+      .btn-export {
+        background: var(--export-tint);
+        color: var(--export);
+        border-color: color-mix(in srgb, var(--export) 30%, transparent);
+      }
+      .btn-export:hover:not(:disabled) {
+        filter: brightness(0.96);
+      }
+
+      .btn-import {
+        background: var(--import-tint);
+        color: var(--import);
+        border-color: color-mix(in srgb, var(--import) 30%, transparent);
+      }
+      .btn-import:hover:not(:disabled) {
+        filter: brightness(0.96);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink-soft);
+        border-color: var(--border);
+      }
+      .btn-ghost:hover:not(:disabled) {
+        background: var(--paper);
+      }
+
+      /* ---------- Message banner ---------- */
+      #message {
+        margin: 18px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0;
+        min-height: 0;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+      }
+
+      #message:not(:empty) {
+        padding: 10px 14px;
+      }
+
+      #message[data-status="ok"] {
+        background: var(--ok-tint);
+        color: var(--ok);
+      }
+
+      #message[data-status="error"] {
+        background: var(--err-tint);
+        color: var(--err);
+      }
+
+      /* ---------- Data panel ---------- */
+      .data-panel {
+        margin-top: 22px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .data-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--paper);
+      }
+
+      .data-panel-head span {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .data-panel-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .data-panel-actions button {
+        font: inherit;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--ink-soft);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .data-panel-actions button:hover {
+        background: var(--paper);
+      }
+
+      #output {
+        display: block;
+        width: 100%;
+        height: 52vh;
+        min-height: 260px;
+        border: none;
+        resize: vertical;
+        padding: 16px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink);
+        background: var(--surface);
+        white-space: pre;
+        overflow: auto;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--ink-soft);
+        font-size: 12px;
+        margin-top: 22px;
+      }
+
+      footer a {
+        color: var(--ink-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="masthead">
+        <img src="icon.png" alt="" />
+        <div>
+          <h1>Bookmark Branch Porter</h1>
+          <p>Import or export a branch of your bookmark tree as JSON or HTML</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">01</div>
+            <div class="step-body">
+              <label class="step-title" for="folder">Choose a branch</label>
+              <select id="folder">
+                <option value="">Entire Bookmark Tree</option>
+              </select>
+              <p class="step-hint">
+                Exports read from this branch. Imports add into it — the root of
+                the tree can't be an import target.
+              </p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">02</div>
+            <div class="step-body">
+              <span class="step-title" id="format-label">Choose a format</span>
+              <div
+                class="format-toggle"
+                role="group"
+                aria-labelledby="format-label"
+              >
+                <button type="button" data-format="json" aria-pressed="true">
+                  { JSON }
+                </button>
+                <button type="button" data-format="html" aria-pressed="false">
+                  &lt;HTML&gt;
+                </button>
+              </div>
+              <!-- kept for port.js compatibility -->
+              <select id="format" style="display: none" aria-hidden="true">
+                <option value="json">JSON</option>
+                <option value="html">HTML</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">03</div>
+            <div class="step-body">
+              <span class="step-title">Import options</span>
+              <div class="checkline">
+                <input type="checkbox" id="noroot" />
+                <label for="noroot"
+                  >Strip the root node on import (recommended when merging into
+                  an existing folder)</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">04</div>
+            <div class="step-body">
+              <span class="step-title">Run</span>
+              <div class="runbar">
+                <button id="doexport" class="btn btn-export" type="button">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M2 8h11M9 4l4 4-4 4"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  Export
+                </button>
+                <button id="doimport" class="btn btn-import" type="button">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M14 8H3M7 4L3 8l4 4"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  Import
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="data-panel">
+        <div class="data-panel-head">
+          <span>Data</span>
+          <div class="data-panel-actions">
+            <button id="docopy" type="button">Copy</button>
+            <button id="doclear" type="button">Clear</button>
+          </div>
+        </div>
+        <textarea id="output" spellcheck="false" wrap="off">
 --- How to Export ---
 
-[1] Select Folder (The Folder/Branch to Export)
-[2] Select Export Format ( {json} or &lt;html&gt; )
-[3] Click the Export Button
+[1] Select the folder/branch to export
+[2] Select the export format ( {json} or <html> )
+[3] Click Export
 
-Note: All exported Data will have one singular Root node, but you can skip/exclude it on import
+Note: exported data always has one root node — you can skip it on import.
 
 
 --- How to Import ---
 
-[1] Select Folder (The Folder/Branch where to Import into)
-[2] Select Import Format ( {json} or &lt;html&gt; )
-[3] Check if you want to skip/exclude the root node on import
-[4] Click the Import Button
+[1] Select the folder/branch to import into
+[2] Select the import format ( {json} or <html> )
+[3] Check "strip the root node" if you want to skip it
+[4] Paste your data into this panel, then click Import
 
-Note: Import into the root of the bookmark Tree is not allowed/possible because of technical limitations.
-
+Note: importing into the root of the bookmark tree isn't possible —
+pick a folder first.
 </textarea
-  >
+        >
+      </div>
 
-  <script src="port.js"></script>
-</body>
+      <footer>Bookmark Branch Porter</footer>
+    </div>
+
+    <script src="port.js"></script>
+  </body>
+</html>
