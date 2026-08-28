@@ -23,10 +23,7 @@
   "browser_action": {
     "default_area": "navbar"
   },
-  "permissions": ["activeTab", "storage", "menus"],
+  "permissions": ["activeTab", "storage", "menus", "clipboardWrite"],
   "optional_permissions": ["bookmarks"],
-  "options_ui": {
-    "page": "options.html"
-  },
   "version": "1.8.36"
 }

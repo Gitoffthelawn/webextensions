@@ -5,34 +5,19 @@ let clickDataStore;
 const manifest = browser.runtime.getManifest();
 const extname = manifest.name;
 
-/*
-const types = new Map();
-types.set("text","Text or URL");
-types.set("mailto","Email Address");
-types.set("tel","Phone Number ");
-types.set("geo","Geo Location (float,float)");
-*/
+async function openPopup() {
+  browser.browserAction.setPopup({ popup: "popup.html" });
+  browser.browserAction.openPopup();
+  browser.browserAction.setPopup({ popup: "" });
+}
 
-//types.forEach(function(value, key) {
 browser.menus.create({
   id: extname,
   title: extname,
   contexts: ["bookmark", "selection", "link", "image", "tab", "page"],
   onclick: function (clickData /*,tab*/) {
     clickDataStore = clickData;
-
-    if (clickData.button === 1 || clickData.modifiers.includes("Ctrl")) {
-      browser.windows.create({
-        type: "popup",
-        url: ["popup.html"],
-        width: 500,
-        height: 550,
-      });
-    } else {
-      browser.browserAction.setPopup({ popup: "popup.html" });
-      browser.browserAction.openPopup();
-      browser.browserAction.setPopup({ popup: "" });
-    }
+    openPopup();
   },
 });
 
@@ -64,16 +49,5 @@ async function onMessage(/*data , sender*/) {
 browser.runtime.onMessage.addListener(onMessage);
 
 browser.browserAction.onClicked.addListener((tab, info) => {
-  if (info.button === 1 || info.modifiers.includes("Ctrl")) {
-    browser.windows.create({
-      type: "popup",
-      url: ["popup.html"],
-      width: 500,
-      height: 550,
-    });
-  } else {
-    browser.browserAction.setPopup({ popup: "popup.html" });
-    browser.browserAction.openPopup();
-    browser.browserAction.setPopup({ popup: "" });
-  }
+  openPopup();
 });

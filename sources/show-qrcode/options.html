@@ -16,6 +16,7 @@
   <body>
     <fieldset>
       <legend>PNG Save Size</legend>
+      <label for="qrSize">Size (px): </label>
       <input
         type="number"
         id="qrSize"
@@ -27,6 +28,7 @@
     </fieldset>
     <fieldset>
       <legend>Save Filetype</legend>
+      <label for="saveMode">Filetype: </label>
       <select id="saveMode">
         <option value="png">Portable Network Graphic (PNG)</option>
         <option value="svg">Scalable Vector Graphic (SVG)</option>
@@ -34,6 +36,7 @@
     </fieldset>
     <fieldset>
       <legend>Error Correction Level</legend>
+      <label for="qrecl">Level: </label>
       <select id="qrecl">
         <option value="M">Medium (15%)</option>
         <option value="L">Low ( 7%)</option>
@@ -43,6 +46,7 @@
     </fieldset>
     <fieldset>
       <legend>Border Padding</legend>
+      <label for="qrPadding">Padding (px): </label>
       <input type="number" id="qrPadding" value="1" min="0" step="1" />
     </fieldset>
     <fieldset>

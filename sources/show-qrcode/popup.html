@@ -2,84 +2,544 @@
 <head>
   <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
   <style>
+    :root {
+      --bg: #ececef;
+      --panel-bg: #ffffff;
+      --text: #1b1b1f;
+      --muted: #68686f;
+      --accent: #3a6df0;
+      --accent-contrast: #ffffff;
+      --border: #d3d3da;
+      --error: #c62828;
+      --error-bg: #fdecea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1f;
+        --panel-bg: #28282c;
+        --text: #f1f1f4;
+        --muted: #a6a6ad;
+        --accent: #6a92ff;
+        --accent-contrast: #0c0c10;
+        --border: #3d3d43;
+        --error: #ff8a80;
+        --error-bg: #3a1f1f;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
     body {
-      padding: 5px;
+      width: 320px;
       margin: 0;
-      overflow: hidden;
-      background: lightgray;
+      padding: 10px;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font:
+        13px/1.4 system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+    }
+    fieldset {
+      border: none;
+      margin: 0;
+      padding: 0;
     }
     button {
-      width: 5em;
-      text-align: center;
-      margin: 0;
-      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 10px;
     }
-    #qrtext {
+    button:hover {
+      border-color: var(--accent);
+    }
+    button.primary {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    input,
+    select,
+    textarea {
+      font: inherit;
+      color: var(--text);
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    input[type="number"] {
       width: 100%;
-      margin: 0;
+    }
+    input[type="checkbox"] {
+      width: auto;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .toolbar select {
+      flex: 1;
+      min-width: 0;
+    }
+    .toolbar button {
+      flex: 0 0 auto;
+      padding: 6px 8px;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .panel h3 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .settings-row label {
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+    .settings-row input,
+    .settings-row select {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .settings-row input.hex-input {
+      flex: 0 0 74px;
+      width: 74px;
+      min-width: 74px;
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      text-transform: uppercase;
+    }
+    .settings-row input.hex-input.invalid {
+      border-color: var(--error);
+    }
+    .color-swatch {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .swatch-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: -4px 0 8px;
+    }
+    .swatch-btn {
+      width: 18px;
+      height: 18px;
       padding: 0;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .swatch-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .history-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-clear {
+      width: 100%;
+      color: var(--muted);
+    }
+    .history-empty {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .qr-stage {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 8px;
     }
     #qrimg {
-      text-align: center;
-      max-width: 350px;
-      margin: 0;
-      padding: 0;
-    }
-    #qrtype {
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+      max-width: 100%;
+      width: 240px;
+      height: 240px;
+      transition: opacity 0.15s ease-in-out;
     }
     #qrsvg {
-      text-align: center;
       display: none;
-      margin: 0;
-      padding: 0;
     }
-    #qractions {
-      text-align: center;
-      margin: 0;
-      padding: 0;
+    #qrstatus {
+      min-height: 1.4em;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
     }
+    #qrstatus.error {
+      color: var(--error);
+      background: var(--error-bg);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+
+    .field-group {
+      margin-bottom: 8px;
+    }
+    .field-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .field-group input,
+    .field-group textarea {
+      width: 100%;
+    }
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+    .field-row > div {
+      flex: 1;
+    }
+    .password-row {
+      display: flex;
+      gap: 6px;
+    }
+    .password-row input {
+      flex: 1;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+    }
+
     #qrtext {
       width: 100%;
       height: 4em;
-      margin: 0;
-      padding: 0;
+      resize: vertical;
+    }
+    #qrcharcount {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .actions button {
+      flex: 1;
     }
   </style>
 </head>
 <body>
-  <center>
-    <fieldset>
-      <div id="qractions">
-        <button id="qrcopy" title="Copy to clipboard">Copy</button>
-        <button id="qroptions" title="Show Options">&#9881;</button>
-        <button id="qrsave" title="Save qrcode image to disk">Save</button>
-      </div>
-    </fieldset>
-    <fieldset>
-      <div class="outer">
-        <img class="inner" id="qrimg" />
-      </div>
-      <div id="qrsvg" />
-    </fieldset>
-    <fieldset>
+  <div id="app">
+    <div class="toolbar">
+      <button id="qrhistory" title="Recent codes">&#128337;</button>
       <select id="qrtype">
         <option value="">URL or Text</option>
         <option value="mailto:">E-Mail</option>
         <option value="tel:">Phone Number</option>
-        <option value="geo:">Geo Location [Format: "{float},{float}"]</option>
-        <option value="WIFI:">
-          WiFi [Format: "T:WPA;S:{SSID};P:{PASSWD};H:{true|false}"]
-        </option>
+        <option value="geo:">Geo Location</option>
+        <option value="WIFI:">WiFi</option>
       </select>
-    </fieldset>
-    <fieldset>
-      <textarea id="qrtext"></textarea>
-    </fieldset>
-    <script src="qrcode.js"></script>
-    <script src="popup.js"></script>
-  </center>
+      <button id="qroptions" title="Settings">&#9881;</button>
+    </div>
+
+    <div id="qrsettings" class="panel" hidden>
+      <h3>Quick Settings</h3>
+      <div class="settings-row">
+        <label for="saveMode">Filetype</label>
+        <select id="saveMode">
+          <option value="png">PNG</option>
+          <option value="svg">SVG</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label for="qrSize">Save size (px)</label>
+        <input
+          type="number"
+          id="qrSize"
+          value="460"
+          min="115"
+          step="1"
+          max="1000"
+        />
+      </div>
+      <div class="settings-row">
+        <label for="qrecl">Error correction</label>
+        <select id="qrecl">
+          <option value="M">Medium (15%)</option>
+          <option value="L">Low (7%)</option>
+          <option value="Q">Quartile (25%)</option>
+          <option value="H">High (30%)</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label for="qrPadding">Padding</label>
+        <input type="number" id="qrPadding" value="1" min="1" step="1" />
+      </div>
+      <div class="settings-row color-row">
+        <label for="fgcolor">Foreground</label>
+        <span class="color-swatch" id="fgcolorSwatch"></span>
+        <input
+          type="text"
+          id="fgcolor"
+          class="hex-input"
+          value="#000000"
+          maxlength="7"
+          spellcheck="false"
+        />
+        <input
+          type="range"
+          id="fgalpha"
+          value="255"
+          min="0"
+          step="1"
+          max="255"
+          title="Foreground opacity"
+        />
+      </div>
+      <div class="swatch-palette" data-target="fgcolor">
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#000000"
+          style="background: #000000"
+          title="#000000"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#ffffff"
+          style="background: #ffffff"
+          title="#ffffff"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#e53935"
+          style="background: #e53935"
+          title="#e53935"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#43a047"
+          style="background: #43a047"
+          title="#43a047"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#1e88e5"
+          style="background: #1e88e5"
+          title="#1e88e5"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#fdd835"
+          style="background: #fdd835"
+          title="#fdd835"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#8e24aa"
+          style="background: #8e24aa"
+          title="#8e24aa"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#fb8c00"
+          style="background: #fb8c00"
+          title="#fb8c00"
+        ></button>
+      </div>
+
+      <div class="settings-row color-row">
+        <label for="bgcolor">Background</label>
+        <span class="color-swatch" id="bgcolorSwatch"></span>
+        <input
+          type="text"
+          id="bgcolor"
+          class="hex-input"
+          value="#ffffff"
+          maxlength="7"
+          spellcheck="false"
+        />
+        <input
+          type="range"
+          id="bgalpha"
+          value="255"
+          min="0"
+          step="1"
+          max="255"
+          title="Background opacity"
+        />
+      </div>
+      <div class="swatch-palette" data-target="bgcolor">
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#ffffff"
+          style="background: #ffffff"
+          title="#ffffff"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#000000"
+          style="background: #000000"
+          title="#000000"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#e53935"
+          style="background: #e53935"
+          title="#e53935"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#43a047"
+          style="background: #43a047"
+          title="#43a047"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#1e88e5"
+          style="background: #1e88e5"
+          title="#1e88e5"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#fdd835"
+          style="background: #fdd835"
+          title="#fdd835"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#8e24aa"
+          style="background: #8e24aa"
+          title="#8e24aa"
+        ></button>
+        <button
+          type="button"
+          class="swatch-btn"
+          data-color="#fb8c00"
+          style="background: #fb8c00"
+          title="#fb8c00"
+        ></button>
+      </div>
+    </div>
+
+    <div id="qrhistorylist" class="panel" hidden>
+      <h3>Recent Codes</h3>
+    </div>
+
+    <div id="qrmain">
+      <div class="qr-stage">
+        <img id="qrimg" alt="Generated QR code" />
+        <div id="qrsvg"></div>
+        <div id="qrstatus" role="status" aria-live="polite"></div>
+      </div>
+
+      <div id="field-text" class="field-group">
+        <textarea id="qrtext"></textarea>
+        <div id="qrcharcount">0 characters</div>
+      </div>
+
+      <div id="field-geo" class="field-group" hidden>
+        <div class="field-row">
+          <div>
+            <label for="geoLat">Latitude</label>
+            <input type="number" id="geoLat" step="any" placeholder="52.5200" />
+          </div>
+          <div>
+            <label for="geoLng">Longitude</label>
+            <input type="number" id="geoLng" step="any" placeholder="13.4050" />
+          </div>
+        </div>
+      </div>
+
+      <div id="field-wifi" class="field-group" hidden>
+        <label for="wifiSsid">Network name (SSID)</label>
+        <input type="text" id="wifiSsid" placeholder="My WiFi" />
+
+        <label for="wifiPassword">Password</label>
+        <div class="password-row">
+          <input type="password" id="wifiPassword" placeholder="••••••••" />
+          <button
+            type="button"
+            id="wifiTogglePassword"
+            title="Show/hide password"
+          >
+            &#128065;
+          </button>
+        </div>
+
+        <label for="wifiSecurity">Security</label>
+        <select id="wifiSecurity">
+          <option value="WPA">WPA/WPA2</option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">No password</option>
+        </select>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="wifiHidden" />
+          <label for="wifiHidden">Hidden network</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="qrcopy" title="Copy to clipboard">&#128203; Copy</button>
+        <button id="qrsave" class="primary" title="Save qrcode image to disk">
+          &#128190; Save
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="qrcode.js"></script>
+  <script src="settings.js"></script>
+  <script src="popup.js"></script>
 </body>
