@@ -1,28 +1,3 @@
-This repository contains the sources of the following [webextensions](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions)
-
-The following are published on AMO:
-
-| Source | Description | AMO link |
-| ---:  | --- | --- |
-| [automate&nbsp;click](https://github.com/igorlogius/webextensions/tree/main/sources/automate-click) | automate some click actions when visiting a website | [link](https://addons.mozilla.org/firefox/addon/automate-click) |
-| [auto&nbsp;close&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/auto-close-tabs) | automatically close tabs which have not been accessed for a time | [link](https://addons.mozilla.org/firefox/addon/auto-close-tabs) |
-| [bookmark&nbsp;branch&nbsp;porter](https://github.com/igorlogius/webextensions/tree/main/sources/bookmark-branch-porter) | Import or Export a branch of your bookmark tree as JSON or HTML | [link](https://addons.mozilla.org/firefox/addon/bookmark-branch-porter) |
-| [close&nbsp;duplicate&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/close-duplicate-tabs) | Displays the number of duplicate tabs and allows to quickly to close the left most ones while leaving the right most intact | [link](https://addons.mozilla.org/firefox/addon/close-duplicate-tabs) |
-| [copy&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/copy-tabs) | Copy the URLs of all window tabs or a selection of tabs as plain text or as html hyperlinks with or without parameters | [link](https://addons.mozilla.org/firefox/addon/copy-tabs) |
-| [copy&nbsp;video&nbsp;frame](https://github.com/igorlogius/webextensions/tree/main/sources/copy-video-frame) | Adds a context menu entry that allows to capture a still frame image from a html video element | [link](https://addons.mozilla.org/firefox/addon/copy-video-frame) |
-| [dont&nbsp;load&nbsp;background&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/dont-load-background-tabs) | Prevents background tabs from loading until activated | [link](https://addons.mozilla.org/firefox/addon/dont-load-background-tabs) |
-| [find&nbsp;in&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/find-in-tabs) | Find text in all your active open tabs | [link](https://addons.mozilla.org/firefox/addon/find-in-tabs) |
-| [gather&nbsp;from&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/gather-from-tabs) | Run a userscript in multiple tabs and collect the output | [link](https://addons.mozilla.org/firefox/addon/gather-from-tabs) |
-| [group&nbsp;same&nbsp;site&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/group-same-site-tabs) | Move same site/domain tabs into named collapsed or uncollapsed native tabgroups | [link](https://addons.mozilla.org/firefox/addon/group-same-site-tabs) |
-| [history&nbsp;porter](https://github.com/igorlogius/webextensions/tree/main/sources/history-porter) | Import or export your browsing history | [link](https://addons.mozilla.org/firefox/addon/history-porter) |
-| [import&nbsp;urls](https://github.com/igorlogius/webextensions/tree/main/sources/import-urls) | Extract URLs from text and import them as tabs or bookmarks | [link](https://addons.mozilla.org/firefox/addon/import-urls) |
-| [load&nbsp;background&nbsp;tabs&nbsp;on&nbsp;select](https://github.com/igorlogius/webextensions/tree/main/sources/load-background-tabs-on-select) | Prevents background tabs from loading until they have been activated | [link](https://addons.mozilla.org/firefox/addon/load-background-tabs-on-select) |
-| [localstorage&nbsp;editor](https://github.com/igorlogius/webextensions/tree/main/sources/localstorage-editor) | Add, edit, copy, remove, export and import local- and session- storage data | [link](https://addons.mozilla.org/firefox/addon/localstorage-editor) |
-| [mute&nbsp;unfocused&nbsp;tabs](https://github.com/igorlogius/webextensions/tree/main/sources/mute-unfocused-tabs) | Automatically mute unfocused tabs | [link](https://addons.mozilla.org/firefox/addon/mute-unfocused-tabs) |
-| [open&nbsp;bookmarks&nbsp;in&nbsp;tabgroup](https://github.com/igorlogius/webextensions/tree/main/sources/open-bookmarks-in-tabgroup) | Open a bookmark folder as a tabgroup | [link](https://addons.mozilla.org/firefox/addon/open-bookmarks-in-tabgroup) |
-| [open&nbsp;temp&nbsp;container](https://github.com/igorlogius/webextensions/tree/main/sources/open-temp-container) | Open bookmarks, links or tabs in temporary containers | [link](https://addons.mozilla.org/firefox/addon/open-temp-container) |
-| [save&nbsp;website&nbsp;as&nbsp;image](https://github.com/igorlogius/webextensions/tree/main/sources/save-website-as-image) | Make full website snapshots | [link](https://addons.mozilla.org/firefox/addon/save-website-as-image) |
-| [show&nbsp;qrcode](https://github.com/igorlogius/webextensions/tree/main/sources/show-qrcode) | Show quick response codes for any tab url, any selected link, text or bookmark | [link](https://addons.mozilla.org/firefox/addon/show-qrcode) |
-| [tabs&nbsp;media&nbsp;controller](https://github.com/igorlogius/webextensions/tree/main/sources/tabs-media-controller) | Control audio and video elements from all tabs via the toolbar button popup menu | [link](https://addons.mozilla.org/firefox/addon/tabs-media-controller) |
-| [tbl2csv](https://github.com/igorlogius/webextensions/tree/main/sources/tbl2csv) | Export HTML Tables as Comma Seperated Values which can be opend and further processed with many common spreadsheet processors like microsoft excel, libreoffice-calc or gnumeric | [link](https://addons.mozilla.org/firefox/addon/tbl2csv) |
-
+This repository contains the sources of some of my webextensions (aka. browser add-ons)
+Some are published and accessable via my [AMO Profile page](https://addons.mozilla.org/en-US/firefox/user/13634657/)
+those which are not, you can build yourself by just zipping any folder under the `sources` directory. 
