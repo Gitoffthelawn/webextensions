@@ -406,6 +406,129 @@ function restoreFromHistory(content) {
 
 // --- actions ------------------------------------------------------------
 
+const BOARD_KEY = "qrBoard";
+
+// Shared by addToBoard() (current composed content) and
+// addSelectedTabsToBoard() (one entry per highlighted tab): renders
+// with the current quick-settings and pushes a new board entry unless
+// an identical one (same content + render settings) already exists.
+async function pushToBoard(board, content) {
+  const fgcolorBase = await getFromStorage("string", "fgcolor", "#000000");
+  const fgalpha = parseInt(await getFromStorage("string", "fgalpha", "255"));
+  const bgcolorBase = await getFromStorage("string", "bgcolor", "#ffffff");
+  const bgalpha = parseInt(await getFromStorage("string", "bgalpha", "255"));
+  const qrPadding = await getFromStorage("number", "qrPadding", 1);
+  const qrecl = await getFromStorage("string", "qrecl", "M");
+
+  let fg = fgcolorBase + fgalpha.toString(16);
+  let bg = bgcolorBase + bgalpha.toString(16);
+  if (fg.length < 9) fg += "0";
+  if (bg.length < 9) bg += "0";
+
+  const alreadyOnBoard = board.some(
+    (e) =>
+      e.content === content &&
+      e.fg === fg &&
+      e.bg === bg &&
+      e.padding === qrPadding &&
+      e.ecl === qrecl,
+  );
+  if (alreadyOnBoard) {
+    return false;
+  }
+  board.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    content,
+    fg,
+    bg,
+    padding: qrPadding,
+    ecl: qrecl,
+    addedAt: Date.now(),
+  });
+  return true;
+}
+
+async function addToBoard() {
+  const content = getComposedContent();
+  if (content === null) {
+    // updateQRCode() already shows an "enter details" status in this
+    // case, so there's nothing more to do.
+    return;
+  }
+
+  const { [BOARD_KEY]: board = [] } =
+    await browser.storage.local.get(BOARD_KEY);
+  await pushToBoard(board, content);
+  await browser.storage.local.set({ [BOARD_KEY]: board });
+
+  addToHistory(content);
+  browser.runtime
+    .sendMessage({ action: "focusOrOpenBoard" })
+    .catch(console.error);
+}
+
+document.getElementById("qrboard").addEventListener("click", addToBoard, false);
+
+// --- multiple tabs selected -> one QR code per tab, straight to board --
+
+const qrmultitab = document.getElementById("qrmultitab");
+const qraddtabs = document.getElementById("qraddtabs");
+
+async function addSelectedTabsToBoard() {
+  const tabs = await browser.tabs.query({
+    highlighted: true,
+    currentWindow: true,
+  });
+  const urls = tabs
+    .map((t) => t.url)
+    .filter((u) => typeof u === "string" && u !== "");
+  if (urls.length === 0) return;
+
+  const originalLabel = qraddtabs.textContent;
+  qraddtabs.disabled = true;
+  qraddtabs.textContent = "Adding…";
+
+  const { [BOARD_KEY]: board = [] } =
+    await browser.storage.local.get(BOARD_KEY);
+  let added = 0;
+  for (const url of urls) {
+    if (await pushToBoard(board, url)) {
+      added++;
+      addToHistory(url);
+    }
+  }
+  if (added > 0) {
+    await browser.storage.local.set({ [BOARD_KEY]: board });
+  }
+
+  browser.runtime
+    .sendMessage({ action: "focusOrOpenBoard" })
+    .catch(console.error);
+
+  qraddtabs.textContent = originalLabel;
+  qraddtabs.disabled = false;
+}
+
+qraddtabs.addEventListener("click", addSelectedTabsToBoard, false);
+
+async function updateMultiTabBar() {
+  try {
+    const tabs = await browser.tabs.query({
+      highlighted: true,
+      currentWindow: true,
+    });
+    if (tabs.length > 1) {
+      qraddtabs.textContent = `\u2795 Add ${tabs.length} selected tabs to board`;
+      qrmultitab.hidden = false;
+    } else {
+      qrmultitab.hidden = true;
+    }
+  } catch (e) {
+    console.error(e);
+    qrmultitab.hidden = true;
+  }
+}
+
 document.getElementById("qrsave").addEventListener(
   "click",
   async function () {
@@ -474,13 +597,33 @@ document.getElementById("qrcopy").addEventListener(
 // --- initial load ---------------------------------------------------
 
 async function onLoad() {
+  updateMultiTabBar();
+
   const lastType = await getFromStorage("string", "qrLastType", "");
   if (lastType !== "") {
     qrtype.value = lastType;
   }
   updateFieldVisibility();
 
-  const m = await browser.runtime.sendMessage({});
+  const response = await browser.runtime.sendMessage({});
+  const m = (response && response.clickData) || undefined;
+  const reopenContent = response && response.reopenContent;
+
+  if (typeof reopenContent === "string" && reopenContent !== "") {
+    // Reopened from the board: the stored string already has any
+    // type prefix (geo:, WIFI:, ...) baked in, so type "" + this
+    // text reproduces the exact original content, same as restoring
+    // from history.
+    qrtype.value = "";
+    updateFieldVisibility();
+    qrtext.value = reopenContent;
+    updateCharCount();
+    updateQRCode();
+    qrtext.focus();
+    qrtext.select();
+    return;
+  }
+
   let value = "";
   if (typeof m === "object") {
     if (m.bookmarkId) {

@@ -1,0 +1,777 @@
+<!doctype html>
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+  <title>QR Code Board</title>
+  <style>
+    :root {
+      --bg: #ececef;
+      --panel-bg: #ffffff;
+      --text: #1b1b1f;
+      --muted: #68686f;
+      --border: #d3d3da;
+      --accent: #3a6df0;
+      --error: #c62828;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1f;
+        --panel-bg: #28282c;
+        --text: #f1f1f4;
+        --muted: #a6a6ad;
+        --border: #3d3d43;
+        --accent: #6a92ff;
+        --error: #ff6b6b;
+      }
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font:
+        13px/1.4 system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+    }
+    #toolbar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    #toolbar h1 {
+      font-size: 14px;
+      margin: 0;
+    }
+    #toolbar .toolbar-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    #toolbar button {
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 10px;
+    }
+    #toolbar button:hover {
+      border-color: var(--accent);
+    }
+    #toolbar button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    #toolbar button:disabled:hover {
+      border-color: var(--border);
+    }
+    #toolbar button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    #toolbar button.danger {
+      background: var(--error);
+      border-color: var(--error);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    #layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 0 14px 14px;
+    }
+    #boardArea {
+      flex: 1 1 auto;
+      min-width: 260px;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 14px 0;
+    }
+    .card {
+      position: relative;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .card svg {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      display: block;
+    }
+    .card .select-box {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+    .card .label {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .card .card-actions button {
+      flex: 1 1 40%;
+      font: 11px/1.2 inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 2px;
+    }
+    .card .card-actions button:hover {
+      border-color: var(--accent);
+    }
+    .card .remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      line-height: 1;
+      padding: 0;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .card .remove:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .card .render-error {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 20px 4px;
+    }
+    #empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    #composer {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      flex: 0 0 340px;
+      width: 340px;
+      align-self: flex-start;
+      position: sticky;
+      top: 14px;
+    }
+    @media (max-width: 720px) {
+      #layout {
+        flex-direction: column;
+      }
+      #composer {
+        position: static;
+        width: 100%;
+        flex: 1 1 auto;
+      }
+    }
+    #composer .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    #composer .toolbar select {
+      flex: 1;
+      min-width: 0;
+    }
+    #composer .toolbar button {
+      flex: 0 0 auto;
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    #composer .toolbar button:hover {
+      border-color: var(--accent);
+    }
+    #composer .panel {
+      margin-bottom: 10px;
+    }
+    #composer .panel h3 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    #composer .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    #composer .settings-row label {
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+    #composer .settings-row input,
+    #composer .settings-row select {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    #composer .settings-row input.hex-input {
+      flex: 0 0 74px;
+      width: 74px;
+      min-width: 74px;
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      text-transform: uppercase;
+    }
+    #composer .settings-row input.hex-input.invalid {
+      border-color: var(--error);
+    }
+    #composer .color-swatch {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    #composer .swatch-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: -4px 0 8px;
+    }
+    #composer .swatch-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    #composer .swatch-btn:hover {
+      border-color: var(--accent);
+    }
+    #composer .history-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    #composer .history-item:hover {
+      border-color: var(--accent);
+    }
+    #composer .history-clear {
+      width: 100%;
+      color: var(--muted);
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    #composer .history-empty {
+      color: var(--muted);
+      margin: 0;
+    }
+    #composer h2 {
+      margin: 0 0 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    #composer input,
+    #composer select,
+    #composer textarea {
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      width: 100%;
+    }
+    #composer input[type="checkbox"] {
+      width: auto;
+    }
+    #vType {
+      max-width: 280px;
+      margin-bottom: 10px;
+    }
+    #composer .qr-stage {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #vImg {
+      width: 200px;
+      height: 200px;
+      max-width: 100%;
+      transition: opacity 0.15s ease-in-out;
+    }
+    #vStatus {
+      min-height: 1.4em;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    #vStatus.error {
+      color: var(--error);
+      background: rgba(198, 40, 40, 0.08);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+    #composer .field-group {
+      max-width: 420px;
+      margin-bottom: 10px;
+    }
+    #composer .field-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    #composer .field-row {
+      display: flex;
+      gap: 8px;
+    }
+    #composer .field-row > div {
+      flex: 1;
+    }
+    #composer .password-row {
+      display: flex;
+      gap: 6px;
+    }
+    #composer .password-row input {
+      flex: 1;
+    }
+    #composer .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    #vText {
+      height: 4em;
+      resize: vertical;
+    }
+    #vCharCount {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    #composer .composer-actions {
+      display: flex;
+      gap: 8px;
+      max-width: 420px;
+    }
+    #composer .composer-actions button {
+      flex: 1;
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    #composer .composer-actions button:hover {
+      border-color: var(--accent);
+    }
+    #composer .composer-actions button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <h1>QR Code Board</h1>
+    <div class="toolbar-actions">
+      <button id="newCodeBtn" type="button">&#9998; New Code</button>
+      <button id="selectAllBtn" type="button">Select all</button>
+      <button id="selectNoneBtn" type="button">Clear selection</button>
+      <button id="saveSelectedBtn" type="button" class="primary" disabled>
+        Save selected
+      </button>
+      <button id="removeSelectedBtn" type="button" class="danger" disabled>
+        Remove selected
+      </button>
+      <button id="clearBoard" type="button">Clear all</button>
+    </div>
+  </div>
+
+  <div id="layout">
+    <div id="composer" hidden>
+      <h2>New QR Code</h2>
+      <div class="toolbar">
+        <button id="vHistoryBtn" type="button" title="Recent codes">
+          &#128337;
+        </button>
+        <select id="vType">
+          <option value="">URL or Text</option>
+          <option value="mailto:">E-Mail</option>
+          <option value="tel:">Phone Number</option>
+          <option value="geo:">Geo Location</option>
+          <option value="WIFI:">WiFi</option>
+        </select>
+        <button id="vSettingsBtn" type="button" title="Settings">
+          &#9881;
+        </button>
+      </div>
+
+      <div id="vSettingsPanel" class="panel" hidden>
+        <h3>Quick Settings</h3>
+        <div class="settings-row">
+          <label for="saveMode">Filetype</label>
+          <select id="saveMode">
+            <option value="png">PNG</option>
+            <option value="svg">SVG</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label for="qrSize">Save size (px)</label>
+          <input
+            type="number"
+            id="qrSize"
+            value="460"
+            min="115"
+            step="1"
+            max="1000"
+          />
+        </div>
+        <div class="settings-row">
+          <label for="qrecl">Error correction</label>
+          <select id="qrecl">
+            <option value="M">Medium (15%)</option>
+            <option value="L">Low (7%)</option>
+            <option value="Q">Quartile (25%)</option>
+            <option value="H">High (30%)</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label for="qrPadding">Padding</label>
+          <input type="number" id="qrPadding" value="1" min="0" step="1" />
+        </div>
+        <div class="settings-row color-row">
+          <label for="fgcolor">Foreground</label>
+          <span class="color-swatch" id="fgcolorSwatch"></span>
+          <input
+            type="text"
+            id="fgcolor"
+            class="hex-input"
+            value="#000000"
+            maxlength="7"
+            spellcheck="false"
+          />
+          <input
+            type="range"
+            id="fgalpha"
+            value="255"
+            min="0"
+            step="1"
+            max="255"
+            title="Foreground opacity"
+          />
+        </div>
+        <div class="swatch-palette" data-target="fgcolor">
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#000000"
+            style="background: #000000"
+            title="#000000"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#ffffff"
+            style="background: #ffffff"
+            title="#ffffff"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#e53935"
+            style="background: #e53935"
+            title="#e53935"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#43a047"
+            style="background: #43a047"
+            title="#43a047"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#1e88e5"
+            style="background: #1e88e5"
+            title="#1e88e5"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#fdd835"
+            style="background: #fdd835"
+            title="#fdd835"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#8e24aa"
+            style="background: #8e24aa"
+            title="#8e24aa"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#fb8c00"
+            style="background: #fb8c00"
+            title="#fb8c00"
+          ></button>
+        </div>
+
+        <div class="settings-row color-row">
+          <label for="bgcolor">Background</label>
+          <span class="color-swatch" id="bgcolorSwatch"></span>
+          <input
+            type="text"
+            id="bgcolor"
+            class="hex-input"
+            value="#ffffff"
+            maxlength="7"
+            spellcheck="false"
+          />
+          <input
+            type="range"
+            id="bgalpha"
+            value="255"
+            min="0"
+            step="1"
+            max="255"
+            title="Background opacity"
+          />
+        </div>
+        <div class="swatch-palette" data-target="bgcolor">
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#ffffff"
+            style="background: #ffffff"
+            title="#ffffff"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#000000"
+            style="background: #000000"
+            title="#000000"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#e53935"
+            style="background: #e53935"
+            title="#e53935"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#43a047"
+            style="background: #43a047"
+            title="#43a047"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#1e88e5"
+            style="background: #1e88e5"
+            title="#1e88e5"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#fdd835"
+            style="background: #fdd835"
+            title="#fdd835"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#8e24aa"
+            style="background: #8e24aa"
+            title="#8e24aa"
+          ></button>
+          <button
+            type="button"
+            class="swatch-btn"
+            data-color="#fb8c00"
+            style="background: #fb8c00"
+            title="#fb8c00"
+          ></button>
+        </div>
+      </div>
+
+      <div id="vHistoryPanel" class="panel" hidden>
+        <h3>Recent Codes</h3>
+      </div>
+
+      <div id="vMain">
+        <div class="qr-stage">
+          <img id="vImg" alt="Generated QR code" />
+          <div id="vStatus" role="status" aria-live="polite"></div>
+        </div>
+
+        <div id="vFieldText" class="field-group">
+          <textarea
+            id="vText"
+            placeholder="https://example.com or any text"
+          ></textarea>
+          <div id="vCharCount">0 characters</div>
+        </div>
+
+        <div id="vFieldGeo" class="field-group" hidden>
+          <div class="field-row">
+            <div>
+              <label for="vGeoLat">Latitude</label>
+              <input
+                type="number"
+                id="vGeoLat"
+                step="any"
+                placeholder="52.5200"
+              />
+            </div>
+            <div>
+              <label for="vGeoLng">Longitude</label>
+              <input
+                type="number"
+                id="vGeoLng"
+                step="any"
+                placeholder="13.4050"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div id="vFieldWifi" class="field-group" hidden>
+          <label for="vWifiSsid">Network name (SSID)</label>
+          <input type="text" id="vWifiSsid" placeholder="My WiFi" />
+
+          <label for="vWifiPassword">Password</label>
+          <div class="password-row">
+            <input type="password" id="vWifiPassword" placeholder="••••••••" />
+            <button
+              type="button"
+              id="vWifiTogglePassword"
+              title="Show/hide password"
+            >
+              &#128065;
+            </button>
+          </div>
+
+          <label for="vWifiSecurity">Security</label>
+          <select id="vWifiSecurity">
+            <option value="WPA">WPA/WPA2</option>
+            <option value="WEP">WEP</option>
+            <option value="nopass">No password</option>
+          </select>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="vWifiHidden" />
+            <label for="vWifiHidden">Hidden network</label>
+          </div>
+        </div>
+
+        <div class="composer-actions">
+          <button id="vCopyBtn" type="button" title="Copy to clipboard">
+            &#128203; Copy
+          </button>
+          <button
+            id="vAddBoardBtn"
+            type="button"
+            class="primary"
+            title="Add this code to the board below"
+          >
+            &#10133; Add to board
+          </button>
+          <button id="vSaveBtn" type="button" title="Save to disk">
+            &#128190; Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="boardArea">
+      <div id="grid"></div>
+      <p id="empty" hidden>
+        No QR codes yet — use &#9998; New Code above, or &#10133; Board in the
+        popup, to add one.
+      </p>
+    </div>
+  </div>
+  <script src="qrcode.js"></script>
+  <script src="settings.js"></script>
+  <script src="view.js"></script>
+</body>
