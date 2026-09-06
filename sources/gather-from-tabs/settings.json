@@ -16,5 +16,35 @@
   },
   {
     "code": "/* URL + LINK.text + LINK.href */\n(() => { \n    function stripLB(txt){\n        return txt.replace(/(?:\\r\\n|\\r|\\n)/gm, ' ');\n    }\n    const node = document.querySelector('a');\n    const url = document.location.href;\n\n    let out = url + \" : \";\n    if(node){\n        out += stripLB(node.innerText) + \" : \" + node.href;\n    }else {\n        out += 'node not found';\n    }\n    out += \"\\n\";\n\n    return out;\n})()"
+  },
+  {
+    "code": "/* Markdown Link */\n(() => {\n    const title = document.title;\n    const url = document.location.href;\n    return '[' + title.replace(/\\]/g, '\\\\]') + '](' + url + ')\\n';\n})()"
+  },
+  {
+    "code": "/* URL + Meta Description */\n(() => {\n    const url = document.location.href;\n    const meta = document.querySelector('meta[name=\"description\"]');\n    const desc = meta ? meta.content.trim() : 'no description found';\n    return url + ' : ' + desc + '\\n';\n})()"
+  },
+  {
+    "code": "/* Domain Only */\n(() => {\n    return document.location.hostname + '\\n';\n})()"
+  },
+  {
+    "code": "/* CSV Row: \"Title\",\"URL\" */\n(() => {\n    function esc(s) { return '\"' + String(s).replace(/\"/g, '\"\"') + '\"'; }\n    const title = document.title;\n    const url = document.location.href;\n    return esc(title) + ',' + esc(url) + '\\n';\n})()"
+  },
+  {
+    "code": "/* JSON: {title, url} */\n(() => {\n    const title = document.title;\n    const url = document.location.href;\n    return JSON.stringify({ title, url }) + '\\n';\n})()"
+  },
+  {
+    "code": "/* URL + All Page Links (deduped) */\n(() => {\n    const url = document.location.href;\n    const links = Array.from(document.querySelectorAll('a[href]'))\n        .map((a) => a.href)\n        .filter((v, i, arr) => arr.indexOf(v) === i);\n    let out = url + ' (' + links.length + ' links):\\n';\n    links.forEach((l) => { out += '  ' + l + '\\n'; });\n    return out;\n})()"
+  },
+  {
+    "code": "/* URL + Selected Text */\n(() => {\n    const url = document.location.href;\n    const sel = document.getSelection().toString().trim();\n    return url + ' : ' + (sel !== '' ? sel : '(nothing selected)') + '\\n';\n})()"
+  },
+  {
+    "code": "/* URL + Canonical Link */\n(() => {\n    const url = document.location.href;\n    const link = document.querySelector('link[rel=\"canonical\"]');\n    return url + ' -> canonical: ' + (link ? link.href : 'none found') + '\\n';\n})()"
+  },
+  {
+    "code": "/* URL + Word Count */\n(() => {\n    const url = document.location.href;\n    const txt = document.body.innerText || '';\n    const words = txt.trim().split(/\\s+/).filter(Boolean).length;\n    return url + ' : ' + words + ' words\\n';\n})()"
+  },
+  {
+    "code": "/* URL + Open Graph Image */\n(() => {\n    const url = document.location.href;\n    const meta = document.querySelector('meta[property=\"og:image\"]');\n    return url + ' : ' + (meta ? meta.content : 'no og:image found') + '\\n';\n})()"
   }
 ]

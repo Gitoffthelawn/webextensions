@@ -5,287 +5,877 @@
   <script src="codemirror.js"></script>
   <title>Gather From Tabs</title>
   <style>
+    :root {
+      --paper: #f7f6f2;
+      --panel: #ffffff;
+      --ink: #1c1e1f;
+      --muted: #6b6f76;
+      --border: #ddd9d0;
+      --accent: #3d6b66;
+      --accent-ink: #ffffff;
+      --danger: #b04a3f;
+      --radius: 6px;
+      --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+      --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
-      color: black;
-      /*background-color: silver;*/
+      height: 100%;
     }
-    #output {
-      height: 12em;
-      width: 99%;
-      overflow: auto;
-      white-space: pre;
+
+    body {
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .deleteButton {
+
+    h1.page-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px;
+      color: var(--ink);
+      flex: 0 0 auto;
     }
-    .runButton {
-      float: right;
+
+    h1.page-title span {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 13px;
+      display: block;
+      margin-top: 2px;
     }
-    .deleteButton {
-      float: left;
+
+    button,
+    input[type="button"] {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      cursor: pointer;
+      transition:
+        background 0.12s ease,
+        border-color 0.12s ease;
     }
-    textarea {
-      resize: vertical;
-      /*text-align:right;*/
-      /*background-color: #cda;*/
-      /*background-color: gainsboro;*/
-      color: black;
+
+    button:hover,
+    input[type="button"]:hover {
+      background: #efece4;
+      border-color: #cfc9ba;
     }
-    tr:hover > td {
-      border-top: 2px solid red;
-      border-bottom: 2px solid red;
-      /*background-color: pink;*/
+
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
     }
-    #btn_copy_as_html,
-    #btn_copy_as_text {
-      width: 50%;
-      float: right;
+
+    button.primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: var(--accent);
     }
-    #shortcutconfigs {
+
+    button.primary:hover {
+      opacity: 0.92;
+      background: var(--accent);
+    }
+
+    button.danger-text {
+      color: var(--danger);
+      border-color: #e3c9c4;
+    }
+
+    /* ---------- tabs ---------- */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex: 0 0 auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      position: relative;
+      top: 1px;
+    }
+
+    .tab-btn:hover {
+      background: #efece4;
+      color: var(--ink);
+    }
+
+    .tab-btn.active {
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-bottom-color: var(--panel);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    #tab-shortcuts.active {
+      overflow-y: auto;
+    }
+
+    fieldset {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px 18px;
+      margin: 0 0 18px;
+    }
+
+    legend b {
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    /* ---------- scripts layout ---------- */
+    :root {
+      --sidebar-w: 300px;
+    }
+
+    .scripts-layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 8px 1fr;
+      gap: 14px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .sidebar-resizer {
+      cursor: col-resize;
+      position: relative;
+      margin: 0 -3px;
+    }
+
+    .sidebar-resizer::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .sidebar-resizer:hover::after,
+    .sidebar-resizer.dragging::after {
+      background: var(--accent);
+    }
+
+    .scripts-main-column {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        height: auto;
+        overflow: visible;
+      }
+
+      .tab-panel.active {
+        display: block;
+        flex: none;
+      }
+
+      #tab-shortcuts.active {
+        overflow-y: visible;
+      }
+
+      .scripts-layout {
+        display: block;
+        flex: none;
+      }
+
+      .sidebar-resizer {
+        display: none;
+      }
+
+      .scripts-sidebar {
+        width: 100% !important;
+        height: auto;
+        margin-bottom: 14px;
+      }
+
+      #scriptsList {
+        flex: none;
+        max-height: 320px;
+      }
+
+      .scripts-main-column {
+        display: block;
+      }
+
+      .scripts-main {
+        margin-bottom: 14px;
+      }
+
+      #editorHost {
+        min-height: 260px;
+      }
+    }
+
+    .scripts-sidebar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .sidebar-header {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-header button,
+    .sidebar-header input[type="button"] {
       width: 100%;
     }
+
+    .sidebar-io {
+      display: flex;
+      gap: 6px;
+    }
+
+    .sidebar-io input[type="button"] {
+      flex: 1 1 0;
+      font-size: 12px;
+      padding: 5px 6px;
+    }
+
+    .sidebar-header input#discardEdits {
+      width: 100%;
+      font-size: 12px;
+    }
+
+    #scriptsList {
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 900px) {
+      #scriptsList {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-height: none;
+      }
+    }
+
+    #scriptsList li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+    }
+
+    #scriptsList li.selected {
+      background: #eaf1ef;
+    }
+
+    .script-check {
+      flex: 0 0 auto;
+      margin-left: 6px;
+    }
+
+    .list-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .list-controls label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .list-controls .spacer {
+      flex: 1 1 auto;
+    }
+
+    .bulk-btn {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+
+    .bulk-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .script-select-btn {
+      flex: 1 1 auto;
+      text-align: left;
+      background: transparent;
+      border: none;
+      padding: 8px 8px;
+      font-size: 12.5px;
+      line-height: 1.35;
+      color: var(--ink);
+      border-radius: 4px;
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+    }
+
+    #scriptsList li.selected .script-select-btn {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .script-select-btn:hover {
+      background: #efece4;
+    }
+
+    .dirty-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      min-width: 6px;
+      border-radius: 50%;
+      background: #c9822f;
+      margin-right: 6px;
+    }
+
+    #savetable.has-changes {
+      background: #c9822f;
+      border-color: #c9822f;
+      color: var(--accent-ink);
+    }
+
+    .unsaved-note {
+      font-size: 12px;
+      color: #a8641c;
+      align-self: center;
+    }
+
+    .reload-link {
+      background: none;
+      border: none;
+      color: #a8641c;
+      text-decoration: underline;
+      font-size: 12px;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .reload-link:hover {
+      color: var(--danger);
+    }
+
+    .script-delete-btn,
+    .script-export-btn {
+      flex: 0 0 auto;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    .script-delete-btn:hover {
+      color: var(--danger);
+      background: #f4e6e3;
+    }
+
+    .script-export-btn:hover {
+      color: var(--accent);
+      background: #eaf1ef;
+    }
+
+    .scripts-main,
+    .output-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .scripts-main {
+      flex: 1 1 60%;
+    }
+
+    .output-panel {
+      flex: 1 1 40%;
+      display: none;
+    }
+
+    .output-panel.visible {
+      display: flex;
+    }
+
+    .scripts-main-column.fullscreen {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 1001;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      background: transparent;
+    }
+
+    .fullscreen-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 20, 18, 0.45);
+      z-index: 1000;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex: 0 0 auto;
+    }
+
+    .editor-toolbar .spacer {
+      flex: 1 1 auto;
+    }
+
+    #editorHost {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #editorHost .cm-editor {
+      height: 100%;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px 8px;
+      text-align: center;
+    }
+
+    .output-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      flex: 0 0 auto;
+    }
+
+    .output-panel-header b {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    #output {
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      white-space: pre;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 8px 10px;
+      resize: none;
+    }
+
+    @media (max-width: 900px) {
+      .scripts-main,
+      .output-panel {
+        flex: none;
+      }
+
+      #editorHost {
+        flex: none;
+        min-height: 260px;
+      }
+
+      #output {
+        flex: none;
+        height: 20em;
+        resize: vertical;
+      }
+
+      .output-panel.visible {
+        display: block;
+      }
+
+      .output-panel {
+        margin-top: 14px;
+      }
+    }
+
+    /* ---------- shortcuts table ---------- */
+    #shortcutconfigs {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #shortcutconfigs th {
+      text-align: left;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #shortcutconfigs td {
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #shortcutconfigs tr:nth-child(even) {
+      background: #fbfaf7;
+    }
+
+    #shortcutconfigs td:first-child {
+      color: var(--muted);
+      width: 24px;
+      font-variant-numeric: tabular-nums;
+    }
+
     #shortcutconfigs select {
       width: 99%;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      padding: 4px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--ink);
     }
   </style>
 </head>
 <body>
-  <fieldset>
-    <legend>
-      <b
-        ><abbr
-          title="Use the ▶️  button to run a script and its output will be shown in the textarea below"
-          >Debug ▶️ Output (?)</abbr
-        ></b
-      >
-    </legend>
-    <textarea id="output">
+  <h1 class="page-title">
+    Gather from Tabs
+    <span
+      >Manage your scripts, run them against open tabs, and choose what happens
+      to the output.</span
+    >
+  </h1>
+
+  <div class="tabs" role="tablist">
+    <button
+      class="tab-btn active"
+      data-tab="scripts"
+      role="tab"
+      aria-selected="true"
+    >
+      Scripts
+    </button>
+    <button
+      class="tab-btn"
+      data-tab="shortcuts"
+      role="tab"
+      aria-selected="false"
+    >
+      Shortcuts
+    </button>
+  </div>
+
+  <section id="tab-scripts" class="tab-panel active">
+    <div class="scripts-layout">
+      <aside class="scripts-sidebar">
+        <div class="sidebar-header">
+          <button id="addScriptBtn" title="Add new script">
+            ➕ New Script
+          </button>
+          <div class="sidebar-io">
+            <input
+              id="impbtn_wrapper"
+              type="button"
+              value="Import"
+              title="Add script(s) from a file to this list"
+            />
+            <input
+              id="impbtn"
+              type="file"
+              name="impbtn"
+              value=""
+              style="display: none"
+            />
+          </div>
+        </div>
+        <div class="list-controls">
+          <label
+            ><input type="checkbox" id="selectAllCheckbox" /> Select all</label
+          >
+          <span class="spacer"></span>
+          <span id="bulkCount">0 selected</span>
+          <button
+            id="bulkExportBtn"
+            class="bulk-btn"
+            title="Export selected scripts to a file"
+            disabled
+          >
+            ⬇
+          </button>
+          <button
+            id="bulkResetBtn"
+            class="bulk-btn"
+            title="Reset selected scripts to last saved version"
+            disabled
+          >
+            ↺
+          </button>
+          <button
+            id="bulkDeleteBtn"
+            class="bulk-btn danger-text"
+            title="Delete selected scripts"
+            disabled
+          >
+            🗑
+          </button>
+        </div>
+        <ul id="scriptsList"></ul>
+      </aside>
+
+      <div
+        class="sidebar-resizer"
+        id="sidebarResizer"
+        title="Drag to resize the script list"
+      ></div>
+
+      <div class="scripts-main-column">
+        <div class="scripts-main">
+          <div class="editor-toolbar">
+            <button
+              id="runScriptBtn"
+              class="primary"
+              title="Test Run Script (Ctrl-Enter)"
+            >
+              ▶️ Run
+            </button>
+            <button
+              id="resetScriptBtn"
+              title="Revert this script to its last saved version"
+            >
+              ↺ Reset
+            </button>
+            <button id="fullscreenBtn" title="Expand editor to fullscreen">
+              ⤢ Fullscreen
+            </button>
+            <span class="spacer"></span>
+            <span class="unsaved-note" id="unsavedNote" style="display: none">
+              Unsaved changes
+              <button
+                id="reloadWithoutSavingBtn"
+                class="reload-link"
+                title="Reload the page, discarding every unsaved change including deleted or newly added scripts"
+              >
+                (reload without saving)
+              </button>
+            </span>
+            <input
+              id="savetable"
+              type="button"
+              value="✅Save"
+              title="Save Edits"
+            />
+          </div>
+          <div id="editorHost"></div>
+        </div>
+
+        <div class="output-panel" id="outputPanel">
+          <div class="output-panel-header">
+            <b>OUTPUT</b>
+            <div class="output-actions">
+              <button id="btn_copy_as_text">Copy as Text</button>
+              <button id="btn_copy_as_html">Copy as HTML</button>
+            </div>
+          </div>
+          <textarea id="output">
 Some hints:
  .replace(/(?:\r\n|\r|\n)/gm, ' ')  // remove line breaks
  .replace(/\s+/gm,' ') // remove duplicate white spaces:
  .replace('"','""') // escape quotes, for csv output
  btoa(Array.from((new TextEncoder).encode(),(o=>String.fromCodePoint(o))).join("")) // base64 encode
  +"\n"  // append line break
- // for more info, see: https://developer.mozilla.org/en-US/docs/Web/javascript
-</textarea
-    >
-    <button id="btn_copy_as_text">Copy as Text</button>
-    <button id="btn_copy_as_html">Copy as HTML</button>
-  </fieldset>
-  <fieldset>
-    <legend>
-      <b
-        ><abbr title="Add, edit and test run your set of scripts here"
-          >Scripts (?)</abbr
-        ></b
-      >
-    </legend>
+ // for more info, see: https://developer.mozilla.org/en-US/docs/Web/javascript</textarea
+          >
+        </div>
+      </div>
+    </div>
+    <div id="fullscreenBackdrop" class="fullscreen-backdrop"></div>
+  </section>
+
+  <section id="tab-shortcuts" class="tab-panel">
     <fieldset>
-      <input
-        id="impbtn_wrapper"
-        type="button"
-        name="impbtn"
-        value="Import"
-        title="Import Settings"
-      />
-      <input
-        id="impbtn"
-        type="file"
-        name="impbtn"
-        value=""
-        style="display: none"
-      />
-      <input
-        id="expbtn"
-        type="button"
-        name="impbtn"
-        value="Export"
-        title="Export Settings"
-      />
-      <input
-        id="savetable"
-        type="button"
-        value="✅Save"
-        style="float: right"
-        title="Save Edits"
-      />
-      <input
-        id="shrink"
-        type="button"
-        value="&#8690;Minimize"
-        style="float: right"
-        title="Minimize Textareas"
-      />
-      <input
-        id="discardEdits"
-        type="button"
-        value="Discard"
-        style="float: right"
-        title="Discard Edits"
-      />
+      <legend>
+        <b
+          >Script-Scope-Actions ( =&gt;
+          <button id="btnOpenShortcutSettings">assign shortcuts</button> &lt;= )
+        </b>
+      </legend>
+
+      <table id="shortcutconfigs" border="1">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Script</th>
+            <th>Scope</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><select name="formatlist"></select></td>
+            <td><select name="scopelist"></select></td>
+            <td><select name="actionlist"></select></td>
+          </tr>
+        </tbody>
+      </table>
     </fieldset>
-    <table id="mainTable" border="1" style="width: 100%; table-layout: fixed">
-      <col width="auto" />
-      <col width="75px" />
-      <thead></thead>
-      <tbody id="mainTableBody" />
-    </table>
-  </fieldset>
-
-  <fieldset>
-    <legend>
-      <b
-        >Script-Scope-Actions ( =&gt;
-        <button id="btnOpenShortcutSettings">assign shortcuts</button> &lt;= )
-      </b>
-    </legend>
-
-    <table id="shortcutconfigs" border="1">
-      <tr>
-        <td>0</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>5</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>6</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>7</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>8</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>9</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>10</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-      <tr>
-        <td>11</td>
-        <td>
-          <select name="formatlist"></select>
-        </td>
-        <td>
-          <select name="scopelist"></select>
-        </td>
-        <td>
-          <select name="actionlist"></select>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
+  </section>
 
   <script src="helper.js"></script>
   <script src="main.js"></script>

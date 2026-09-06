@@ -163,19 +163,6 @@ browser.browserAction.setBadgeBackgroundColor({ color: "#00000000" });
 browser.storage.onChanged.addListener(updateMenus);
 
 async function onCommand(cmd) {
-  if (cmd === "page-actions") {
-    // tbd.
-    let atabs = await browser.tabs.query({
-      currentWindow: true,
-      active: true,
-    });
-
-    browser.tabs.sendMessage(atabs[0].id, {
-      cmd: "show-page-actions",
-    });
-    return;
-  }
-
   const shortcutconfig = await getFromStorage("object", "shortcutconfig", null);
 
   if (shortcutconfig === null) {
@@ -228,9 +215,5 @@ async function onCommand(cmd) {
 browser.browserAction.setBadgeBackgroundColor({ color: "#00000000" });
 
 browser.commands.onCommand.addListener(onCommand);
-
-browser.runtime.onMessage.addListener((data, sender) => {
-  onCommand(data.cmd);
-});
 
 updateMenus();

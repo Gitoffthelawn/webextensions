@@ -55,11 +55,11 @@ THE SOFTWARE.
       if (!(this instanceof i))
         throw new TypeError("Promises must be constructed via new");
       if ("function" != typeof e) throw new TypeError("not a function");
-      (this._state = 0),
+      ((this._state = 0),
         (this._handled = !1),
         (this._value = undefined),
         (this._deferreds = []),
-        s(e, this);
+        s(e, this));
     }
     function r(o, r) {
       for (; 3 === o._state; ) o = o._value;
@@ -85,7 +85,8 @@ THE SOFTWARE.
           throw new TypeError("A promise cannot be resolved with itself.");
         if (n && ("object" == typeof n || "function" == typeof n)) {
           var t = n.then;
-          if (n instanceof i) return (e._state = 3), (e._value = n), void c(e);
+          if (n instanceof i)
+            return ((e._state = 3), (e._value = n), void c(e));
           if ("function" == typeof t)
             return void s(
               (function o(e, n) {
@@ -96,13 +97,13 @@ THE SOFTWARE.
               e,
             );
         }
-        (e._state = 1), (e._value = n), c(e);
+        ((e._state = 1), (e._value = n), c(e));
       } catch (r) {
         u(e, r);
       }
     }
     function u(e, n) {
-      (e._state = 2), (e._value = n), c(e);
+      ((e._state = 2), (e._value = n), c(e));
     }
     function c(e) {
       2 === e._state &&
@@ -115,9 +116,9 @@ THE SOFTWARE.
       e._deferreds = null;
     }
     function l(e, n, t) {
-      (this.onFulfilled = "function" == typeof e ? e : null),
+      ((this.onFulfilled = "function" == typeof e ? e : null),
         (this.onRejected = "function" == typeof n ? n : null),
-        (this.promise = t);
+        (this.promise = t));
     }
     function s(e, n) {
       var t = !1;
@@ -132,15 +133,15 @@ THE SOFTWARE.
         );
       } catch (o) {
         if (t) return;
-        (t = !0), u(n, o);
+        ((t = !0), u(n, o));
       }
     }
-    (i.prototype["catch"] = function (e) {
+    ((i.prototype["catch"] = function (e) {
       return this.then(null, e);
     }),
       (i.prototype.then = function (e, n) {
         var t = new this.constructor(o);
-        return r(this, new l(e, n, t)), t;
+        return (r(this, new l(e, n, t)), t);
       }),
       (i.prototype["finally"] = e),
       (i.all = function (n) {
@@ -162,7 +163,7 @@ THE SOFTWARE.
                     i,
                   );
               }
-              (f[n] = e), 0 == --u && r(f);
+              ((f[n] = e), 0 == --u && r(f));
             } catch (o) {
               i(o);
             }
@@ -200,7 +201,7 @@ THE SOFTWARE.
         void 0 !== console &&
           console &&
           console.warn("Possible Unhandled Promise Rejection:", e);
-      });
+      }));
     var t = (function () {
       if ("undefined" != typeof self) return self;
       if ("undefined" != typeof window) return window;
@@ -31767,7 +31768,7 @@ THE SOFTWARE.
       n = {
         replace: (r, i) => {
           let s = typeof i == "string" ? i : i.source;
-          return (s = s.replace(m.caret, "$1")), (t = t.replace(r, s)), n;
+          return ((s = s.replace(m.caret, "$1")), (t = t.replace(r, s)), n);
         },
         getRegex: () => new RegExp(t, e),
       };
@@ -32208,7 +32209,7 @@ THE SOFTWARE.
       text: o,
       tokens: n.inlineTokens(o),
     };
-    return (n.state.inLink = !1), a;
+    return ((n.state.inLink = !1), a);
   }
   function Je(l, e, t) {
     let n = l.match(t.other.indentCodeCompensation);
@@ -32321,7 +32322,7 @@ THE SOFTWARE.
             u;
           for (u = 0; u < n.length; u++)
             if (this.rules.other.blockquoteStart.test(n[u]))
-              a.push(n[u]), (o = !0);
+              (a.push(n[u]), (o = !0));
             else if (!o) a.push(n[u]);
             else break;
           n = n.slice(u);
@@ -32334,14 +32335,14 @@ THE SOFTWARE.
     $1`,
               )
               .replace(this.rules.other.blockquoteSetextReplace2, "");
-          (r = r
+          ((r = r
             ? `${r}
 ${p}`
             : p),
             (i = i
               ? `${i}
 ${c}`
-              : c);
+              : c));
           let f = this.lexer.state.top;
           if (
             ((this.lexer.state.top = !0),
@@ -32361,9 +32362,9 @@ ${c}`
                 n.join(`
 `),
               T = this.blockquote(g);
-            (s[s.length - 1] = T),
+            ((s[s.length - 1] = T),
               (r = r.substring(0, r.length - x.raw.length) + T.raw),
-              (i = i.substring(0, i.length - x.text.length) + T.text);
+              (i = i.substring(0, i.length - x.text.length) + T.text));
             break;
           } else if (k?.type === "list") {
             let x = k,
@@ -32374,11 +32375,11 @@ ${c}`
                 n.join(`
 `),
               T = this.list(g);
-            (s[s.length - 1] = T),
+            ((s[s.length - 1] = T),
               (r = r.substring(0, r.length - k.raw.length) + T.raw),
               (i = i.substring(0, i.length - x.raw.length) + T.raw),
               (n = g.substring(s.at(-1).raw.length).split(`
-`));
+`)));
             continue;
           }
         }
@@ -32398,8 +32399,8 @@ ${c}`
             loose: !1,
             items: [],
           };
-        (n = r ? `\\d{1,9}\\${n.slice(-1)}` : `\\${n}`),
-          this.options.pedantic && (n = r ? n : "[*+-]");
+        ((n = r ? `\\d{1,9}\\${n.slice(-1)}` : `\\${n}`),
+          this.options.pedantic && (n = r ? n : "[*+-]"));
         let s = this.rules.other.listItemRegex(n),
           o = !1;
         for (; e; ) {
@@ -32407,7 +32408,7 @@ ${c}`
             p = "",
             c = "";
           if (!(t = s.exec(e)) || this.rules.block.hr.test(e)) break;
-          (p = t[0]), (e = e.substring(p.length));
+          ((p = t[0]), (e = e.substring(p.length)));
           let f = t[2]
               .split(
                 `
@@ -32487,13 +32488,13 @@ ${c}`
                   `
 ` + k;
               }
-              !x && !k.trim() && (x = !0),
+              (!x && !k.trim() && (x = !0),
                 (p +=
                   G +
                   `
 `),
                 (e = e.substring(G.length + 1)),
-                (f = A.slice(g));
+                (f = A.slice(g)));
             }
           }
           i.loose ||
@@ -32502,7 +32503,7 @@ ${c}`
               : this.rules.other.doubleBlankLine.test(p) && (o = !0));
           let T = null,
             Y;
-          this.options.gfm &&
+          (this.options.gfm &&
             ((T = this.rules.other.listIsTask.exec(c)),
             T &&
               ((Y = T[0] !== "[ ] "),
@@ -32516,10 +32517,10 @@ ${c}`
               text: c,
               tokens: [],
             }),
-            (i.raw += p);
+            (i.raw += p));
         }
         let a = i.items.at(-1);
-        if (a) (a.raw = a.raw.trimEnd()), (a.text = a.text.trimEnd());
+        if (a) ((a.raw = a.raw.trimEnd()), (a.text = a.text.trimEnd()));
         else return;
         i.raw = i.raw.trimEnd();
         for (let u = 0; u < i.items.length; u++)
@@ -32702,9 +32703,9 @@ ${c}`
           if (s === -2) return;
           if (s > -1) {
             let a = (t[0].indexOf("!") === 0 ? 5 : 4) + t[1].length + s;
-            (t[2] = t[2].substring(0, s)),
+            ((t[2] = t[2].substring(0, s)),
               (t[0] = t[0].substring(0, a).trim()),
-              (t[3] = "");
+              (t[3] = ""));
           }
         }
         let r = t[2],
@@ -32854,14 +32855,14 @@ ${c}`
       let t;
       if ((t = this.rules.inline.url.exec(e))) {
         let n, r;
-        if (t[2] === "@") (n = t[0]), (r = "mailto:" + n);
+        if (t[2] === "@") ((n = t[0]), (r = "mailto:" + n));
         else {
           let i;
           do
-            (i = t[0]),
-              (t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? "");
+            ((i = t[0]),
+              (t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? ""));
           while (i !== t[0]);
-          (n = t[0]), t[1] === "www." ? (r = "http://" + t[0]) : (r = t[0]);
+          ((n = t[0]), t[1] === "www." ? (r = "http://" + t[0]) : (r = t[0]));
         }
         return {
           type: "link",
@@ -32887,7 +32888,7 @@ ${c}`
     tokenizer;
     inlineQueue;
     constructor(e) {
-      (this.tokens = []),
+      ((this.tokens = []),
         (this.tokens.links = Object.create(null)),
         (this.options = e || O),
         (this.options.tokenizer = this.options.tokenizer || new y()),
@@ -32895,14 +32896,14 @@ ${c}`
         (this.tokenizer.options = this.options),
         (this.tokenizer.lexer = this),
         (this.inlineQueue = []),
-        (this.state = { inLink: !1, inRawBlock: !1, top: !0 });
+        (this.state = { inLink: !1, inRawBlock: !1, top: !0 }));
       let t = { other: m, block: I.normal, inline: M.normal };
-      this.options.pedantic
+      (this.options.pedantic
         ? ((t.block = I.pedantic), (t.inline = M.pedantic))
         : this.options.gfm &&
           ((t.block = I.gfm),
           this.options.breaks ? (t.inline = M.breaks) : (t.inline = M.gfm)),
-        (this.tokenizer.rules = t);
+        (this.tokenizer.rules = t));
     }
     static get rules() {
       return { block: I, inline: M };
@@ -32914,17 +32915,17 @@ ${c}`
       return new l(t).inlineTokens(e);
     }
     lex(e) {
-      (e = e.replace(
+      ((e = e.replace(
         m.carriageReturn,
         `
 `,
       )),
-        this.blockTokens(e, this.tokens);
+        this.blockTokens(e, this.tokens));
       for (let t = 0; t < this.inlineQueue.length; t++) {
         let n = this.inlineQueue[t];
         this.inlineTokens(n.src, n.tokens);
       }
-      return (this.inlineQueue = []), this.tokens;
+      return ((this.inlineQueue = []), this.tokens);
     }
     blockTokens(e, t = [], n = !1) {
       for (
@@ -32966,27 +32967,27 @@ ${c}`
           continue;
         }
         if ((r = this.tokenizer.fences(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.heading(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.hr(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.blockquote(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.list(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.html(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.def(e))) {
@@ -33005,11 +33006,11 @@ ${c}`
           continue;
         }
         if ((r = this.tokenizer.table(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         if ((r = this.tokenizer.lheading(e))) {
-          (e = e.substring(r.raw.length)), t.push(r);
+          ((e = e.substring(r.raw.length)), t.push(r));
           continue;
         }
         let i = e;
@@ -33017,15 +33018,15 @@ ${c}`
           let s = 1 / 0,
             o = e.slice(1),
             a;
-          this.options.extensions.startBlock.forEach((u) => {
-            (a = u.call({ lexer: this }, o)),
-              typeof a == "number" && a >= 0 && (s = Math.min(s, a));
+          (this.options.extensions.startBlock.forEach((u) => {
+            ((a = u.call({ lexer: this }, o)),
+              typeof a == "number" && a >= 0 && (s = Math.min(s, a)));
           }),
-            s < 1 / 0 && s >= 0 && (i = e.substring(0, s + 1));
+            s < 1 / 0 && s >= 0 && (i = e.substring(0, s + 1)));
         }
         if (this.state.top && (r = this.tokenizer.paragraph(i))) {
           let s = t.at(-1);
-          n && s?.type === "paragraph"
+          (n && s?.type === "paragraph"
             ? ((s.raw +=
                 `
 ` + r.raw),
@@ -33036,7 +33037,7 @@ ${c}`
               (this.inlineQueue.at(-1).src = s.text))
             : t.push(r),
             (n = i.length !== e.length),
-            (e = e.substring(r.raw.length));
+            (e = e.substring(r.raw.length)));
           continue;
         }
         if ((r = this.tokenizer.text(e))) {
@@ -33062,10 +33063,10 @@ ${c}`
           } else throw new Error(s);
         }
       }
-      return (this.state.top = !0), t;
+      return ((this.state.top = !0), t);
     }
     inline(e, t = []) {
-      return this.inlineQueue.push({ src: e, tokens: t }), t;
+      return (this.inlineQueue.push({ src: e, tokens: t }), t);
     }
     inlineTokens(e, t = []) {
       let n = e,
@@ -33101,7 +33102,7 @@ ${c}`
       let i = !1,
         s = "";
       for (; e; ) {
-        i || (s = ""), (i = !1);
+        (i || (s = ""), (i = !1));
         let o;
         if (
           this.options.extensions?.inline?.some((u) =>
@@ -33112,15 +33113,15 @@ ${c}`
         )
           continue;
         if ((o = this.tokenizer.escape(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.tag(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.link(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.reflink(e, this.tokens.links))) {
@@ -33132,27 +33133,27 @@ ${c}`
           continue;
         }
         if ((o = this.tokenizer.emStrong(e, n, s))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.codespan(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.br(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.del(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if ((o = this.tokenizer.autolink(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         if (!this.state.inLink && (o = this.tokenizer.url(e))) {
-          (e = e.substring(o.raw.length)), t.push(o);
+          ((e = e.substring(o.raw.length)), t.push(o));
           continue;
         }
         let a = e;
@@ -33160,16 +33161,16 @@ ${c}`
           let u = 1 / 0,
             p = e.slice(1),
             c;
-          this.options.extensions.startInline.forEach((f) => {
-            (c = f.call({ lexer: this }, p)),
-              typeof c == "number" && c >= 0 && (u = Math.min(u, c));
+          (this.options.extensions.startInline.forEach((f) => {
+            ((c = f.call({ lexer: this }, p)),
+              typeof c == "number" && c >= 0 && (u = Math.min(u, c)));
           }),
-            u < 1 / 0 && u >= 0 && (a = e.substring(0, u + 1));
+            u < 1 / 0 && u >= 0 && (a = e.substring(0, u + 1)));
         }
         if ((o = this.tokenizer.inlineText(a))) {
-          (e = e.substring(o.raw.length)),
+          ((e = e.substring(o.raw.length)),
             o.raw.slice(-1) !== "_" && (s = o.raw.slice(-1)),
-            (i = !0);
+            (i = !0));
           let u = t.at(-1);
           u?.type === "text"
             ? ((u.raw += o.raw), (u.text += o.text))
@@ -33351,7 +33352,7 @@ ${e}</tr>
       if (i === null) return r;
       e = i;
       let s = '<a href="' + e + '"';
-      return t && (s += ' title="' + w(t) + '"'), (s += ">" + r + "</a>"), s;
+      return (t && (s += ' title="' + w(t) + '"'), (s += ">" + r + "</a>"), s);
     }
     image({ href: e, title: t, text: n, tokens: r }) {
       r && (n = this.parser.parseInline(r, this.parser.textRenderer));
@@ -33359,7 +33360,7 @@ ${e}</tr>
       if (i === null) return w(n);
       e = i;
       let s = `<img src="${e}" alt="${n}"`;
-      return t && (s += ` title="${w(t)}"`), (s += ">"), s;
+      return (t && (s += ` title="${w(t)}"`), (s += ">"), s);
     }
     text(e) {
       return "tokens" in e && e.tokens
@@ -33403,12 +33404,12 @@ ${e}</tr>
     renderer;
     textRenderer;
     constructor(e) {
-      (this.options = e || O),
+      ((this.options = e || O),
         (this.options.renderer = this.options.renderer || new P()),
         (this.renderer = this.options.renderer),
         (this.renderer.options = this.options),
         (this.renderer.parser = this),
-        (this.textRenderer = new S$1());
+        (this.textRenderer = new S$1()));
     }
     static parse(e, t) {
       return new l(t).parse(e);
@@ -33487,10 +33488,10 @@ ${e}</tr>
             let o = s,
               a = this.renderer.text(o);
             for (; r + 1 < e.length && e[r + 1].type === "text"; )
-              (o = e[++r]),
+              ((o = e[++r]),
                 (a +=
                   `
-` + this.renderer.text(o));
+` + this.renderer.text(o)));
             t
               ? (n += this.renderer.paragraph({
                   type: "paragraph",
@@ -33503,7 +33504,7 @@ ${e}</tr>
           }
           default: {
             let o = 'Token with "' + s.type + '" type was not found.';
-            if (this.options.silent) return console.error(o), "";
+            if (this.options.silent) return (console.error(o), "");
             throw new Error(o);
           }
         }
@@ -33582,7 +33583,7 @@ ${e}</tr>
           }
           default: {
             let o = 'Token with "' + s.type + '" type was not found.';
-            if (this.options.silent) return console.error(o), "";
+            if (this.options.silent) return (console.error(o), "");
             throw new Error(o);
           }
         }
@@ -33698,7 +33699,7 @@ ${e}</tr>
                   s
                     ? (t.renderers[i.name] = function (...o) {
                         let a = i.renderer.apply(this, o);
-                        return a === !1 && (a = s.apply(this, o)), a;
+                        return (a === !1 && (a = s.apply(this, o)), a);
                       })
                     : (t.renderers[i.name] = i.renderer);
                 }
@@ -33708,7 +33709,7 @@ ${e}</tr>
                       "extension level must be 'block' or 'inline'",
                     );
                   let s = t[i.level];
-                  s ? s.unshift(i.tokenizer) : (t[i.level] = [i.tokenizer]),
+                  (s ? s.unshift(i.tokenizer) : (t[i.level] = [i.tokenizer]),
                     i.start &&
                       (i.level === "block"
                         ? t.startBlock
@@ -33717,7 +33718,7 @@ ${e}</tr>
                         : i.level === "inline" &&
                           (t.startInline
                             ? t.startInline.push(i.start)
-                            : (t.startInline = [i.start])));
+                            : (t.startInline = [i.start]))));
                 }
                 "childTokens" in i &&
                   i.childTokens &&
@@ -33735,7 +33736,7 @@ ${e}</tr>
                 u = i[o];
               i[o] = (...p) => {
                 let c = a.apply(i, p);
-                return c === !1 && (c = u.apply(i, p)), c || "";
+                return (c === !1 && (c = u.apply(i, p)), c || "");
               };
             }
             r.renderer = i;
@@ -33750,7 +33751,7 @@ ${e}</tr>
                 u = i[o];
               i[o] = (...p) => {
                 let c = a.apply(i, p);
-                return c === !1 && (c = u.apply(i, p)), c;
+                return (c === !1 && (c = u.apply(i, p)), c);
               };
             }
             r.tokenizer = i;
@@ -33774,7 +33775,7 @@ ${e}</tr>
                   })
                 : (i[o] = (...p) => {
                     let c = a.apply(i, p);
-                    return c === !1 && (c = u.apply(i, p)), c;
+                    return (c === !1 && (c = u.apply(i, p)), c);
                   });
             }
             r.hooks = i;
@@ -33785,7 +33786,9 @@ ${e}</tr>
             r.walkTokens = function (o) {
               let a = [];
               return (
-                a.push(s.call(this, o)), i && (a = a.concat(i.call(this, o))), a
+                a.push(s.call(this, o)),
+                i && (a = a.concat(i.call(this, o))),
+                a
               );
             };
           }
@@ -33795,7 +33798,7 @@ ${e}</tr>
       );
     }
     setOptions(e) {
-      return (this.defaults = { ...this.defaults, ...e }), this;
+      return ((this.defaults = { ...this.defaults, ...e }), this);
     }
     lexer(e, t) {
       return b.lex(e, t ?? this.defaults);
@@ -33846,10 +33849,10 @@ ${e}</tr>
         try {
           s.hooks && (n = s.hooks.preprocess(n));
           let p = a(n, s);
-          s.hooks && (p = s.hooks.processAllTokens(p)),
-            s.walkTokens && this.walkTokens(p, s.walkTokens);
+          (s.hooks && (p = s.hooks.processAllTokens(p)),
+            s.walkTokens && this.walkTokens(p, s.walkTokens));
           let c = u(p, s);
-          return s.hooks && (c = s.hooks.postprocess(c)), c;
+          return (s.hooks && (c = s.hooks.postprocess(c)), c);
         } catch (p) {
           return o(p);
         }
@@ -33876,12 +33879,12 @@ Please report this to https://github.com/markedjs/marked.`),
     return _.parse(l, e);
   }
   d.options = d.setOptions = function (l) {
-    return _.setOptions(l), (d.defaults = _.defaults), H(d.defaults), d;
+    return (_.setOptions(l), (d.defaults = _.defaults), H(d.defaults), d);
   };
   d.getDefaults = L$1;
   d.defaults = O;
   d.use = function (...l) {
-    return _.use(...l), (d.defaults = _.defaults), H(d.defaults), d;
+    return (_.use(...l), (d.defaults = _.defaults), H(d.defaults), d);
   };
   d.walkTokens = function (l, e) {
     return _.walkTokens(l, e);

@@ -1,5 +1,12 @@
 {
   "author": "igorlogius",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/gather-from-tabs",
   "description": "Run a userscript in multiple tabs and collect the output",
   "browser_action": {
@@ -9,9 +16,6 @@
     "scripts": ["helper.js", "background.js"]
   },
   "commands": {
-    "page-actions": {
-      "description": "Show SSA page popup"
-    },
     "0": {
       "description": "Script-Scope-Action 0"
     },
@@ -49,12 +53,6 @@
       "description": "Script-Scope-Action 11"
     }
   },
-  "content_scripts": [
-    {
-      "js": ["helper.js", "content.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
   "options_ui": {
     "open_in_tab": true,
     "page": "main.html"
