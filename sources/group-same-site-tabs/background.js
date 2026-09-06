@@ -3,8 +3,8 @@
 let collapsed = true;
 
 async function grpTabsForSites(tabs, sites) {
-  (tabs = tabs.filter((t) => sites.has(new URL(t.url).hostname))),
-    grpTabs(tabs);
+  ((tabs = tabs.filter((t) => sites.has(new URL(t.url).hostname))),
+    grpTabs(tabs));
 }
 
 async function grpSingleSite(site) {
