@@ -1,25 +1,490 @@
+/* ==========================================================================
+   LocalStorage Editor — theme
+   Developer-tool palette, light by default, dark under prefers-color-scheme
+   (which follows the OS / Firefox "Website appearance" setting). Colors can
+   be further overridden at runtime by popup.js from the browser's installed
+   theme (see applyBrowserTheme). Monospace for stored data, system sans for
+   UI chrome. No external fonts or frameworks.
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #edeff2;
+  --surface-3: #e1e4e9;
+  --border: #d6dae1;
+  --text: #22262d;
+  --text-dim: #5b6270;
+  --text-faint: #8a909c;
+
+  --accent: #2f7dc7;
+  --accent-hover: #2769a8;
+  --accent-dim: rgba(47, 125, 199, 0.12);
+  --accent-contrast: #ffffff;
+
+  --local: #2f7dc7;
+  --session: #b5750f;
+
+  --danger: #c94f36;
+  --danger-dim: rgba(201, 79, 54, 0.1);
+  --success: #2f9e63;
+
+  --shadow: 0 12px 32px rgba(30, 34, 42, 0.18);
+  --backdrop: rgba(60, 64, 72, 0.28);
+  --scrollbar-track: var(--surface);
+  --scrollbar-thumb: #c7cbd3;
+
+  --radius: 5px;
+  --font-ui: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-data: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1e24;
+    --surface: #21252c;
+    --surface-2: #2a2f38;
+    --surface-3: #333944;
+    --border: #3a4150;
+    --text: #dbe0e8;
+    --text-dim: #8991a1;
+    --text-faint: #626a78;
+
+    --accent: #5b9dd9;
+    --accent-hover: #71acdf;
+    --accent-dim: rgba(91, 157, 217, 0.16);
+    --accent-contrast: #eaf3fc;
+
+    --local: #5b9dd9;
+    --session: #d69a4d;
+
+    --danger: #d6674d;
+    --danger-dim: rgba(214, 103, 77, 0.16);
+    --success: #56b981;
+
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --backdrop: rgba(10, 11, 14, 0.55);
+    --scrollbar-thumb: var(--surface-3);
+  }
+}
+
+/* Manual override applied by popup.js when it can read the user's actual
+   Firefox theme colors (see applyBrowserTheme in popup.js). Takes priority
+   over both the light default and the prefers-color-scheme dark block. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  background: lightgray;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
   min-width: 640px;
   min-height: 480px;
-  padding: 5px;
+  padding: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-button {
-  min-width: 5vw;
+button,
+.btn {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease;
+  text-decoration: none;
 }
 
-#log {
-  width: 100%;
+button svg,
+.btn svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  stroke: currentColor;
 }
+
+button:hover,
+.btn:hover {
+  background: var(--surface-3);
+  border-color: #4a5262;
+}
+
+button:active,
+.btn:active {
+  background: var(--surface);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Primary / danger button accents, set via id since markup has no spare classes */
+#savbtn,
+#confirmBtn {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+#savbtn:hover,
+#confirmBtn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+#disbtn:hover {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+#delbtn:hover {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Highlighted "you have unsaved changes" state, set from popup.js */
+#savbtn[data-dirty="true"] {
+  border-color: var(--success);
+}
+#disbtn[data-dirty="true"] {
+  border-color: var(--danger);
+}
+
+/* ---- toolbar ---------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  row-gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.toolbar-status {
+  flex: 1 1 80px;
+  min-width: 80px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.toolbar-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.toolbar-check input {
+  accent-color: var(--accent);
+}
+
+/* ---- table ------------------------------------------------------------ */
+
+#mainTable {
+  flex: 1;
+  min-height: 0;
+}
+
+.tabulator {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  color: var(--text);
+}
+
+.tabulator .tabulator-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.tabulator .tabulator-col {
+  background: transparent;
+  border-right: 1px solid var(--border);
+}
+
+.tabulator .tabulator-col-title {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.tabulator .tabulator-header-filter input,
+.tabulator .tabulator-header-filter select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+.tabulator .tabulator-row {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-data);
+}
+
+.tabulator .tabulator-row.tabulator-row-even {
+  background: var(--bg);
+}
+
+.tabulator .tabulator-row:hover {
+  background: var(--surface-3);
+}
+
+.tabulator .tabulator-row.tabulator-selected {
+  background: var(--accent-dim);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.tabulator .tabulator-row.tabulator-selected:hover {
+  background: var(--accent-dim);
+}
+
+.tabulator .tabulator-cell {
+  border-right: 1px solid var(--border);
+  color: var(--text);
+}
+
+.tabulator .tabulator-cell.tabulator-editing {
+  border: 1px solid var(--accent);
+}
+
+.tabulator .tabulator-cell.tabulator-editing input,
+.tabulator .tabulator-cell.tabulator-editing textarea {
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-data);
+}
+
+.tabulator .tabulator-cell.tabulator-validation-fail {
+  border: 1px solid var(--danger) !important;
+  background: var(--danger-dim);
+}
+
+.tabulator-row .tabulator-row-handle {
+  color: var(--text-faint);
+}
+
+.tabulator .tabulator-placeholder {
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+}
+
+.tabulator-tableholder {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+.tabulator-tableholder::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.tabulator-tableholder::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 5px;
+}
+
+.tabulator-alert {
+  background: rgba(27, 30, 36, 0.9);
+}
+.tabulator-alert-msg {
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+.tabulator-alert-msg.tabulator-alert-state-error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* storage-area badge dot, painted by popup.js formatter */
+.sa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.sa-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.sa-badge.sa-local::before {
+  background: var(--local);
+}
+.sa-badge.sa-session::before {
+  background: var(--session);
+}
+
+/* ---- footer tip --------------------------------------------------------*/
 
 #tip {
-  font-size: 0.8em;
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
 }
 
-.tabulator-cell.tabulator-editable textarea {
-  min-height: calc(2 * 22px) !important;
-  max-height: calc(10 * 22px) !important;
-  white-space: nowrap !important;
+/* ---- edit dialog ------------------------------------------------------- */
+
+dialog#editDialog {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: var(--shadow);
+
+  width: 98vw;
+  height: 96vh;
+  min-width: 380px;
+  min-height: 280px;
+}
+
+dialog#editDialog::backdrop {
+  background: var(--backdrop);
+}
+
+dialog#editDialog form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+dialog#editDialog fieldset {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: none;
+  margin: 0;
+  padding: 14px 16px 16px;
+  gap: 10px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dialog-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 56px;
+}
+
+dialog#editDialog select,
+dialog#editDialog input[type="text"],
+dialog#editDialog input:not([type]) {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 12px;
+  padding: 5px 8px;
+}
+
+dialog#editDialog input {
+  flex: 1;
+}
+
+.wrap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-left: auto;
+}
+
+dialog#editDialog textarea {
+  flex: 1;
+  min-height: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px;
+  resize: none;
 }

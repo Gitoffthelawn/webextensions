@@ -5,73 +5,146 @@
   <link href="popup.css" rel="stylesheet" />
 </head>
 <body>
-  <dialog id="editDialog" style="width: 99%; height: 99%">
+  <dialog id="editDialog">
     <form>
+      <div class="dialog-header">
+        <h2>Edit entry</h2>
+      </div>
       <fieldset>
-        <div style="float: right">
-          <button value="cancel" formmethod="dialog">Discard</button>
-          <button id="confirmBtn" value="default">Save</button>
+        <div class="field-row">
+          <label class="field-label" for="dlgStore">Storage</label>
+          <select id="dlgStore">
+            <option value="Local">Local</option>
+            <option value="Session">Session</option>
+          </select>
         </div>
 
-        <p>
-          <label>
-            Storage:
-            <select>
-              <option value="Local">Local</option>
-              <option value="Session">Session</option>
-            </select>
-          </label>
-        </p>
+        <div class="field-row">
+          <label class="field-label" for="dlgKey">Key</label>
+          <input id="dlgKey" type="text" value="" spellcheck="false" />
+        </div>
 
-        <p>
-          <label>
-            Key:
-            <input style="width: 100%" value="" />
+        <div class="field-row">
+          <span class="field-label">Value</span>
+          <label class="wrap-toggle">
+            <input type="checkbox" checked />
+            wrap
           </label>
-        </p>
+        </div>
+        <textarea spellcheck="false"></textarea>
 
-        <p>
-          <label>
-            Value:
-            <abbr title="toggle line wrap">
-              <input type="checkbox" checked />
-              (?)
-            </abbr>
-            <textarea
-              style="
-                width: 100%;
-                height: 380px;
-                white-space: nowrap;
-                resize: none;
-              "
-              ;
-              spellcheck="false"
-            ></textarea>
-          </label>
-        </p>
+        <div class="dialog-actions">
+          <button value="cancel" formmethod="dialog">Discard</button>
+          <button id="confirmBtn" value="default">
+            <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+              <path d="M3 8.5l3 3 7-7" />
+            </svg>
+            Save
+          </button>
+        </div>
       </fieldset>
     </form>
   </dialog>
 
-  <fieldset>
-    <button id="addbtn" title="add new value">&#10039;Add</button>
-    <button id="delbtn" title="delete selected">&#10005;Delete</button>
-    <button id="savbtn" title="save changes">&#10003;Submit</button>
-    <button id="disbtn" title="discard changes">&#9888;Discard</button>
-    <button id="impbtn" title="clipboard import">&darr;Import</button>
-    <button id="cpybtn" title="copy selected">&uarr;Copy</button>
-    <button id="expbtn" title="download selected">&uarr;Download</button>
-    <abbr title="inital check state"
-      ><input type="checkbox" id="checkState" />(?)</abbr
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <button id="addbtn" title="add new value">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path d="M8 3v10M3 8h10" />
+        </svg>
+        Add
+      </button>
+      <button id="delbtn" title="delete selected">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path
+            d="M3.5 4.5h9M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.2a1 1 0 001 .8h3.8a1 1 0 001-.8l.6-8.2"
+          />
+        </svg>
+        Delete
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-group">
+      <button id="savbtn" title="save changes">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path d="M3 8.5l3 3 7-7" />
+        </svg>
+        Submit
+      </button>
+      <button id="disbtn" title="discard changes">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path d="M4 4l8 8M12 4l-8 8" />
+        </svg>
+        Discard
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-group">
+      <button id="impbtn" title="clipboard import">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path
+            d="M8 2v8m0 0l-3-3m3 3l3-3M3 12v1.5a1 1 0 001 1h8a1 1 0 001-1V12"
+          />
+        </svg>
+        Import
+      </button>
+      <button id="cpybtn" title="copy selected">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <rect x="5.5" y="5.5" width="7" height="8" rx="1" />
+          <path d="M3.5 10.5V3a1 1 0 011-1H10" />
+        </svg>
+        Copy
+      </button>
+      <button id="expbtn" title="download selected">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.6">
+          <path d="M8 2v7m0 0l-2.5-2.5M8 9l2.5-2.5" />
+          <path d="M3 12.5v.5a1.5 1.5 0 001.5 1.5h7a1.5 1.5 0 001.5-1.5v-.5" />
+        </svg>
+        Download
+      </button>
+    </div>
+
+    <div class="toolbar-status" id="log">...</div>
+
+    <label class="toolbar-check" title="initial check state">
+      <input type="checkbox" id="checkState" />
+      select on load
+    </label>
+
+    <a
+      class="btn"
+      id="helpbtn"
+      href="https://github.com/igorlogius/webextensions/issues/new/choose?title=localstorage-editor%20-"
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Get help / report an issue"
     >
-  </fieldset>
-  <fieldset>
-    <div id="log"></div>
-  </fieldset>
-  <div id="mainTable" border="0" style="width: 99%"></div>
-  <fieldset>
-    <div id="tip"></div>
-  </fieldset>
+      <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5">
+        <circle cx="8" cy="8" r="6.25" />
+        <path
+          d="M6.2 6.2a1.8 1.8 0 013.4.8c0 1.2-1.6 1.3-1.6 2.6"
+          stroke-linecap="round"
+        />
+        <circle
+          cx="8"
+          cy="11.6"
+          r="0.15"
+          fill="currentColor"
+          stroke-width="0.6"
+        />
+      </svg>
+      Help
+    </a>
+  </div>
+
+  <div id="mainTable"></div>
+
+  <div id="tip"></div>
+
   <script src="tabulator.min.js"></script>
   <script src="popup.js"></script>
 </body>
