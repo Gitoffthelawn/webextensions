@@ -1,110 +1,357 @@
-body {
-  padding: 0.5em;
-  background-color: lightgray;
-  /*max-height:400px;*/
-  /*overflow: hidden;*/
-  width: 500px;
+/* ---- Design tokens ------------------------------------------------- */
+
+:root {
+  --bg: #f6f7f6;
+  --surface: #ffffff;
+  --surface-hover: #eef1ef;
+  --border: #dee3df;
+  --text: #171a18;
+  --text-muted: #66716c;
+  --accent: #146b65;
+  --accent-contrast: #ffffff;
+  --highlight-bg: #ffe07a;
+  --highlight-text: #3a2c00;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-#resultlist {
-  /*height: 300px;*/
-  overflow-y: scroll;
-  border: 1px solid gray;
-  margin-top: 80px;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1e1c;
+    --surface: #242826;
+    --surface-hover: #2e332f;
+    --border: #3a3f3b;
+    --text: #edefed;
+    --text-muted: #9aa39d;
+    --accent: #3fc2b4;
+    --accent-contrast: #0b1210;
+    --highlight-bg: #8a6a16;
+    --highlight-text: #fff2cf;
+  }
 }
+
+/* ---- Base ------------------------------------------------------------ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  width: 480px;
+  max-height: 600px;
+  overflow: hidden; /* the popup panel sizes to its content, up to
+                        max-height; #resultlist scrolls internally */
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* When opened as its own tab (see popup.js), a real viewport exists, so
+   percentage/vh sizing is safe here — let it use the full window and
+   center the content into a comfortably readable column. */
+body.detached {
+  width: 100%;
+  max-height: none;
+  height: 100vh;
+  align-items: center;
+}
+
+body.detached #fsinput,
+body.detached #resultlist {
+  width: 100%;
+  max-width: 760px;
+}
+
+body.detached #fsinput {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+body.detached #resultlist {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- Header: search + options ---------------------------------------- */
 
 #fsinput {
-  position: fixed;
-  padding-top: 15px;
-  padding-left: 15px;
-  padding-right: 15px;
-  top: 0px;
-  left: 0px;
-  height: 20px;
-  width: 500px;
-  /*background-color: yellow;*/
-  background-color: lightgray;
-  padding-bottom: 30px;
-}
-
-#searchprogress {
-  position: fixed;
-  width: 500px;
-  top: 60px;
-  left: 15px;
-}
-
-ul {
-  /*list-style-type: none; */
-  padding: 0;
-  padding-left: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
   margin: 0;
-}
-
-fieldset {
+  padding: 12px 14px 8px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   display: flex;
-  align-items: stretch;
-  align-content: stretch;
-  flex-flow: row wrap;
+  flex-direction: column;
+  gap: 8px;
 }
 
-input[type="number"] {
-  flex-grow: 1;
-  width: 15%;
-  border: 1px solid #ccc;
-  text-align: center;
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
-input[type="checkbox"] {
-  flex-grow: 0;
-  min-width: 10%;
-  margin: 0;
+.search-row:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.search-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+#searchField {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 3px 0;
+}
+
+#searchField::placeholder {
+  color: var(--text-muted);
+}
+
+/* Firefox's native clear ("x") button on <input type=search> */
+#searchField::-moz-search-clear-button {
+  filter: grayscale(1) opacity(0.6);
+}
+
+#detach {
+  flex: none;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
-input[type="search"] {
-  flex-grow: 100;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
+#detach svg {
+  width: 16px;
+  height: 16px;
 }
 
-input:focus {
+#detach:hover,
+#detach:focus-visible {
+  background: var(--surface-hover);
+  color: var(--accent);
   outline: none;
 }
 
-ul ul {
-  border-bottom: 1px solid black;
+.options-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-body > ul > li:hover {
-  /*border: 1px solid black;*/
-  background-color: skyblue;
+.opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  user-select: none;
 }
 
-body > ul > li:focus {
-  /*border: 1px solid black;*/
-  background-color: skyblue;
-}
-
-li li {
+.opt-number input {
+  width: 2.6em;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  text-align: center;
   padding: 0;
-  /*border-top: 1px solid red;*/
-  /*border-top: 1px solid black;*/
 }
 
-/*
-li li:nth-child(odd) {
-  background: #dcdcdc;
+.opt-toggle {
+  position: relative;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
 }
-*/
 
-h3,
-h4 {
+.opt-toggle input {
+  position: absolute;
+  inset: 0;
   margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.opt-toggle:has(input:checked) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.opt-toggle:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.opt-toggle:has(input:disabled) {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#searchprogress {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  border: none;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+#searchprogress::-moz-progress-bar {
+  background: var(--accent);
+}
+
+#note {
+  min-height: 14px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* ---- Results ----------------------------------------------------------- */
+
+#resultlist {
+  list-style: none;
+  margin: 0;
+  padding: 6px 8px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.tab-result a {
+  display: block;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background-color 0.12s ease;
+}
+
+.tab-result a:hover,
+.tab-result a:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.tab-result__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.favicon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.title {
+  margin: 0 0 3px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result ul {
+  list-style: none;
+  margin: 4px 0 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-p {
-  margin: 0;
+.result ul li {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.hit-mark {
+  background: var(--highlight-bg);
+  color: var(--highlight-text);
+  border-radius: 3px;
+  padding: 0 2px;
 }

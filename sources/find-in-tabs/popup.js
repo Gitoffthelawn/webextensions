@@ -36,10 +36,35 @@
     return browser.storage.local.set(obj);
   }
 
-  function encodeHTMLEntities(text) {
-    var textArea = document.createElement("textarea");
-    textArea.innerText = text;
-    return textArea.innerHTML;
+  function buildHitList(hits, regexmode, caseSensitive, searchedVal) {
+    const ul = document.createElement("ul");
+    ul.style.fontSize = "0.8em";
+    hits.forEach((hit) => {
+      const li = document.createElement("li");
+      const matchText = regexmode
+        ? hit.mid
+        : caseSensitive
+          ? searchedVal
+          : searchedVal.toUpperCase();
+      // The exact on-page position was computed by content.js in the same
+      // pass that found this match, so jumping to it later needs no second
+      // search of the page — just this stored rect.
+      li.dataset.matchText = matchText;
+      li.__matchRect = hit.rect || null;
+
+      li.appendChild(document.createTextNode(hit.left));
+
+      const mark = document.createElement("b");
+      const span = document.createElement("span");
+      span.className = "hit-mark";
+      span.textContent = matchText;
+      mark.appendChild(span);
+      li.appendChild(mark);
+
+      li.appendChild(document.createTextNode(hit.right));
+      ul.appendChild(li);
+    });
+    return ul;
   }
 
   async function createTabList() {
@@ -62,41 +87,67 @@
       element.querySelector(".title").innerText = tab.title;
       //element.querySelector(".result").innerText = tab.url.slice(0, 80);
 
+      const favicon = element.querySelector(".favicon");
+      const fallbackIcon = browser.runtime.getURL("icon.png");
+      favicon.src = tab.favIconUrl || fallbackIcon;
+      favicon.addEventListener(
+        "error",
+        () => {
+          favicon.src = fallbackIcon;
+        },
+        { once: true },
+      );
+
       // handle click or arrow-keys
       element.addEventListener("keydown", async (event) => {
         if (event.key === "Enter") {
           event.target.querySelector("a").click();
         }
       });
-      element.querySelector("a").addEventListener("click", async (el) => {
+      element.querySelector("a").addEventListener("click", async (event) => {
         browser.tabs.highlight({ windowId: tab.windowId, tabs: [tab.index] });
-        //browser.tabs.update(tab.id, {active: true});
-        let searchedVal = el.target.querySelector("ul li b").innerText;
-        let result = await browser.find.find(searchedVal, {
-          tabId: tab.id,
-          includeRectData: true,
-          matchDiacritics: document.getElementById("accentSensitive").checked,
-        });
-        if (result.count > 0) {
-          await browser.find.highlightResults({ tabId: tab.id });
-          // todo scroll to first result
-          //vscrollOffset = result.rectData[0]
-          try {
-            const vScrollOffset =
-              result.rectData[0].rectsAndTexts.rectList[0].top;
 
-            await browser.tabs.sendMessage(tab.id, {
-              cmd: "scroll",
-              yoffset: vScrollOffset,
-            });
+        // Only jump to a specific location if a result line exists for this
+        // row: prefer the exact line clicked, falling back to the first hit
+        // (e.g. when Enter dispatches a click on the <a> itself, or the
+        // title/favicon area was clicked rather than a specific line).
+        const hitLi =
+          event.target.closest("li[data-match-text]") ||
+          event.currentTarget.querySelector("li[data-match-text]");
 
-            /*
-            await browser.tabs.executeScript(tab.id, {
-              code: `window.scrollTo(0, ${vScrollOffset})`,
-            });
-            */
-          } catch (e) {
-            //console.warn(e);
+        if (hitLi) {
+          const matchText = hitLi.dataset.matchText;
+          const rect = hitLi.__matchRect;
+
+          // Best-effort cosmetic pass: ask Firefox's native find to
+          // highlight every occurrence on the page. This never blocks the
+          // jump below — the exact position we scroll to comes from the
+          // rect content.js computed directly when it found this match,
+          // not from correlating it against this separate search.
+          if (matchText) {
+            browser.find
+              .find(matchText, {
+                tabId: tab.id,
+                caseSensitive: document.getElementById("caseSensitive").checked,
+                matchDiacritics:
+                  document.getElementById("accentSensitive").checked,
+              })
+              .then(() => browser.find.highlightResults({ tabId: tab.id }))
+              .catch(() => {
+                //console.warn(e);
+              });
+          }
+
+          if (rect) {
+            try {
+              await browser.tabs.sendMessage(tab.id, {
+                cmd: "scroll",
+                yoffset: rect.top,
+                rect,
+              });
+            } catch (e) {
+              //console.warn(e);
+            }
           }
         }
         /*
@@ -127,7 +178,7 @@
 
   async function handeInputChange(event) {
     let searchedVal = document.getElementById("searchField").value;
-    let maxhits = document.getElementById("maxhits").value;
+    let maxhits = parseInt(document.getElementById("maxhits").value, 10) || 3;
     let caseSensitive = document.getElementById("caseSensitive").checked;
     let accentSensitive = document.getElementById("accentSensitive").checked;
     let regexmode = document.getElementById("regexmode").checked;
@@ -182,6 +233,8 @@
     last_regexmode_value = regexmode;
 
     let noresult = true;
+    let totalHits = 0;
+    let tabsWithHits = 0;
     let tabIdx = 1;
     document.getElementById("searchprogress").setAttribute("max", tabs.length);
     let counter = 0;
@@ -204,6 +257,11 @@
         }
       }
 
+      if (response && response.hits.length > 0) {
+        totalHits += response.hits.length;
+        tabsWithHits += 1;
+      }
+
       elements.forEach((e) => {
         if (searchedVal.length < 3) {
           e.style.display = styleElementHidden; // hide elements
@@ -213,42 +271,26 @@
           return;
         }
         let show = false;
-        let resulting = "";
+        const hasHits = Boolean(response && response.hits.length > 0);
 
         if (response) {
-          for (const hit of response.hits) {
-            if (regexmode) {
-              resulting +=
-                "<li>" +
-                encodeHTMLEntities(hit.left) +
-                "<b><span style='background:#ffcc6c'>" +
-                encodeHTMLEntities(hit.mid) +
-                "</span></b>" +
-                encodeHTMLEntities(hit.right) +
-                "</li>";
-            } else {
-              resulting +=
-                "<li>" +
-                encodeHTMLEntities(hit.left) +
-                "<b><span style='background:#ffcc6c'>" +
-                encodeHTMLEntities(
-                  caseSensitive ? searchedVal : searchedVal.toUpperCase(),
-                ) +
-                "</span></b>" +
-                encodeHTMLEntities(hit.right) +
-                "</li>";
-            }
-          }
-          if (resulting === "" && searchedVal) {
+          if (!hasHits && searchedVal) {
             e.style.display = styleElementHidden;
-          } else if (resulting === "" && searchedVal.toString().length === 0) {
+          } else if (!hasHits && searchedVal.toString().length === 0) {
             e.style.display = styleElementDisplay;
             e.querySelector(".result").innerText = tab.url.slice(0, 80);
           } else {
             e.style.display = styleElementDisplay;
             if (searchedVal) {
-              e.querySelector(".result").innerHTML =
-                '<ul style="font-size:0.8em;">' + resulting + "</ul>";
+              const resultEl = e.querySelector(".result");
+              resultEl.replaceChildren(
+                buildHitList(
+                  response.hits,
+                  regexmode,
+                  caseSensitive,
+                  searchedVal,
+                ),
+              );
               show = true;
               noresult = false;
             }
@@ -265,25 +307,32 @@
     }
 
     if (searchedVal.length < 3) {
-      document.getElementById("note").innerText =
-        "not enough characters ( 3+ required )";
+      document.getElementById("note").innerText = "Type at least 3 characters";
     } else if (searchedVal.length > 2 && noresult) {
-      document.getElementById("note").innerText = "no results";
+      document.getElementById("note").innerText = "No matches found";
     } else {
-      document.getElementById("note").innerText = "";
+      const hitWord = totalHits === 1 ? "match" : "matches";
+      const tabWord = tabsWithHits === 1 ? "tab" : "tabs";
+      document.getElementById("note").innerText =
+        `${totalHits} ${hitWord} in ${tabsWithHits} ${tabWord}`;
     }
   }
 
   /**/
   async function createDocumentListener() {
-    if (await browser.sidebarAction.isOpen({})) {
+    // If we're already running as a full tab (not the toolbar popup or the
+    // sidebar), there's nothing to detach to, so hide the button. Tag the
+    // body so the wider, centered "detached" layout in popup.css applies.
+    const currentTab = await browser.tabs.getCurrent();
+    if (currentTab) {
       document.getElementById("detach").style.display = "none";
+      document.body.classList.add("detached");
     }
 
     document.getElementById("detach").addEventListener(
       "click",
       function (event) {
-        browser.sidebarAction.open();
+        browser.tabs.create({ url: "popup.html" });
         window.close();
       },
       false,

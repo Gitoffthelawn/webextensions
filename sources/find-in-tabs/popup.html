@@ -1,53 +1,101 @@
 <!doctype html>
 <head>
+  <meta charset="utf-8" />
   <link rel="stylesheet" href="popup.css" />
 </head>
-<body class="browser-style">
+<body>
   <template id="li_template">
-    <li class="browser-style">
+    <li class="tab-result">
       <a>
-        <h4 class="title browser-style"></h4>
-        <p class="result browser-style"></p>
+        <div class="tab-result__head">
+          <img class="favicon" alt="" />
+          <h4 class="title"></h4>
+        </div>
+        <p class="result"></p>
       </a>
     </li>
   </template>
 
   <fieldset id="fsinput">
-    <input
-      class=""
-      id="searchField"
-      type="search"
-      placeholder="Enter text here"
-      autofocus
-    />
+    <div class="search-row">
+      <svg
+        class="search-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="11"
+          cy="11"
+          r="6.5"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <path
+          d="M20 20L16 16"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+      <input
+        id="searchField"
+        type="search"
+        placeholder="Search open tabs"
+        autofocus
+      />
+      <button type="button" id="detach" title="Open search in a new tab">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M14 4h6v6"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M20 4 11 13"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="sr-only">Open search in a new tab</span>
+      </button>
+    </div>
 
-    <input
-      class=""
-      id="maxhits"
-      type="number"
-      min="1"
-      title="Max Results per Tab"
-    />
-
-    <input class="" id="caseSensitive" type="checkbox" title="Match Case" />
-
-    <input
-      class=""
-      id="accentSensitive"
-      type="checkbox"
-      title="Match Diacritics"
-    />
-
-    <input class="" id="regexmode" type="checkbox" title="Regex Mode" />
+    <div class="options-row">
+      <label class="opt opt-number" title="Max results per tab">
+        <span>Max</span>
+        <input id="maxhits" type="number" min="1" />
+      </label>
+      <label class="opt opt-toggle" title="Match case">
+        <input id="caseSensitive" type="checkbox" />
+        <span>Aa</span>
+      </label>
+      <label class="opt opt-toggle" title="Match diacritics">
+        <input id="accentSensitive" type="checkbox" />
+        <span>áâã</span>
+      </label>
+      <label class="opt opt-toggle" title="Regex mode">
+        <input id="regexmode" type="checkbox" />
+        <span>.*</span>
+      </label>
+    </div>
 
     <progress id="searchprogress" value="0" max="1"></progress>
+    <div id="note"></div>
   </fieldset>
 
   <ul id="resultlist"></ul>
-
-  <small>
-    <div style="padding: 0px; margin: 3px; text-size: small" id="note"></div>
-  </small>
 
   <script src="popup.js"></script>
 </body>
