@@ -1,10 +1,9 @@
 /* ==========================================================================
    LocalStorage Editor — theme
    Developer-tool palette, light by default, dark under prefers-color-scheme
-   (which follows the OS / Firefox "Website appearance" setting). Colors can
-   be further overridden at runtime by popup.js from the browser's installed
-   theme (see applyBrowserTheme). Monospace for stored data, system sans for
-   UI chrome. No external fonts or frameworks.
+   (which follows the OS / Firefox "Website appearance" setting). Monospace
+   for stored data, system sans for UI chrome. No external fonts, no
+   frameworks, no runtime theme JS — this is the only source of truth.
    ========================================================================== */
 
 :root {
@@ -70,16 +69,6 @@
   }
 }
 
-/* Manual override applied by popup.js when it can read the user's actual
-   Firefox theme colors (see applyBrowserTheme in popup.js). Takes priority
-   over both the light default and the prefers-color-scheme dark block. */
-:root[data-theme="dark"] {
-  color-scheme: dark;
-}
-:root[data-theme="light"] {
-  color-scheme: light;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -92,7 +81,8 @@ body {
   min-width: 640px;
   min-height: 480px;
   padding: 8px;
-  /*display: flex;*/
+  /*overflow: hidden;
+  display: flex;*/
   flex-direction: column;
   gap: 8px;
 }
@@ -289,6 +279,10 @@ textarea:focus-visible {
 
 .tabulator .tabulator-row.tabulator-selected:hover {
   background: var(--accent-dim);
+}
+
+.tabulator .tabulator-row.tabulator-selected .tabulator-cell {
+  color: #111;
 }
 
 .tabulator .tabulator-cell {

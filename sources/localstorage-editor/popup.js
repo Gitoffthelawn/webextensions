@@ -1,74 +1,5 @@
 /* global browser Tabulator */
 
-// ---------------------------------------------------------------------------
-// Follow the browser's theme. The CSS already switches its base palette via
-// `prefers-color-scheme`, which covers the OS/Firefox light-vs-dark setting
-// on its own. On top of that, when Firefox has an actual installed theme
-// (not just light/dark), pull its surface/text/border colors so the popup
-// blends in rather than just picking light-vs-dark.
-// ---------------------------------------------------------------------------
-
-function relativeLuminance(cssColor) {
-  const probe = document.createElement("div");
-  probe.style.color = cssColor;
-  document.body.appendChild(probe);
-  const rgb = getComputedStyle(probe).color.match(/[\d.]+/g);
-  document.body.removeChild(probe);
-  if (!rgb) return null;
-  const [r, g, b] = rgb.map(Number);
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-}
-
-function applyBrowserTheme(theme) {
-  const root = document.documentElement;
-  const colors = theme && theme.colors;
-
-  if (!colors) {
-    // No (or default) theme installed: drop overrides and let
-    // prefers-color-scheme drive the palette.
-    [
-      "--surface",
-      "--bg",
-      "--text",
-      "--border",
-      "--surface-2",
-      "--surface-3",
-    ].forEach((v) => root.style.removeProperty(v));
-    root.removeAttribute("data-theme");
-    return;
-  }
-
-  const surface = colors.popup || colors.frame_inactive || colors.frame;
-  const text = colors.popup_text || colors.toolbar_text || colors.textcolor;
-  const border = colors.popup_border || colors.toolbar_field_border;
-  const bg = colors.frame || colors.accentcolor || surface;
-
-  if (surface) root.style.setProperty("--surface", surface);
-  if (text) root.style.setProperty("--text", text);
-  if (border) root.style.setProperty("--border", border);
-  if (bg) root.style.setProperty("--bg", bg);
-
-  const luminance = relativeLuminance(text || "") ?? null;
-  if (luminance !== null) {
-    // Light text on the theme's surface implies a dark theme, and vice versa.
-    root.setAttribute("data-theme", luminance > 0.5 ? "dark" : "light");
-  }
-}
-
-(async function followBrowserTheme() {
-  if (!browser.theme || !browser.theme.getCurrent) {
-    return; // API unavailable: prefers-color-scheme still applies
-  }
-  try {
-    applyBrowserTheme(await browser.theme.getCurrent());
-    browser.theme.onUpdated.addListener(({ theme }) =>
-      applyBrowserTheme(theme),
-    );
-  } catch (e) {
-    console.error(e);
-  }
-})();
-
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   return typeof tmp[id] === type ? tmp[id] : fallback;
@@ -521,7 +452,6 @@ async function onDOMContentLoaded() {
         editorParams: {
           elementAttributes: {
             spellcheck: "false",
-            wrap: "off",
           },
           verticalNavigation: "hybrid",
           variableHeight: true,
@@ -628,7 +558,6 @@ async function onDOMContentLoaded() {
       textareaEl.style.whiteSpace = "wrap";
     }
   });
-
 } // onDOMContentLoaded
 
 function onChange(evt) {
