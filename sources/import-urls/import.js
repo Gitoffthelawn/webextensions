@@ -2,38 +2,261 @@
 
 sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-var requiredPermissionB = {
-  permissions: ["bookmarks"],
-};
+const DEFAULT_REGEX =
+  "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z][a-zA-Z0-9]{0,5}\\b[-a-zA-Z0-9@:%_+\\.~#?&//=]*";
 
+const requiredPermissionB = { permissions: ["bookmarks"] };
 const requiredPermissionA = { permissions: ["clipboardRead"] };
-const result = document.getElementById("status");
-const result2 = document.getElementById("status2");
-const urlspreview = document.getElementById("urlspreview");
-const folders = document.getElementById("folders");
-const reqBMPer = document.getElementById("reqBookmarkPermission");
+
+// Elements
+const rawtext = document.getElementById("rawtext");
+const dropzone = document.getElementById("dropzone");
+const impbtn = document.getElementById("impbtn");
+const pastebtn = document.getElementById("pastebtn");
+const clearrawbtn = document.getElementById("clearrawbtn");
 const extREinput = document.getElementById("extractregex");
+const resetregexbtn = document.getElementById("resetregexbtn");
+const impcbbtn = document.getElementById("impcbbtn");
+const extractstatus = document.getElementById("extractstatus");
 
-reqBMPer.addEventListener("click", async () => {
-  if (!(await browser.permissions.request(requiredPermissionB))) {
-    result2.innerText = "Bookmark Permission not granted";
-    return;
-  }
-  location.reload();
-});
+const reviewstep = document.getElementById("reviewstep");
+const actionstep = document.getElementById("actionstep");
+const countbadge = document.getElementById("countbadge");
+const selectallbtn = document.getElementById("selectallbtn");
+const selectnonebtn = document.getElementById("selectnonebtn");
+const dedupe = document.getElementById("dedupe");
+const urllist = document.getElementById("urllist");
 
-async function initSelect() {
-  folders.disabled = false;
-  const nodes = await browser.bookmarks.getTree();
-  let out = new Map();
-  let depth = 1;
-  for (const node of nodes) {
-    out = new Map([...out, ...recGetFolders(node, depth)]);
+const urlsopen = document.getElementById("urlsopen");
+const openLoad = document.getElementById("openLoad");
+const openDelay = document.getElementById("openDelay");
+
+const folders = document.getElementById("folders");
+const addbookmarksbtn = document.getElementById("addbookmarksbtn");
+const bookmarkrow = document.getElementById("bookmarkrow");
+const permissionrow = document.getElementById("permissionrow");
+const reqBMPer = document.getElementById("reqBookmarkPermission");
+const actionstatus = document.getElementById("actionstatus");
+
+// State: `entries` preserves every match in extraction order (with duplicates).
+// `deselectedIds` tracks which entries the user has unchecked.
+let entries = []; // { id, url }
+let nextId = 1;
+let deselectedIds = new Set();
+
+function showStatus(el, type, msg) {
+  el.textContent = msg;
+  el.className = "status visible " + type;
+}
+
+function clearStatus(el) {
+  el.textContent = "";
+  el.className = "status";
+}
+
+function visibleEntries() {
+  if (!dedupe.checked) return entries;
+  const seen = new Set();
+  const out = [];
+  for (const e of entries) {
+    if (seen.has(e.url)) continue;
+    seen.add(e.url);
+    out.push(e);
   }
-  for (const [k, v] of out) {
-    folders.add(new Option("-".repeat(v.depth) + " " + v.title, k));
+  return out;
+}
+
+function selectedUrls() {
+  return visibleEntries()
+    .filter((e) => !deselectedIds.has(e.id))
+    .map((e) => e.url);
+}
+
+function renderList() {
+  const visible = visibleEntries();
+  urllist.innerHTML = "";
+  for (const e of visible) {
+    const li = document.createElement("li");
+    const selected = !deselectedIds.has(e.id);
+    if (!selected) li.classList.add("deselected");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = selected;
+    cb.addEventListener("change", () => {
+      if (cb.checked) deselectedIds.delete(e.id);
+      else deselectedIds.add(e.id);
+      li.classList.toggle("deselected", !cb.checked);
+      updateCounts();
+    });
+
+    const span = document.createElement("span");
+    span.className = "url-text";
+    span.textContent = e.url;
+    span.title = e.url;
+
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "remove subtle";
+    rm.title = "Remove";
+    rm.textContent = "\u00d7";
+    rm.addEventListener("click", () => {
+      entries = entries.filter((entry) => entry.id !== e.id);
+      deselectedIds.delete(e.id);
+      renderList();
+      syncStepAvailability();
+    });
+
+    li.append(cb, span, rm);
+    urllist.appendChild(li);
+  }
+  updateCounts();
+}
+
+function updateCounts() {
+  const visible = visibleEntries();
+  const selectedCount = visible.filter((e) => !deselectedIds.has(e.id)).length;
+  countbadge.textContent = `${selectedCount} of ${visible.length} selected`;
+  urlsopen.disabled = selectedCount === 0;
+  addbookmarksbtn.disabled = selectedCount === 0 || folders.value === "";
+}
+
+function syncStepAvailability() {
+  const hasEntries = entries.length > 0;
+  reviewstep.dataset.disabled = hasEntries ? "false" : "true";
+  actionstep.dataset.disabled = hasEntries ? "false" : "true";
+  if (!hasEntries) {
+    urllist.innerHTML = "";
+    countbadge.textContent = "0 selected";
   }
 }
+
+selectallbtn.addEventListener("click", () => {
+  deselectedIds.clear();
+  renderList();
+});
+
+selectnonebtn.addEventListener("click", () => {
+  for (const e of visibleEntries()) deselectedIds.add(e.id);
+  renderList();
+});
+
+dedupe.addEventListener("change", () => {
+  browser.storage.local.set({ dedupe: dedupe.checked });
+  renderList();
+});
+
+// --- Step 1: gather text ---
+
+function loadFileText(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    rawtext.value = reader.result;
+  };
+  reader.onerror = () => {
+    showStatus(extractstatus, "error", "Could not read that file.");
+  };
+  reader.readAsText(file);
+}
+
+impbtn.addEventListener("change", function () {
+  const file = this.files[0];
+  if (file) loadFileText(file);
+});
+
+pastebtn.addEventListener("click", async () => {
+  try {
+    if (!(await browser.permissions.request(requiredPermissionA))) {
+      showStatus(extractstatus, "error", "Clipboard permission not granted.");
+      return;
+    }
+    const text = await navigator.clipboard.readText();
+    rawtext.value = text;
+    clearStatus(extractstatus);
+  } catch (e) {
+    console.error(e);
+    showStatus(extractstatus, "error", "Couldn't read the clipboard.");
+  }
+});
+
+clearrawbtn.addEventListener("click", () => {
+  rawtext.value = "";
+});
+
+["dragenter", "dragover"].forEach((evtName) => {
+  dropzone.addEventListener(evtName, (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  });
+});
+["dragleave", "drop"].forEach((evtName) => {
+  dropzone.addEventListener(evtName, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+  });
+});
+dropzone.addEventListener("drop", (e) => {
+  const file =
+    e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) loadFileText(file);
+});
+
+resetregexbtn.addEventListener("click", () => {
+  extREinput.value = DEFAULT_REGEX;
+  browser.storage.local.set({ extractregex: DEFAULT_REGEX });
+});
+
+extREinput.addEventListener("input", () => {
+  browser.storage.local.set({ extractregex: extREinput.value.trim() });
+});
+
+function extractUrls(str) {
+  let regex;
+  try {
+    regex = new RegExp(extREinput.value, "gm");
+  } catch (e) {
+    showStatus(
+      extractstatus,
+      "error",
+      "That extraction pattern isn't a valid regex.",
+    );
+    return;
+  }
+
+  const matches = [];
+  let m;
+  while ((m = regex.exec(str)) !== null) {
+    if (m.index === regex.lastIndex) regex.lastIndex++;
+    matches.push(m[0]);
+  }
+
+  entries = matches.map((url) => ({ id: nextId++, url }));
+  deselectedIds = new Set();
+  renderList();
+  syncStepAvailability();
+
+  if (entries.length === 0) {
+    showStatus(extractstatus, "error", "No URLs found in that text.");
+  } else {
+    const uniqueCount = new Set(matches).size;
+    const dupeCount = matches.length - uniqueCount;
+    const dupeNote =
+      dupeCount > 0
+        ? ` (${dupeCount} duplicate${dupeCount === 1 ? "" : "s"})`
+        : "";
+    showStatus(
+      extractstatus,
+      "success",
+      `Found ${matches.length} URL${matches.length === 1 ? "" : "s"}${dupeNote}.`,
+    );
+  }
+}
+
+impcbbtn.addEventListener("click", () => {
+  extractUrls(rawtext.value);
+});
+
+// --- Step 2/3: bookmarks permission + folders ---
 
 function recGetFolders(node, depth = 0) {
   let out = new Map();
@@ -50,152 +273,117 @@ function recGetFolders(node, depth = 0) {
   return out;
 }
 
-async function importData(str) {
-  //const index_offset = (await browser.tabs.query({ currentWindow: true })).length;
+async function initFolderSelect() {
+  folders.innerHTML = '<option value="">Bookmark folder&hellip;</option>';
+  folders.disabled = false;
+  bookmarkrow.style.display = "";
+  permissionrow.style.display = "none";
 
-  let m;
-  let count = 0;
-
-  const regex = new RegExp(extREinput.value, "gm");
-
-  console.debug(regex);
-
-  while ((m = regex.exec(str)) !== null) {
-    // This is necessary to avoid infinite loops with zero-width matches
-    if (m.index === regex.lastIndex) {
-      regex.lastIndex++;
-    }
-
-    // The result can be accessed through the `m`-variable.
-    m.forEach((match, groupIndex) => {
-      if (groupIndex === 0) {
-        // group 0 is the full match
-
-        /*
-        browser.tabs.create({
-          active: false,
-          discarded: true,
-          url: match,
-          index: index_offset + count,
-        });
-        */
-        urlspreview.value += match + "\n";
-
-        count++;
-      }
-    });
+  const nodes = await browser.bookmarks.getTree();
+  let out = new Map();
+  for (const node of nodes) {
+    out = new Map([...out, ...recGetFolders(node, 1)]);
   }
-  result.innerText = count + " URLs found";
-  result2.innerText = "";
+  for (const [k, v] of out) {
+    folders.add(new Option("-".repeat(v.depth) + " " + v.title, k));
+  }
 }
 
-function onChange(evt) {
-  const id = evt.target.id;
-  let el = document.getElementById(id);
-
-  let value = el.type === "checkbox" ? el.checked : el.value;
-  let obj = {};
-  if (typeof value === "string") {
-    value = value.trim(); // strip whitespace
+reqBMPer.addEventListener("click", async () => {
+  if (!(await browser.permissions.request(requiredPermissionB))) {
+    showStatus(actionstatus, "error", "Bookmark permission not granted.");
+    return;
   }
-  obj[id] = value;
+  await initFolderSelect();
+});
 
-  browser.storage.local.set(obj);
+folders.addEventListener("change", () => {
+  updateCounts();
+});
+
+addbookmarksbtn.addEventListener("click", async () => {
+  const urls = selectedUrls();
+  if (folders.value === "" || urls.length === 0) return;
+  for (const url of urls) {
+    await browser.bookmarks.create({ parentId: folders.value, url });
+  }
+  showStatus(
+    actionstatus,
+    "success",
+    `Added ${urls.length} bookmark${urls.length === 1 ? "" : "s"}.`,
+  );
+  folders.value = "";
+  updateCounts();
+});
+
+// --- Step 3: open tabs ---
+
+urlsopen.addEventListener("click", async () => {
+  const urls = selectedUrls();
+  if (urls.length === 0) return;
+
+  if (urls.length > 25) {
+    const ok = confirm(`This will open ${urls.length} tabs. Continue?`);
+    if (!ok) return;
+  }
+
+  const index_offset = (await browser.tabs.query({ currentWindow: true }))
+    .length;
+  const discarded = !openLoad.checked;
+  const delay = Number(openDelay.value) || 0;
+
+  let count = 0;
+  for (const url of urls) {
+    await browser.tabs.create({
+      active: false,
+      discarded,
+      url,
+      index: index_offset + count,
+    });
+    count++;
+    if (!discarded && delay > 0) {
+      await sleep(delay * 1000);
+    }
+  }
+  showStatus(
+    actionstatus,
+    "success",
+    `Opened ${count} tab${count === 1 ? "" : "s"}.`,
+  );
+});
+
+// --- Persisted fields (openLoad / openDelay / dedupe / extractregex) ---
+
+function onPersistedChange(evt) {
+  const id = evt.target.id;
+  const el = evt.target;
+  let value = el.type === "checkbox" ? el.checked : el.value;
+  if (typeof value === "string") value = value.trim();
+  browser.storage.local.set({ [id]: value });
 }
 
 async function onLoad() {
   if (await browser.permissions.contains(requiredPermissionB)) {
-    await initSelect();
+    await initFolderSelect();
   }
 
-  ["extractregex"].map((id) => {
-    browser.storage.local
-      .get(id)
-      .then((obj) => {
-        let el = document.getElementById(id);
-        let val = obj[id];
+  const persistedFields = ["extractregex", "openLoad", "openDelay", "dedupe"];
+  const stored = await browser.storage.local.get(persistedFields);
 
-        console.debug(id, val);
+  if (typeof stored.extractregex === "string") {
+    extREinput.value = stored.extractregex;
+  } else {
+    extREinput.value = DEFAULT_REGEX;
+  }
+  if (typeof stored.openLoad === "boolean") openLoad.checked = stored.openLoad;
+  if (typeof stored.openDelay !== "undefined")
+    openDelay.value = stored.openDelay;
+  if (typeof stored.dedupe === "boolean") dedupe.checked = stored.dedupe;
 
-        if (typeof val !== "undefined") {
-          if (el.type === "checkbox") {
-            el.checked = val;
-          } else {
-            el.value = val;
-          }
-        }
-      })
-      .catch(console.error);
+  openLoad.addEventListener("change", onPersistedChange);
+  openDelay.addEventListener("input", onPersistedChange);
 
-    let el = document.getElementById(id);
-    el.addEventListener("input", onChange);
-  });
-
-  let impbtn = document.getElementById("impbtn");
-
-  // read data from file into current table
-  impbtn.addEventListener("input", function (/*evt*/) {
-    const file = this.files[0];
-    const reader = new FileReader();
-    reader.onload = async function (/*e*/) {
-      try {
-        const data = reader.result;
-        //importData(data);
-        document.getElementById("rawtext").value = data;
-      } catch (e) {
-        console.error(e);
-        result.innerText = "Import failed!" + e;
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  let impcbbtn = document.getElementById("impcbbtn");
-
-  impcbbtn.addEventListener("click", async () => {
-    importData(document.getElementById("rawtext").value);
-  });
+  syncStepAvailability();
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);
-
-folders.addEventListener("change", async () => {
-  if (folders.value !== "") {
-    urlspreview.value.split("\n").forEach((line) => {
-      if (line.startsWith("http")) {
-        browser.bookmarks.create({
-          parentId: folders.value,
-          url: line,
-        });
-      }
-    });
-    result2.innerText = "Done";
-    folders.value = "";
-  }
-});
-
-urlsopen.addEventListener("click", async () => {
-  const index_offset = (await browser.tabs.query({ currentWindow: true }))
-    .length;
-
-  let count = 0;
-
-  const discarded = !document.getElementById("openLoad").checked;
-  const delay = document.getElementById("openDelay").value;
-
-  for (const line of urlspreview.value.split("\n")) {
-    if (line.startsWith("http")) {
-      await browser.tabs.create({
-        active: false,
-        discarded,
-        url: line,
-        index: index_offset + count,
-      });
-      count++;
-      if (!discarded) {
-        await sleep(delay * 1000);
-      }
-    }
-  }
-  result2.innerText = "Done";
-});

@@ -1,71 +1,492 @@
 <!doctype html>
-<head>
-  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-  <title>Open Tabs from File</title>
-  <style>
-    body {
-      background-color: lightgray;
-      min-height: 400px;
-    }
-    #urlspreview,
-    #rawtext {
-      min-height: 25em;
-      white-space: pre;
-      overflow-wrap: normal;
-      overflow-x: scroll;
-      width: 99%;
-    }
-    #extractregex {
-      width: 75%;
-    }
-  </style>
-</head>
-<body>
-  <fieldset>
-    <legend>1. Provide text to extract URLs from</legend>
-    <div>
-      <textarea id="rawtext"></textarea>
-      load from file
-      <input id="impbtn" type="file" value="" />
-      <p />
+<html lang="en">
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <title>Import URLs</title>
+    <style>
+      :root {
+        --bg: #f6f6f4;
+        --surface: #ffffff;
+        --border: #e2e1dd;
+        --border-strong: #cac8c2;
+        --text: #1c1c1a;
+        --text-muted: #6b6a65;
+        --accent: #3557d6;
+        --accent-hover: #2a45b0;
+        --accent-soft: #e9edfb;
+        --danger: #c0392b;
+        --danger-soft: #fbeceb;
+        --success-text: #1f7a3d;
+        --success-soft: #eaf6ec;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
 
-      <span
-        ><abbr title="Regular Expression used to extract the URLs"
-          >Extraction RegEx: </abbr
-        ><input id="extractregex" type="text"
-      /></span>
+      * {
+        box-sizing: border-box;
+      }
 
-      <p />
+      body {
+        margin: 0;
+        padding: 28px 20px 60px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-      <button id="impcbbtn">2.Extract URLs</button>
+      .page {
+        max-width: 660px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+
+      .subtitle {
+        color: var(--text-muted);
+        margin: 0 0 24px;
+        font-size: 13px;
+      }
+
+      .step {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 18px 18px 18px 52px;
+        margin-bottom: 14px;
+      }
+
+      .step-number {
+        position: absolute;
+        left: 16px;
+        top: 18px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .step h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 10px;
+      }
+
+      textarea,
+      input[type="text"],
+      select {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: var(--bg);
+        border: 1px solid var(--border-strong);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 8px 10px;
+      }
+
+      textarea:focus,
+      input:focus,
+      select:focus,
+      button:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      #rawtext {
+        width: 100%;
+        min-height: 9em;
+        resize: vertical;
+      }
+
+      #dropzone.drag-over {
+        outline: 2px dashed var(--accent);
+        outline-offset: -6px;
+        background: var(--accent-soft);
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .row + .row {
+        margin-top: 8px;
+      }
+
+      button {
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 500;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button:disabled:hover {
+        border-color: var(--border-strong);
+        color: var(--text);
+      }
+
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      button.primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+      }
+      button.primary:disabled {
+        background: var(--border-strong);
+        border-color: var(--border-strong);
+        color: #fff;
+      }
+
+      button.subtle {
+        border-color: transparent;
+        background: transparent;
+        color: var(--text-muted);
+        padding: 4px 6px;
+      }
+      button.subtle:hover {
+        color: var(--accent);
+        border-color: transparent;
+      }
+
+      .file-label {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        cursor: pointer;
+        border: 1px dashed var(--border-strong);
+        border-radius: 6px;
+        padding: 7px 12px;
+      }
+      .file-label:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .file-label input {
+        display: none;
+      }
+
+      details.advanced {
+        margin-top: 12px;
+        font-size: 12.5px;
+      }
+      details.advanced summary {
+        cursor: pointer;
+        color: var(--text-muted);
+        user-select: none;
+      }
+      details.advanced summary:hover {
+        color: var(--accent);
+      }
+      #extractregex {
+        width: 100%;
+        margin-top: 8px;
+      }
+      .regex-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .regex-row input {
+        flex: 1;
+      }
+
+      .list-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 12px;
+        border-radius: 999px;
+        padding: 2px 10px;
+      }
+
+      .list-actions {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .list-actions label {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 6px;
+      }
+
+      #urllist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 260px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+      }
+
+      #urllist:empty::after {
+        content: "No URLs yet. Extract text above to populate this list.";
+        display: block;
+        padding: 14px;
+        color: var(--text-muted);
+        font-size: 12.5px;
+        font-family: var(--sans);
+      }
+
+      #urllist li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      #urllist li:last-child {
+        border-bottom: none;
+      }
+      #urllist li.deselected {
+        opacity: 0.45;
+      }
+
+      #urllist li .url-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #urllist li button.remove {
+        flex-shrink: 0;
+        padding: 2px 6px;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .step[data-disabled="true"] {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .status {
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        display: none;
+      }
+      .status.visible {
+        display: block;
+      }
+      .status.info {
+        background: var(--accent-soft);
+        color: var(--accent-hover);
+      }
+      .status.success {
+        background: var(--success-soft);
+        color: var(--success-text);
+      }
+      .status.error {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .permission-hint {
+        font-size: 12.5px;
+        color: var(--text-muted);
+      }
+
+      .divider-or {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 11px;
+        margin: 14px 0 10px;
+        position: relative;
+      }
+      .divider-or::before,
+      .divider-or::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 42%;
+        border-top: 1px solid var(--border);
+      }
+      .divider-or::before {
+        left: 0;
+      }
+      .divider-or::after {
+        right: 0;
+      }
+
+      .field-inline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: var(--text-muted);
+      }
+      .field-inline input[type="number"] {
+        width: 3.5em;
+        font-family: var(--sans);
+      }
+      .field-inline input[type="checkbox"] {
+        width: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Import URLs</h1>
+      <p class="subtitle">
+        Pull links out of any text, then open them as tabs or save them as
+        bookmarks.
+      </p>
+
+      <div class="step">
+        <div class="step-number">1</div>
+        <h2>Provide text to extract URLs from</h2>
+        <div id="dropzone">
+          <textarea
+            id="rawtext"
+            placeholder="Paste text here, or drop a file onto this box&#10;e.g. an email, a chat log, a list of notes"
+          ></textarea>
+        </div>
+        <div class="row">
+          <label class="file-label">
+            Load from file
+            <input id="impbtn" type="file" />
+          </label>
+          <button id="pastebtn" type="button">Paste from clipboard</button>
+          <button id="clearrawbtn" type="button" class="subtle">Clear</button>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced: extraction pattern</summary>
+          <div class="regex-row">
+            <input id="extractregex" type="text" />
+            <button
+              id="resetregexbtn"
+              type="button"
+              class="subtle"
+              title="Reset to default"
+            >
+              Reset
+            </button>
+          </div>
+        </details>
+
+        <div class="row">
+          <button id="impcbbtn" class="primary" type="button">
+            Extract URLs
+          </button>
+        </div>
+        <div id="extractstatus" class="status"></div>
+      </div>
+
+      <div class="step" id="reviewstep" data-disabled="true">
+        <div class="step-number">2</div>
+        <h2>Review and select URLs</h2>
+        <div class="list-toolbar">
+          <span class="badge" id="countbadge">0 selected</span>
+          <div class="list-actions">
+            <button id="selectallbtn" type="button" class="subtle">
+              Select all
+            </button>
+            <button id="selectnonebtn" type="button" class="subtle">
+              Select none
+            </button>
+            <label
+              ><input id="dedupe" type="checkbox" checked /> Remove
+              duplicates</label
+            >
+          </div>
+        </div>
+        <ul id="urllist"></ul>
+      </div>
+
+      <div class="step" id="actionstep" data-disabled="true">
+        <div class="step-number">3</div>
+        <h2>Do something with the selected URLs</h2>
+
+        <div class="row">
+          <button id="urlsopen" class="primary" type="button">
+            Open selected in tabs
+          </button>
+          <span class="field-inline"
+            ><input type="checkbox" id="openLoad" /> load tab content</span
+          >
+          <span class="field-inline"
+            >delay
+            <input type="number" id="openDelay" min="0" value="0" />s</span
+          >
+        </div>
+
+        <div class="divider-or">or</div>
+
+        <div class="row" id="bookmarkrow">
+          <select id="folders" disabled>
+            <option value="">Bookmark folder&hellip;</option>
+          </select>
+          <button id="addbookmarksbtn" type="button" disabled>
+            Add to bookmarks
+          </button>
+        </div>
+        <div class="row" id="permissionrow">
+          <span class="permission-hint"
+            >Bookmarking needs an extra permission.</span
+          >
+          <button id="reqBookmarkPermission" type="button" class="subtle">
+            Enable bookmarks
+          </button>
+        </div>
+
+        <div id="actionstatus" class="status"></div>
+      </div>
     </div>
-  </fieldset>
-  3. Preview URLs
-  <textarea id="urlspreview"></textarea>
-  <fieldset>
-    <div id="status"></div>
-  </fieldset>
-  <fieldset>
-    <button id="urlsopen">4.Open in tabs</button>
-    load tabs?
-    <input type="checkbox" id="openLoad" />
-    with seconds delay? <input type="number" id="openDelay" min="0" value="0" />
-  </fieldset>
 
-  <fieldset>
-    Or
-    <select id="folders" disabled>
-      <option value="">Create bookmarks in folder</option>
-    </select>
-
-    <acronym id="reqBookmarkPermission" title="Request Permission"
-      >(click here to enable)</acronym
-    >
-  </fieldset>
-
-  <fieldset>
-    <div id="status2"></div>
-  </fieldset>
-
-  <script src="import.js"></script>
-</body>
+    <script src="import.js"></script>
+  </body>
+</html>

@@ -26,6 +26,11 @@ browser.runtime.onInstalled.addListener(async (details) => {
     await setToStorage("extractregex", extractregex);
     openImportTab();
   } else if (details.reason === "update") {
-    await setToStorage("extractregex", extractregex);
+    // Only seed the default regex if the user hasn't customized it yet.
+    // Previously this overwrote a user's saved regex on every update.
+    const existing = await getFromStorage("string", "extractregex", undefined);
+    if (typeof existing === "undefined") {
+      await setToStorage("extractregex", extractregex);
+    }
   }
 });
