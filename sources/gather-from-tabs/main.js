@@ -218,7 +218,9 @@ function selectScript(id) {
 }
 
 function addScript() {
-  const s = makeScript("");
+  const code =
+    '/* new script */\n(() => {\n    return "Hello World!\\n";\n})()';
+  const s = makeScript(code);
   scripts.push(s);
   selectScript(s._id);
 }
