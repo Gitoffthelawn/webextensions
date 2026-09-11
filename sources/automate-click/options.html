@@ -7,27 +7,232 @@
     <link href="options.css" rel="stylesheet" />
   </head>
   <body>
-    <p></p>
-    <fieldset>
-      <button id="addbtn" title="create a new empty rule">&#10039; New</button>
-      <button id="delbtn" title="delete selected rules">&#10005; Delete</button>
-      <button id="ablebtn" title="invert the enabled state of selected rules">
-        &#8652; State
+    <fieldset id="toolbar">
+      <button
+        id="wizardbtn"
+        class="ac-primary"
+        title="Step-by-step setup for a new rule"
+      >
+        &#10024; Guided Setup
       </button>
-      <button id="impbtn_wrapper" title="import rules from a file to add">
-        &darr; Import
+      <button
+        id="addbtn"
+        title="Add a blank rule row to edit directly in the table"
+      >
+        &#10133; Add Rule Manually
+      </button>
+      <button id="dupbtn" title="Duplicate the selected rule(s)">
+        &#128464; Duplicate Rule(s)
+      </button>
+      <button id="delbtn" title="Delete the selected rule(s)">
+        &#128465; Delete Rule(s)
+      </button>
+      <button id="ablebtn" title="Turn the selected rule(s) on or off">
+        &#9211; Enable/Disable
+      </button>
+      <button id="impbtn_wrapper" title="Import rules from a file">
+        &darr; Import Rules
       </button>
       <input id="impbtn" type="file" value="" style="display: none" />
-      <button id="expbtn" title="export selected rules">&uarr; Export</button>
-      <button id="savbtn" title="save changes">&#10003; Save</button>
-      <button id="discbtn" title="discard changes">&#9888; Discard</button>
-      <div style="float: right">
-        <button id="tgladv" title="more options">&#9881;</button>
-      </div>
+      <button id="expbtn" title="Export the selected rule(s) to a file">
+        &uarr; Export Rules
+      </button>
+      <button id="savbtn" title="Save your changes so they take effect">
+        &#128190; Save Changes
+      </button>
+      <button id="discbtn" title="Undo changes made since the last save">
+        &#8634; Discard Changes
+      </button>
+      <div style="flex: 1"></div>
+      <button id="tgladv" title="Show or hide the advanced timing columns">
+        &#9881; More Options
+      </button>
     </fieldset>
-    <p></p>
-    <table id="mainTable" border="1" style="width: 100%; height: 80vh"></table>
-    <span>Columns marked with (*) are required</span>
+    <div id="statusbar">
+      <span id="statuscount">0 rules</span>
+      <span id="statusselected"></span>
+      <span id="statusdirty"></span>
+      <div style="flex: 1"></div>
+      <label
+        class="ac-inline-toggle"
+        title="Turn the Guided Setup button on the toolbar on or off"
+      >
+        <input type="checkbox" id="wizardBtnToggle" checked />
+        Show Guided Setup button
+      </label>
+    </div>
+    <table id="mainTable" border="1" style="width: 100%; height: 76vh"></table>
+    <span
+      >Columns marked with (*) are required. New here? Use the &#10024; Guided
+      Setup button above.</span
+    >
+    <div id="toastcontainer"></div>
+
+    <div id="wizardOverlay" class="ac-modal-overlay">
+      <div
+        class="ac-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wizardTitle"
+      >
+        <div class="ac-modal-header">
+          <h2 id="wizardTitle">New Rule — Guided Setup</h2>
+          <button
+            id="wizardClose"
+            class="ac-modal-close"
+            title="Close and go back to the table"
+            type="button"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="ac-modal-steps">
+          <div class="ac-step" data-step="1">
+            <h3>Step 1 of 4 — Which website?</h3>
+            <p>
+              A rule watches for a website address and then clicks something on
+              it automatically. Paste the address of the page you want to
+              automate below.
+            </p>
+            <label class="ac-field-label">
+              Website address
+              <input
+                type="text"
+                id="wStepUrl"
+                placeholder="https://example.com/some-page"
+              />
+            </label>
+            <div class="ac-radio-group">
+              <label
+                ><input type="radio" name="wScope" value="page" checked /> Only
+                this exact page</label
+              >
+              <label
+                ><input type="radio" name="wScope" value="site" /> Any page on
+                this website</label
+              >
+            </div>
+          </div>
+
+          <div class="ac-step" data-step="2" hidden>
+            <h3>Step 2 of 4 — What should be clicked?</h3>
+            <p>
+              To click something automatically (like a "Close" or "Accept"
+              button), Automate Click needs a <strong>CSS selector</strong> — a
+              short code that points at that exact element on the page.
+            </p>
+            <ol class="ac-instructions">
+              <li>
+                Open the website in another tab and find the thing you want
+                clicked.
+              </li>
+              <li>
+                Right-click directly on it and choose
+                <strong>Inspect</strong> (or <strong>Inspect Element</strong>).
+              </li>
+              <li>
+                The Developer Tools panel opens with that element highlighted in
+                the code.
+              </li>
+              <li>
+                Right-click the highlighted line of code, then choose
+                <strong>Copy &rarr; CSS Selector</strong>.
+              </li>
+              <li>Come back to this tab and paste it below.</li>
+            </ol>
+            <label class="ac-field-label">
+              CSS selector
+              <input
+                type="text"
+                id="wStepSelector"
+                placeholder="e.g. button.accept-cookies"
+              />
+            </label>
+            <div class="ac-wizard-actions-inline">
+              <button id="wTestSelector" type="button">
+                Test on the open page
+              </button>
+              <span id="wTestResult" class="ac-test-result"></span>
+            </div>
+            <p class="ac-hint">
+              Tip: switch to the tab with the actual website open, then come
+              back here and press "Test" — the matching element will briefly
+              flash orange on the page so you can confirm it found the right
+              thing.
+            </p>
+          </div>
+
+          <div class="ac-step" data-step="3" hidden>
+            <h3>Step 3 of 4 — Timing (optional)</h3>
+            <label class="ac-field-label">
+              Wait before clicking
+              <select id="wInitialDelay">
+                <option value="0">Immediately</option>
+                <option value="1000" selected>1 second</option>
+                <option value="3000">3 seconds</option>
+                <option value="5000">5 seconds</option>
+              </select>
+            </label>
+            <label class="ac-checkbox-label">
+              <input type="checkbox" id="wRepeatEnabled" />
+              Keep checking and clicking again if it reappears
+            </label>
+            <div id="wRepeatOptions" hidden>
+              <label class="ac-field-label">
+                Check again every
+                <select id="wRepeatDelay">
+                  <option value="1000">1 second</option>
+                  <option value="3000" selected>3 seconds</option>
+                  <option value="5000">5 seconds</option>
+                  <option value="10000">10 seconds</option>
+                </select>
+              </label>
+            </div>
+            <label class="ac-field-label">
+              Name this rule (optional, helps you find it later)
+              <input
+                type="text"
+                id="wAnnotation"
+                placeholder="e.g. Close cookie banner"
+              />
+            </label>
+            <label class="ac-checkbox-label">
+              <input type="checkbox" id="wEnableNow" />
+              Turn this rule on now (otherwise it's saved switched off, so you
+              can enable it later once you're happy with it)
+            </label>
+          </div>
+
+          <div class="ac-step" data-step="4" hidden>
+            <h3>Step 4 of 4 — Review</h3>
+            <p id="wReviewSummary"></p>
+            <p class="ac-hint">
+              This rule will be saved and turned on right away.
+            </p>
+          </div>
+        </div>
+
+        <div class="ac-modal-footer">
+          <div id="wizardDots" class="ac-wizard-dots"></div>
+          <div class="ac-modal-buttons">
+            <button
+              id="wSkip"
+              type="button"
+              title="Close the guide and use the table directly"
+            >
+              Skip Guide
+            </button>
+            <button id="wBack" type="button">Back</button>
+            <button id="wNext" type="button" class="ac-primary">Next</button>
+            <button id="wFinish" type="button" class="ac-primary" hidden>
+              Save Rule
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="tabulator.js"></script>
     <script src="options.js"></script>
   </body>

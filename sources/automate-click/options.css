@@ -1,7 +1,301 @@
 body {
-  background: lightgray;
+  background: #f4f5f7;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  margin: 0.5em;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d0d3d9;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 8px;
+  margin: 0 0 6px 0;
 }
 
 button {
-  min-width: 5vw;
+  min-width: 4.5em;
+  padding: 5px 8px;
+  border: 1px solid #c7cad1;
+  border-radius: 4px;
+  background: #fafbfc;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #eef1f5;
+}
+
+#savbtn {
+  border-color: #c7cad1;
+}
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  font-size: 0.85em;
+  color: #5f6672;
+  padding: 2px 4px 6px 4px;
+}
+
+.ac-inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+  color: #5f6672;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#statusdirty {
+  color: #b3261e;
+  font-weight: 600;
+}
+
+.ac-invalid-cell {
+  background: #ffe3e0 !important;
+  outline: 2px solid #d32f2f;
+}
+
+#toastcontainer {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10000;
+}
+
+.ac-toast {
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #fff;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+  max-width: 320px;
+}
+
+.ac-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ac-toast.info {
+  background: #37474f;
+}
+
+.ac-toast.success {
+  background: #2e7d32;
+}
+
+.ac-toast.error {
+  background: #c62828;
+}
+
+.ac-row-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ac-row-actions button {
+  min-width: unset;
+  padding: 2px 6px;
+  margin-right: 0;
+  font-size: 0.82em;
+}
+
+/* ------------------------------ primary CTA ------------------------------ */
+
+.ac-primary {
+  background: #1565c0;
+  border-color: #0d47a1;
+  color: #fff;
+  font-weight: 600;
+}
+
+.ac-primary:hover {
+  background: #0d47a1;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --------------------------- guided setup modal --------------------------- */
+
+.ac-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 26, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+}
+
+.ac-modal-overlay.open {
+  display: flex;
+}
+
+.ac-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: min(560px, 92vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.ac-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e3e5e9;
+}
+
+.ac-modal-header h2 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.ac-modal-close {
+  min-width: unset;
+  border: none;
+  background: transparent;
+  font-size: 1.4em;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.ac-modal-close:hover {
+  background: #eef1f5;
+}
+
+.ac-modal-steps {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.ac-step h3 {
+  margin-top: 0;
+}
+
+.ac-step p {
+  line-height: 1.5;
+}
+
+.ac-field-label {
+  display: block;
+  font-weight: 600;
+  margin: 14px 0 4px 0;
+}
+
+.ac-field-label input[type="text"],
+.ac-field-label select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  padding: 7px 8px;
+  font-weight: normal;
+  border: 1px solid #c7cad1;
+  border-radius: 4px;
+}
+
+.ac-radio-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ac-radio-group label,
+.ac-checkbox-label {
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ac-checkbox-label {
+  margin-top: 14px;
+}
+
+.ac-instructions {
+  background: #f4f5f7;
+  border-radius: 6px;
+  padding: 12px 12px 12px 30px;
+  line-height: 1.6;
+}
+
+.ac-wizard-actions-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ac-test-result {
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.ac-test-result.success {
+  color: #2e7d32;
+}
+
+.ac-test-result.error {
+  color: #c62828;
+}
+
+.ac-hint {
+  font-size: 0.85em;
+  color: #5f6672;
+}
+
+.ac-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-top: 1px solid #e3e5e9;
+}
+
+.ac-modal-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.ac-wizard-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.ac-wizard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d0d3d9;
+}
+
+.ac-wizard-dot.active {
+  background: #1565c0;
 }

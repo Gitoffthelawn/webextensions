@@ -3,23 +3,23 @@ const temporary = browser.runtime.id.endsWith("@temporary-addon"); // debugging?
 
 function querySelectorAllWithOpenShadow(selector) {
   const results = [];
+  const visitedRoots = new Set();
 
-  // Get elements matching the selector in the document
-  results.push(...document.querySelectorAll(selector));
+  // Query one root (the document, or a shadow root) and then dive into
+  // every shadow root found anywhere below it - to any nesting depth, not
+  // just one level - applying the same selector at each level.
+  const traverse = (root) => {
+    results.push(...root.querySelectorAll(selector));
 
-  // Recursive function to traverse the DOM
-  const traverse = (node) => {
-    if (node.shadowRoot) {
-      // Query the open shadow root and add to results
-      results.push(...node.shadowRoot.querySelectorAll(selector));
-    }
-
-    // Recursively traverse child nodes
-    node.childNodes.forEach(traverse);
+    root.querySelectorAll("*").forEach((el) => {
+      if (el.shadowRoot && !visitedRoots.has(el.shadowRoot)) {
+        visitedRoots.add(el.shadowRoot);
+        traverse(el.shadowRoot);
+      }
+    });
   };
 
-  // Start traversal from the document body
-  traverse(document.body);
+  traverse(document);
 
   return results; // Return an array of matched elements
 }
@@ -76,7 +76,7 @@ function waitFor(selector) {
   }
 } // waitFor end
 
-async function onMessage(selectors) {
+async function onSelectorsMessage(selectors) {
   runningTIDs.forEach((tid) => {
     try {
       clearTimeout(tid);
@@ -95,6 +95,75 @@ async function onMessage(selectors) {
       }, selector.initaldelay || 3000),
     ); // wait initaldelay
   });
+}
+
+/* -------------------------------------------------------------------- */
+/* On-demand "Test" / "Run" support, used by the buttons in options.html */
+/* -------------------------------------------------------------------- */
+
+function flashElements(items, color) {
+  items.forEach((el) => {
+    const prevOutline = el.style.outline;
+    const prevOffset = el.style.outlineOffset;
+    el.style.outline = "3px solid " + color;
+    el.style.outlineOffset = "1px";
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center",
+    });
+    setTimeout(() => {
+      el.style.outline = prevOutline;
+      el.style.outlineOffset = prevOffset;
+    }, 1500);
+  });
+}
+
+function testSelectorNow(cssselector) {
+  try {
+    const items = querySelectorAllWithOpenShadow(cssselector);
+    flashElements(items, "#ff5722");
+    return { ok: true, count: items.length };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+function runSelectorNow(cssselector) {
+  try {
+    const items = querySelectorAllWithOpenShadow(cssselector);
+    let clicked = 0;
+    items.forEach((item) => {
+      if (typeof item.click === "function") {
+        item.click();
+        clicked++;
+      }
+    });
+    flashElements(items, "#2e7d32");
+    return { ok: true, count: clicked };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
+}
+
+/* -------------------------------------------------------------------- */
+/* Single message router                                                */
+/* -------------------------------------------------------------------- */
+
+function onMessage(message) {
+  if (message && typeof message === "object" && message.type) {
+    switch (message.type) {
+      case "ac-test":
+        return Promise.resolve(testSelectorNow(message.cssselector));
+      case "ac-run":
+        return Promise.resolve(runSelectorNow(message.cssselector));
+      default:
+        return;
+    }
+  }
+  // legacy shape: a plain array/Set of selector rule objects from
+  // background.js's webNavigation trigger
+  return onSelectorsMessage(message);
 }
 
 browser.runtime.onMessage.addListener(onMessage);

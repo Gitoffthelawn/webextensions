@@ -13,6 +13,7 @@ const log = (level, msg) => {
 };
 
 let table = null;
+let unsavedChanges = false;
 
 // button refs
 const impbtnWrp = document.getElementById("impbtn_wrapper");
@@ -23,29 +24,126 @@ const expbtn = document.getElementById("expbtn");
 const delbtn = document.getElementById("delbtn");
 const ablebtn = document.getElementById("ablebtn");
 const addbtn = document.getElementById("addbtn");
+const dupbtn = document.getElementById("dupbtn");
 const tgladv = document.getElementById("tgladv");
+const toastcontainer = document.getElementById("toastcontainer");
+const statuscount = document.getElementById("statuscount");
+const statusselected = document.getElementById("statusselected");
+const statusdirty = document.getElementById("statusdirty");
+
+/* ---------------------------- toast helper ---------------------------- */
+
+function showToast(message, kind = "info", timeout = 3000) {
+  const el = document.createElement("div");
+  el.className = "ac-toast " + kind;
+  el.textContent = message;
+  toastcontainer.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 200);
+  }, timeout);
+}
+
+/* ------------------------- dirty-state tracking ------------------------ */
 
 function hightlightChange() {
+  unsavedChanges = true;
   savbtn.style.borderColor = "red";
+  updateStatusBar();
 }
 
 function unhightlightChange() {
+  unsavedChanges = false;
   savbtn.style.borderColor = "";
+  updateStatusBar();
 }
 
-tgladv.addEventListener("click", async function (evt) {
-  table.toggleColumn("tags");
-  //table.toggleColumn('annotation');
-  table.toggleColumn("repeatdelay");
-  table.toggleColumn("maxrepeats");
-  table.toggleColumn("randomrepeatvariance");
+window.addEventListener("beforeunload", (e) => {
+  if (unsavedChanges) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+function updateStatusBar() {
+  if (!table) return;
+  const total = table.getDataCount();
+  const selected = table.getSelectedRows().length;
+  statuscount.textContent =
+    total === 0
+      ? wizardbtn.hidden
+        ? "No rules yet — use the New (advanced) button to add one"
+        : "No rules yet — click Guided Setup to create one"
+      : total + (total === 1 ? " rule" : " rules");
+  statusselected.textContent = selected ? selected + " selected" : "";
+  statusdirty.textContent = unsavedChanges ? "unsaved changes" : "";
+}
+
+/* --------------------------- regex validation --------------------------- */
+
+function isValidRegex(str) {
+  try {
+    new RegExp(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function validateRegexCell(cell) {
+  const el = cell.getElement();
+  if (isValidRegex(cell.getValue())) {
+    el.classList.remove("ac-invalid-cell");
+    el.title = "";
+  } else {
+    el.classList.add("ac-invalid-cell");
+    el.title = "Not a valid regular expression";
+  }
+}
+
+/* ------------------------ relay test/run to a page ------------------------ */
+
+async function relay(type, cssselector) {
+  if (!cssselector) {
+    return { ok: false, error: "CSS selector is empty" };
+  }
+  try {
+    const res = await browser.runtime.sendMessage({ type, cssselector });
+    return res || { ok: false, error: "No response from page" };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
+function describeResult(res, verb) {
+  if (!res.ok) {
+    return { text: "Error: " + res.error, kind: "error" };
+  }
+  if (res.count === 0) {
+    return { text: "No matching elements found on the page", kind: "error" };
+  }
+  return {
+    text: res.count + " element(s) " + verb,
+    kind: "success",
+  };
+}
+
+/* --------------------------------- rows --------------------------------- */
+
+tgladv.addEventListener("click", async function () {
+  ["tags", "repeatdelay", "maxrepeats", "randomrepeatvariance"].forEach((f) =>
+    table.toggleColumn(f),
+  );
+  const nowOn = table.getColumn("repeatdelay").isVisible();
+  localStorage.setItem("ac-advanced-visible", nowOn ? "1" : "0");
 });
 
 function addNewRowWithData(regex) {
   table.deselectRow();
   table.addRow(
     {
-      enabled: true,
+      enabled: false,
       group: "",
       annotation: "",
       tags: "",
@@ -61,11 +159,11 @@ function addNewRowWithData(regex) {
   hightlightChange();
 }
 
-addbtn.addEventListener("click", async function (evt) {
+addbtn.addEventListener("click", async function () {
   table.deselectRow();
   table.addRow(
     {
-      enabled: true,
+      enabled: false,
       group: "",
       annotation: "",
       tags: "",
@@ -81,7 +179,276 @@ addbtn.addEventListener("click", async function (evt) {
   hightlightChange();
 });
 
-ablebtn.addEventListener("click", async function (evt) {
+/* ------------------------------ guided setup ------------------------------ */
+
+const wizardOverlay = document.getElementById("wizardOverlay");
+const wizardbtn = document.getElementById("wizardbtn");
+const wizardClose = document.getElementById("wizardClose");
+const wSkip = document.getElementById("wSkip");
+const wBack = document.getElementById("wBack");
+const wNext = document.getElementById("wNext");
+const wFinish = document.getElementById("wFinish");
+const wizardDots = document.getElementById("wizardDots");
+const wStepUrl = document.getElementById("wStepUrl");
+const wStepSelector = document.getElementById("wStepSelector");
+const wTestSelector = document.getElementById("wTestSelector");
+const wTestResult = document.getElementById("wTestResult");
+const wInitialDelay = document.getElementById("wInitialDelay");
+const wRepeatEnabled = document.getElementById("wRepeatEnabled");
+const wRepeatOptions = document.getElementById("wRepeatOptions");
+const wRepeatDelay = document.getElementById("wRepeatDelay");
+const wAnnotation = document.getElementById("wAnnotation");
+const wEnableNow = document.getElementById("wEnableNow");
+const wReviewSummary = document.getElementById("wReviewSummary");
+const wizardBtnToggle = document.getElementById("wizardBtnToggle");
+
+const WIZARD_BTN_PREF_KEY = "ac-show-wizard-btn";
+
+function applyWizardBtnVisibility() {
+  const show = localStorage.getItem(WIZARD_BTN_PREF_KEY) !== "0";
+  wizardbtn.hidden = !show;
+  wizardBtnToggle.checked = show;
+}
+
+wizardBtnToggle.addEventListener("change", () => {
+  localStorage.setItem(
+    WIZARD_BTN_PREF_KEY,
+    wizardBtnToggle.checked ? "1" : "0",
+  );
+  applyWizardBtnVisibility();
+});
+
+applyWizardBtnVisibility();
+
+const WIZARD_TOTAL_STEPS = 4;
+let wizardStep = 1;
+
+function renderWizardDots() {
+  wizardDots.innerHTML = "";
+  for (let i = 1; i <= WIZARD_TOTAL_STEPS; i++) {
+    const dot = document.createElement("span");
+    dot.className = "ac-wizard-dot" + (i === wizardStep ? " active" : "");
+    wizardDots.appendChild(dot);
+  }
+}
+
+function normalizeUrl(raw) {
+  let v = raw.trim();
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) {
+    v = "https://" + v;
+  }
+  return v;
+}
+
+function buildRegexFromWizard() {
+  const url = normalizeUrl(wStepUrl.value);
+  const scope = document.querySelector('input[name="wScope"]:checked').value;
+
+  if (scope === "site") {
+    try {
+      const origin = new URL(url).origin;
+      const escaped = origin.replaceAll("/", "\\/").replaceAll(".", "\\.");
+      return "^" + escaped + ".*";
+    } catch (e) {
+      // fall through to the page-scoped regex below
+    }
+  }
+
+  let regex = "^" + url.replaceAll("/", "\\/");
+  regex = regex.replaceAll(".", "\\.");
+  return regex + ".*";
+}
+
+function buildReviewText() {
+  const url = normalizeUrl(wStepUrl.value) || "(no address given)";
+  const scope = document.querySelector('input[name="wScope"]:checked').value;
+  const where =
+    scope === "site"
+      ? "any page on the same website as " + url
+      : "pages starting with " + url;
+  const delaySec = parseInt(wInitialDelay.value, 10) / 1000;
+
+  let text =
+    "When you visit " +
+    where +
+    ", Automate Click will wait " +
+    (delaySec === 0 ? "no time at all" : delaySec + " second(s)") +
+    " and then click the element matching: " +
+    (wStepSelector.value.trim() || "(no selector given)") +
+    ".";
+
+  if (wRepeatEnabled.checked) {
+    const repeatSec = parseInt(wRepeatDelay.value, 10) / 1000;
+    text +=
+      " It will keep checking every " +
+      repeatSec +
+      " second(s) in case it reappears.";
+  }
+
+  if (wAnnotation.value.trim()) {
+    text += ' This rule will be named "' + wAnnotation.value.trim() + '".';
+  }
+
+  text += wEnableNow.checked
+    ? " It will be turned on as soon as you save it."
+    : " It will be saved switched off, so you can turn it on later once you're happy with it.";
+
+  return text;
+}
+
+function showWizardStep(step) {
+  document.querySelectorAll(".ac-step").forEach((el) => {
+    el.hidden = Number(el.dataset.step) !== step;
+  });
+  wBack.disabled = step === 1;
+  wNext.hidden = step === WIZARD_TOTAL_STEPS;
+  wFinish.hidden = step !== WIZARD_TOTAL_STEPS;
+  if (step === WIZARD_TOTAL_STEPS) {
+    wReviewSummary.textContent = buildReviewText();
+  }
+  renderWizardDots();
+}
+
+function resetWizard() {
+  wStepUrl.value = "";
+  document.querySelector('input[name="wScope"][value="page"]').checked = true;
+  wStepSelector.value = "";
+  wTestResult.textContent = "";
+  wTestResult.className = "ac-test-result";
+  wInitialDelay.value = "1000";
+  wRepeatEnabled.checked = false;
+  wRepeatOptions.hidden = true;
+  wRepeatDelay.value = "3000";
+  wAnnotation.value = "";
+  wEnableNow.checked = false;
+  wizardStep = 1;
+  showWizardStep(1);
+}
+
+function openWizard() {
+  resetWizard();
+  wizardOverlay.classList.add("open");
+  wStepUrl.focus();
+}
+
+function closeWizard() {
+  wizardOverlay.classList.remove("open");
+}
+
+function validateWizardStep(step) {
+  if (step === 1) {
+    const url = normalizeUrl(wStepUrl.value);
+    if (!url) {
+      showToast("Enter the website address first", "error");
+      return false;
+    }
+    try {
+      new URL(url);
+    } catch (e) {
+      showToast("That doesn't look like a valid web address", "error");
+      return false;
+    }
+  }
+  if (step === 2) {
+    if (!wStepSelector.value.trim()) {
+      showToast("Paste the CSS selector you copied first", "error");
+      return false;
+    }
+  }
+  return true;
+}
+
+wizardbtn.addEventListener("click", openWizard);
+wizardClose.addEventListener("click", closeWizard);
+wSkip.addEventListener("click", closeWizard);
+wizardOverlay.addEventListener("click", (e) => {
+  if (e.target === wizardOverlay) closeWizard();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && wizardOverlay.classList.contains("open")) {
+    closeWizard();
+  }
+});
+
+wRepeatEnabled.addEventListener("change", () => {
+  wRepeatOptions.hidden = !wRepeatEnabled.checked;
+});
+
+wTestSelector.addEventListener("click", async () => {
+  const sel = wStepSelector.value.trim();
+  if (!sel) {
+    wTestResult.textContent = "Paste a selector first";
+    wTestResult.className = "ac-test-result error";
+    return;
+  }
+  wTestResult.textContent = "Testing…";
+  wTestResult.className = "ac-test-result";
+  const res = await relay("ac-relay-test", sel);
+  const d = describeResult(res, "highlighted on the page");
+  wTestResult.textContent = d.text;
+  wTestResult.className = "ac-test-result " + d.kind;
+});
+
+wNext.addEventListener("click", () => {
+  if (!validateWizardStep(wizardStep)) return;
+  wizardStep = Math.min(wizardStep + 1, WIZARD_TOTAL_STEPS);
+  showWizardStep(wizardStep);
+});
+
+wBack.addEventListener("click", () => {
+  wizardStep = Math.max(wizardStep - 1, 1);
+  showWizardStep(wizardStep);
+});
+
+wFinish.addEventListener("click", () => {
+  if (!validateWizardStep(1) || !validateWizardStep(2)) return;
+
+  const rule = {
+    enabled: wEnableNow.checked,
+    group: "",
+    annotation: wAnnotation.value.trim(),
+    tags: "",
+    cssselector: wStepSelector.value.trim(),
+    initaldelay: parseInt(wInitialDelay.value, 10),
+    repeatdelay: wRepeatEnabled.checked ? parseInt(wRepeatDelay.value, 10) : 0,
+    // negative maxrepeats means "keep going forever" (see waitFor() in
+    // content-script.js)
+    maxrepeats: wRepeatEnabled.checked ? -1 : 0,
+    randomrepeatvariance: 0,
+    urlregex: buildRegexFromWizard(),
+  };
+
+  table.deselectRow();
+  table.addRow(rule, true);
+
+  closeWizard();
+  if (persistRules()) {
+    showToast(
+      wEnableNow.checked
+        ? "Rule saved and turned on"
+        : "Rule saved — it's currently off, enable it in the table when it's ready",
+      "success",
+      wEnableNow.checked ? 3000 : 5000,
+    );
+  }
+});
+
+dupbtn.addEventListener("click", async function () {
+  const rows = table.getSelectedRows();
+  if (!rows.length) {
+    showToast("Select one or more rules to duplicate", "info");
+    return;
+  }
+  rows.forEach((row) => {
+    const data = { ...row.getData() };
+    table.addRow(data, false, row);
+  });
+  hightlightChange();
+  showToast(rows.length + " rule(s) duplicated", "success");
+});
+
+ablebtn.addEventListener("click", async function () {
   let changed = false;
   table.getSelectedRows().forEach((row) => {
     const cell = row.getCell("enabled");
@@ -94,30 +461,45 @@ ablebtn.addEventListener("click", async function (evt) {
   }
 });
 
-delbtn.addEventListener("click", async function (evt) {
-  let changed = false;
-  table.getSelectedRows().forEach((row) => {
-    row.delete();
-    changed = true;
-  });
-  if (changed) {
-    hightlightChange();
+delbtn.addEventListener("click", async function () {
+  const rows = table.getSelectedRows();
+  if (!rows.length) {
+    showToast("Select one or more rules to delete", "info");
+    return;
   }
+  if (!window.confirm("Delete " + rows.length + " selected rule(s)?")) {
+    return;
+  }
+  rows.forEach((row) => row.delete());
+  hightlightChange();
 });
 
 discbtn.addEventListener("click", (evt) => {
-  if (!window.confirm("Discard changes?")) {
+  if (unsavedChanges && !window.confirm("Discard unsaved changes?")) {
     return;
   }
+  unsavedChanges = false; // avoid the beforeunload prompt on top of this confirm
   window.location.reload();
 });
 
-savbtn.addEventListener("click", (evt) => {
-  if (!window.confirm("Save changes?")) {
-    return;
+function persistRules({ confirmMessage } = {}) {
+  let data = table.getData();
+
+  const badRegexRows = data.filter((d) => !isValidRegex(d.urlregex));
+  if (badRegexRows.length) {
+    showToast(
+      badRegexRows.length +
+        " rule(s) have an invalid URL regular expression — fix the highlighted cell(s) before saving",
+      "error",
+      5000,
+    );
+    return false;
   }
 
-  let data = table.getData();
+  if (confirmMessage && !window.confirm(confirmMessage)) {
+    return false;
+  }
+
   let i = 0;
   for (i = 0; i < data.length; i++) {
     // numbers need parsing ... for whatever reason
@@ -129,13 +511,25 @@ savbtn.addEventListener("click", (evt) => {
   }
   browser.storage.local.set({ selectors: data });
   unhightlightChange();
+  return true;
+}
+
+savbtn.addEventListener("click", () => {
+  const count = table.getDataCount();
+  if (persistRules({ confirmMessage: "Save changes?" })) {
+    showToast("Saved " + count + " rule(s)", "success");
+  }
 });
 
-expbtn.addEventListener("click", async function (evt) {
+expbtn.addEventListener("click", async function () {
   let selectedRows = table.getSelectedRows();
 
-  // order the selected by position
+  if (!selectedRows.length) {
+    showToast("Select one or more rules to export", "info");
+    return;
+  }
 
+  // order the selected by position
   selectedRows.sort((a, b) => {
     return b.getPosition() - a.getPosition();
   });
@@ -164,21 +558,22 @@ expbtn.addEventListener("click", async function (evt) {
   document.body.appendChild(dl);
   dl.click();
   document.body.removeChild(dl);
+  showToast("Exported " + expData.length + " rule(s)", "success");
 });
 
 // delegate to real import Button which is a file selector
-impbtnWrp.addEventListener("click", function (evt) {
+impbtnWrp.addEventListener("click", function () {
   impbtn.click();
 });
 
 // read data from file into current table
-impbtn.addEventListener("input", function (evt) {
+impbtn.addEventListener("input", function () {
   var file = this.files[0];
   var reader = new FileReader();
-  reader.onload = async function (e) {
+  reader.onload = async function () {
     try {
       var config = JSON.parse(reader.result);
-      let imported_something = false;
+      let imported = 0;
       config.forEach((selector) => {
         table.addRow(
           {
@@ -199,16 +594,20 @@ impbtn.addEventListener("input", function (evt) {
           },
           false,
         );
-        imported_something = true;
+        imported++;
       });
-      if (imported_something) {
+      if (imported) {
         hightlightChange();
+        showToast(imported + " rule(s) imported — remember to Save", "success");
       }
     } catch (e) {
       log("ERROR", "error loading file " + e);
+      showToast("Could not import file: " + e, "error");
     }
   };
   reader.readAsText(file);
+  // allow re-importing the same filename later
+  this.value = "";
 });
 
 function tagValuesLookup() {
@@ -226,13 +625,66 @@ function tagValuesLookup() {
   return tags;
 }
 
+/* --------------------------- row action buttons -------------------------- */
+
+function makeRowActionsFormatter() {
+  return function (cell) {
+    const wrap = document.createElement("span");
+    wrap.className = "ac-row-actions";
+
+    const testBtn = document.createElement("button");
+    testBtn.textContent = "\u{1F50D} Test"; // magnifying glass
+    testBtn.title =
+      "Highlight matching element(s) on the last page you had open";
+    testBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const cssselector = cell.getRow().getData().cssselector;
+      const res = await relay("ac-relay-test", cssselector);
+      const d = describeResult(res, "highlighted");
+      showToast(d.text, d.kind);
+    });
+
+    const runBtn = document.createElement("button");
+    runBtn.textContent = "\u25B6 Run"; // play
+    runBtn.title =
+      "Click the matching element(s) now, on the last page you had open";
+    runBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const cssselector = cell.getRow().getData().cssselector;
+      const res = await relay("ac-relay-run", cssselector);
+      const d = describeResult(res, "clicked");
+      showToast(d.text, d.kind);
+    });
+
+    const rowDelBtn = document.createElement("button");
+    rowDelBtn.textContent = "\u{1F5D1} Delete"; // wastebasket
+    rowDelBtn.title = "Delete this rule";
+    rowDelBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const row = cell.getRow();
+      const label =
+        row.getData().annotation || row.getData().cssselector || "this rule";
+      if (!window.confirm('Delete "' + label + '"?')) {
+        return;
+      }
+      row.delete();
+      hightlightChange();
+      showToast("Rule deleted", "success");
+    });
+
+    wrap.appendChild(testBtn);
+    wrap.appendChild(runBtn);
+    wrap.appendChild(rowDelBtn);
+    return wrap;
+  };
+}
+
 async function onDOMContentLoaded() {
   table = new Tabulator("#mainTable", {
-    //height: "100%",
-    virtualDom: false, //disable virtual DOM rendering
-    layout: "fitDataStretch", //fit columns to width of table
-    responsiveLayout: "hide", //hide columns that dont fit on the table
-    pagination: false, //paginate the data
+    virtualDom: false,
+    layout: "fitDataStretch",
+    responsiveLayout: "hide",
+    pagination: false,
     movableRows: true,
     groupBy: "group",
     groupUpdateOnCellEdit: true,
@@ -256,11 +708,12 @@ async function onDOMContentLoaded() {
         headerSort: false,
         cellClick: function (e, cell) {
           cell.getRow().toggleSelect();
+          updateStatusBar();
         },
       },
       {
         title: "Enabled",
-        width: 100,
+        width: 90,
         field: "enabled",
         formatter: "tickCross",
         sorter: "boolean",
@@ -268,6 +721,13 @@ async function onDOMContentLoaded() {
         hozAlign: "center",
         editor: true,
         editorParams: { tristate: false },
+      },
+      {
+        title: "Actions",
+        width: 220,
+        headerSort: false,
+        hozAlign: "center",
+        formatter: makeRowActionsFormatter(),
       },
       {
         title: "Group",
@@ -289,9 +749,9 @@ async function onDOMContentLoaded() {
         sorter: "string",
         sorterParams: { locale: true, alignEmptyValues: "bottom" },
         headerFilterParams: {
-          values: tagValuesLookup, // get values
-          verticalNavigation: "hybrid", //navigate to new row when at the top or bottom of the selection list
-          multiselect: true, //allow multiple entries to be selected
+          values: tagValuesLookup,
+          verticalNavigation: "hybrid",
+          multiselect: true,
         },
         visible: false,
       },
@@ -367,25 +827,48 @@ async function onDOMContentLoaded() {
     ],
   });
 
+  // restore the advanced-columns visibility preference
+  const advancedOn = localStorage.getItem("ac-advanced-visible") === "1";
+  if (advancedOn) {
+    ["tags", "repeatdelay", "maxrepeats", "randomrepeatvariance"].forEach((f) =>
+      table.showColumn(f),
+    );
+  }
+
   // Load data
   const data = await getTblData();
   data.forEach((e) => {
     table.addRow(e, true);
   });
 
-  /**
-   * Register Table Events
-   */
-  // hlchange if values change
+  // validate any regexes that came from storage
+  table.getRows().forEach((row) => {
+    const cell = row.getCell("urlregex");
+    if (cell) validateRegexCell(cell);
+  });
+  updateStatusBar();
+
+  /* --------------------------- table events --------------------------- */
+
   table.on("cellEdited", function (cell) {
+    if (cell.getField() === "urlregex") {
+      validateRegexCell(cell);
+    }
     if (cell.getValue() !== cell.getOldValue()) {
       hightlightChange();
     }
   });
 
-  // todo: determine if the row actually moved
-  table.on("rowMoved", function (row) {
+  table.on("rowMoved", function () {
     hightlightChange();
+  });
+
+  table.on("rowDeleted", function () {
+    updateStatusBar();
+  });
+
+  table.on("rowSelectionChanged", function () {
+    updateStatusBar();
   });
 
   // invert the selected state of each row
@@ -398,24 +881,50 @@ async function onDOMContentLoaded() {
   // after adding a row, open the group it is in and highlight/select it
   table.on("rowAdded", function (row) {
     var group = row.getGroup();
-    group.show();
+    if (group) group.show();
     row.select();
+    updateStatusBar();
   });
 
   let params = new URL(document.location).searchParams;
-  let url = params.get("url"); // is the string "Jonathan Smith".
+  let url = params.get("url");
 
   if (url) {
-    let regex = "^" + url.replaceAll("/", "\\/");
-    regex = regex.replaceAll(".", "\\.");
-    regex = regex + ".*";
+    addRuleFromUrl(url);
+  }
 
-    //let origin =  (new URL(url)).origin;
-    //todo: maybe make permission requeste based on this, problem is, that regex might match multiple domains ... but to be fair that is pretty unlikely ... so maybe its ok?
-
-    addNewRowWithData(regex);
+  if (pendingRuleRequest) {
+    addRuleFromUrl(pendingRuleRequest.url);
+    pendingRuleRequest = null;
   }
 }
+
+function addRuleFromUrl(url) {
+  let regex = "^" + url.replaceAll("/", "\\/");
+  regex = regex.replaceAll(".", "\\.");
+  regex = regex + ".*";
+
+  addNewRowWithData(regex);
+  showToast(
+    "New rule created for this page (currently off — enable it in the table when it's ready)",
+    "success",
+    5000,
+  );
+}
+
+// the background script re-uses this tab (instead of opening a new one)
+// when the browser action fires again while this options tab is already open
+let pendingRuleRequest = null;
+
+browser.runtime.onMessage.addListener((message) => {
+  if (message && message.type === "ac-add-rule") {
+    if (table) {
+      addRuleFromUrl(message.url);
+    } else {
+      pendingRuleRequest = message;
+    }
+  }
+});
 
 async function getTblData() {
   let data = [];
@@ -423,26 +932,16 @@ async function getTblData() {
 
   if (Array.isArray(res.selectors)) {
     res.selectors.sort(function (b, a) {
-      // > 0 => b before a
-      // < 0 => a before b
-      // === 0 => keep original order of a and b
-
       if (typeof a.idx === "undefined" && typeof b.idx === "number") {
-        return 1; // b before a
+        return 1;
       }
       if (typeof a.idx === "number" && typeof b.idx === "undefined") {
-        return -1; // a before b
+        return -1;
       }
-
       if (typeof a.idx === "number" && typeof b.idx === "number") {
-        if (a.idx > b.idx) {
-          return 1;
-        }
-        if (a.idx < b.idx) {
-          return -1;
-        }
+        if (a.idx > b.idx) return 1;
+        if (a.idx < b.idx) return -1;
       }
-      // if in doubt, do nothing :) , also covers  double undeinfed and a === b
       return 0;
     });
     res.selectors.forEach((selector) => {
@@ -459,8 +958,6 @@ async function getTblData() {
           selector.rvariance || selector.randomrepeatvariance || 0,
         ),
         urlregex: selector.url_regex || selector.urlregex || "",
-        xclickpos: selector.xclickpos || 0,
-        yclickpos: selector.yclickpos || 0,
       });
     });
   }
