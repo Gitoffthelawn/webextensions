@@ -4,6 +4,37 @@ function getMediaElementBy(id) {
   return document.querySelector('[tmcuuid="' + id + '"]');
 }
 
+function isElementVisible(el) {
+  if (!el) return false;
+
+  const style = window.getComputedStyle(el);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.opacity === "0"
+  ) {
+    return false;
+  }
+
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.top < window.innerHeight &&
+    rect.bottom > 0 &&
+    rect.left < window.innerWidth &&
+    rect.right > 0
+  );
+}
+
+const getMediaElements = () => {
+  return [...document.querySelectorAll("video, audio")].filter((el) => {
+    // Always include audio elements
+    if (el.tagName === "AUDIO") return true;
+    return isElementVisible(el);
+  });
+};
+
 function getThumbnail(video) {
   const vw = video.videoWidth || 300;
   const vh = video.videoHeight || 200;
@@ -39,7 +70,7 @@ function handleQuery(id, skipPoster) {
 // get all media elements and their states
 function handleQueryAll() {
   const ret = [];
-  const els = document.querySelectorAll("video,audio");
+  const els = getMediaElements();
   for (const el of els) {
     let tmcuuid = el.getAttribute("tmcuuid");
     if (tmcuuid === null) {
@@ -86,13 +117,13 @@ function handlePause(ids) {
 }
 
 function handlePauseAll() {
-  for (const el of document.querySelectorAll("video,audio")) {
+  for (const el of getMediaElements()) {
     el.pause();
   }
 }
 
 function handleMuteAll() {
-  for (const el of document.querySelectorAll("video,audio")) {
+  for (const el of getMediaElements()) {
     el.muted = true;
   }
 }
