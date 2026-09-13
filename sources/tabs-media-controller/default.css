@@ -1,112 +1,459 @@
 :root {
-  /* dark mode */
-  /*
-  --main-bg-color: gray;
-  --main-btn-bgcolor: black;
-  --main-btn-fontcolor: white;
-  */
+  /* palette drawn from the extension's own icon: deep teal disc,
+     coral play button, warm gold notes */
+  --bg: #0e2b34;
+  --surface: #133846;
+  --surface-2: #1a4657;
+  --border: #2a5c6d;
+  --text: #eaf4f2;
+  --text-muted: #93b6bb;
+  --accent: #e2583f;
+  --accent-2: #f0a83c;
 
-  /* light mode  */
-  /**/
-  --main-bg-color: lightgray;
-  --main-btn-bgcolor: silver;
-  --main-btn-fontcolor: black;
-  /**/
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 7px;
+  --gap: 10px;
+  --font: -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-button {
-  background-color: var(--main-btn-bgcolor);
-  color: var(--main-btn-fontcolor);
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface-2: #eef3f2;
+    --border: #d7e3e1;
+    --text: #123138;
+    --text-muted: #5c7c82;
+    --accent: #d94f36;
+    --accent-2: #c07f1f;
+  }
+  .elementPlayPauseBtn,
+  button:hover {
+    color: #fff;
+  }
 }
 
-button:hover {
-  border-color: black;
+* {
+  box-sizing: border-box;
 }
 
 body {
-  max-width: 595px;
-  padding: 10px;
+  width: 580px;
+  max-width: 580px;
+  padding: var(--gap);
   margin: 0;
-  background-color: var(--main-bg-color);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+  font-size: 12px;
+  background-color: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+button:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 1px;
+}
+
+button svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
 }
 
 #tabs {
   padding: 0;
   margin: 0;
-  overflow-y: scroll;
-}
-.tabDiv {
-  padding: 10px;
-  margin: 0;
-}
-.tabFavImg {
-  display: block;
-  height: 1.5em;
-  float: left;
-  padding: 0;
-  margin: 0;
-}
-.tabFocusBtn {
-  display: inline-block;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-}
-.tabMuteBtn {
-  width: 25%;
-}
-.tabPauseBtn {
-  width: 25%;
-}
-.sitePauseBtn {
-  width: 25%;
-}
-.siteMuteBtn {
-  width: 25%;
-}
-.elementDiv {
-  width: 100%;
-  height: 175px;
-}
-.previewImg {
-  height: 170px;
-  float: left;
-  border: 5px groove var(--main-bg-color);
-  margin-left: 5px;
-  padding-bottom: 3px;
-  padding-right: 3px;
-  width: 280px;
-}
-.elementControlsDiv {
-  position: relative;
-  border: 5px groove var(--main-bg-color);
-  height: 162px;
-  width: 250px;
-  float: left;
-  padding-top: 10px;
-}
-.elementFocusBtn {
-  width: 70%;
-  margin-left: 15%;
-}
-.elementMuteBtn {
-  width: 70%;
-  margin-left: 15%;
+  max-height: 560px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
 }
 
-.elementPlaybackRateBtn {
-  width: 70%;
-  margin-left: 15%;
+#tabs[hidden] {
+  display: none;
 }
-.elementVolumeBtn {
-  width: 70%;
-  margin-left: 15%;
+
+/* ---- per-site card: groups every tab (and its media) from one origin ---- */
+.siteDiv {
+  padding: 8px;
+  margin: 0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+.tabHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabHeaderRow button {
+  min-width: 0;
+  flex: none;
+}
+
+.tabHeaderRow button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.siteLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabFavImg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 4px;
+}
+
+.tabFocusBtn {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: transparent;
+  border-color: transparent;
+  padding: 4px 6px;
+}
+
+.tabFocusBtn:hover {
+  background-color: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* one tab's worth of media, nested inside a site card */
+.tabGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+}
+
+.tabSubRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tabSubFocusBtn {
+  flex: 1 1 auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- compact media row: basic controls only, tap to open full controls ---- */
+.elementDiv {
+  width: 100%;
+  background-color: var(--surface-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.elementSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.elementSummary:hover {
+  background-color: var(--border);
+}
+
+.elementInfo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.openChevron {
+  flex: none;
+  display: flex;
+  color: var(--text-muted);
+}
+
+.openChevron svg {
+  width: 14px;
+  height: 14px;
+  transform: rotate(-90deg);
+}
+
+.elementActionRow {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.elementFocusBtn,
+.elementMuteBtn,
 .elementPlayPauseBtn {
-  width: 70%;
-  margin-left: 15%;
+  width: auto;
+  min-width: 0;
+  margin-left: 0;
+  flex: 1 1 0;
+  padding: 9px 10px;
 }
+
+.elementPlayPauseBtn {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.elementPlayPauseBtn:hover {
+  filter: brightness(1.1);
+}
+
+/* ---- full-popup detail view for one media element ---- */
+#detailView {
+  background-color: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#detailView[hidden] {
+  display: none;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailBackBtn {
+  background-color: transparent;
+  border-color: transparent;
+  padding: 6px 8px;
+}
+
+.detailBackBtn:hover {
+  background-color: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.detailTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailContent {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.detailBody {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.previewBox {
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.previewBoxLarge {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 340px;
+}
+
+.previewImg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.detailActionRow {
+  width: 100%;
+  max-width: 320px;
+}
+
+.detailActionRow button {
+  padding: 14px 10px;
+}
+
+.detailActionRow button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.detailControlsDiv {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sliderLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 46px;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.elementPlaybackRateBtn,
+.elementVolumeBtn,
 .elementTimeBtn {
-  width: 70%;
-  margin-left: 15%;
+  width: auto;
+  min-width: 0;
+  margin-left: 0;
+  flex: 1 1 auto;
+  accent-color: var(--accent-2);
+  height: 20px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+/* Firefox (this is a Firefox-only extension, so -moz- is what actually matters) */
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent-2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  border: 3px solid var(--surface-2);
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+/* kept for portability if this popup is ever previewed in a Chromium-based tool */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  border: 3px solid var(--surface-2);
+  box-shadow: 0 0 0 1px var(--border);
+  margin-top: -6px;
+  cursor: pointer;
+}
+
+input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+datalist {
+  display: none;
+}
+
+.emptyState {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 32px 12px;
+  font-size: 13px;
 }

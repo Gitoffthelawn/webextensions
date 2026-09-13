@@ -5,18 +5,27 @@ function getMediaElementBy(id) {
 }
 
 function getThumbnail(video) {
+  const vw = video.videoWidth || 300;
+  const vh = video.videoHeight || 200;
+  // scale to fit within a 300x200 bounding box, preserving aspect ratio
+  const scale = Math.min(300 / vw, 200 / vh, 1);
   let canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(vw * scale));
+  canvas.height = Math.max(1, Math.round(vh * scale));
   let ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, 300, 200);
-  return canvas.toDataURL("image/jpeg", 0.3);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.8);
 }
 
-function handleQuery(id) {
+function handleQuery(id, skipPoster) {
   const el = getMediaElementBy(id);
 
   return {
-    poster:
-      el.tagName.toLowerCase() === "video" ? getThumbnail(el) : "audio.png",
+    poster: skipPoster
+      ? ""
+      : el.tagName.toLowerCase() === "video"
+        ? getThumbnail(el)
+        : "audio.png",
     duration: el.duration,
     currentTime: el.currentTime,
     playing: !el.paused,
@@ -185,7 +194,7 @@ browser.runtime.onMessage.addListener((request) => {
   //console.debug("onMessage", JSON.stringify(request, null, 4));
   switch (request.cmd) {
     case "query":
-      return Promise.resolve(handleQuery(request.id));
+      return Promise.resolve(handleQuery(request.id, request.skipPoster));
     case "queryAll":
       return Promise.resolve(handleQueryAll());
     case "play":

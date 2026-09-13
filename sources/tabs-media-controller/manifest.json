@@ -9,6 +9,13 @@
     "default_area": "navbar",
     "default_popup": "popup.html"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "commands": {
     "_execute_browser_action": {},
     "gotoNextRight": {
