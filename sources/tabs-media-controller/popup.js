@@ -119,6 +119,18 @@ const ICON_BUILDERS = {
     s.appendChild(svgEl("path", { d: "M15 6l-6 6 6 6" }));
     return s;
   },
+  forward: () => {
+    const s = svgEl("svg", {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 2,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    });
+    s.appendChild(svgEl("path", { d: "M9 6l6 6-6 6" }));
+    return s;
+  },
 };
 
 // replaces a button's content with an icon (+ optional text label), using
@@ -186,6 +198,15 @@ const detailTitle = document.createElement("span");
 detailTitle.classList.add("detailTitle");
 detailHeader.appendChild(detailTitle);
 
+const detailNextBtn = document.createElement("button");
+detailNextBtn.classList.add("detailBackBtn", "detailNextBtn");
+detailNextBtn.setAttribute("title", "next media element");
+let detailNextLabel = document.createElement("span");
+detailNextLabel.textContent = "Next";
+detailNextBtn.appendChild(detailNextLabel);
+detailNextBtn.appendChild(ICON_BUILDERS.forward());
+detailHeader.appendChild(detailNextBtn);
+
 const detailContent = document.createElement("div");
 detailContent.classList.add("detailContent");
 detailView.appendChild(detailContent);
@@ -196,6 +217,7 @@ function openDetail(record) {
   openRecord = record;
   detailTitle.textContent = record.title;
   detailContent.replaceChildren(record.detailNode);
+  detailNextBtn.disabled = mediaRegistry.length < 2;
   detailView.hidden = false;
   tablist.hidden = true;
 }
@@ -207,6 +229,14 @@ function closeDetail() {
 }
 
 detailBackBtn.onclick = () => closeDetail();
+detailNextBtn.onclick = () => {
+  if (!openRecord || mediaRegistry.length < 2) {
+    return;
+  }
+  const idx = mediaRegistry.indexOf(openRecord);
+  const nextIdx = idx === -1 ? 0 : (idx + 1) % mediaRegistry.length;
+  openDetail(mediaRegistry[nextIdx]);
+};
 
 // every media element currently rendered, so the poll loop can update state
 // without caring whether the row is collapsed or its detail view is open
@@ -214,6 +244,15 @@ let mediaRegistry = [];
 
 // wires up a set of mute buttons (list row + detail view) that all reflect
 // and control the same underlying media element
+// disables a set of buttons and gives them a pulsing "in progress" look while
+// their command's round-trip to the page is still in flight
+function setPending(buttons, pending) {
+  buttons.forEach((b) => {
+    b.disabled = pending;
+    b.classList.toggle("btnPending", pending);
+  });
+}
+
 function wireMuteButtons(record, tab, eid, buttons) {
   const paint = () =>
     buttons.forEach((b) =>
@@ -222,12 +261,23 @@ function wireMuteButtons(record, tab, eid, buttons) {
   paint();
   buttons.forEach((b) => {
     b.setAttribute("title", "mute / unmute element");
-    b.onclick = (evt) => {
+    b.onclick = async (evt) => {
       evt.stopPropagation();
-      browser.tabs.sendMessage(tab.id, { cmd: record.muteCmd, ids: [eid] });
+      const cmdToSend = record.muteCmd;
+      // the icon flips immediately so the click always feels instant; the
+      // lock just stops a second click racing this one before it's actually
+      // reached the page
+      setPending(buttons, true);
       record.muteCmd = record.muteCmd === "mute" ? "unmute" : "mute";
       paint();
       record.lastInteraction = Date.now();
+      try {
+        await browser.tabs.sendMessage(tab.id, { cmd: cmdToSend, ids: [eid] });
+      } catch (e) {
+        // the next poll will reconcile the icon if this didn't actually land
+      } finally {
+        setPending(buttons, false);
+      }
     };
   });
 }
@@ -237,12 +287,20 @@ function wirePlayPauseButtons(record, tab, eid, buttons) {
   paint();
   buttons.forEach((b) => {
     b.setAttribute("title", "play / pause element");
-    b.onclick = (evt) => {
+    b.onclick = async (evt) => {
       evt.stopPropagation();
-      browser.tabs.sendMessage(tab.id, { cmd: record.playCmd, ids: [eid] });
+      const cmdToSend = record.playCmd;
+      setPending(buttons, true);
       record.playCmd = record.playCmd === "play" ? "pause" : "play";
       paint();
       record.lastInteraction = Date.now();
+      try {
+        await browser.tabs.sendMessage(tab.id, { cmd: cmdToSend, ids: [eid] });
+      } catch (e) {
+        // the next poll will reconcile the icon if this didn't actually land
+      } finally {
+        setPending(buttons, false);
+      }
     };
   });
 }
@@ -253,14 +311,87 @@ function wireFocusButtons(tab, eid, buttons) {
     b.setAttribute("title", "scroll element into view");
     b.onclick = async (evt) => {
       evt.stopPropagation();
-      await browser.windows.update(tab.windowId, { focused: true });
-      await browser.tabs.highlight({
-        windowId: tab.windowId,
-        tabs: [tab.index],
-      });
-      await browser.tabs.sendMessage(tab.id, { cmd: "focus", id: eid });
+      setPending(buttons, true);
+      try {
+        await browser.windows.update(tab.windowId, { focused: true });
+        await browser.tabs.highlight({
+          windowId: tab.windowId,
+          tabs: [tab.index],
+        });
+        await browser.tabs.sendMessage(tab.id, { cmd: "focus", id: eid });
+      } catch (e) {
+        // ignore — nothing to reconcile for a one-shot action
+      } finally {
+        setPending(buttons, false);
+      }
     };
   });
+}
+
+// keeps the detail view's seek slider in sync with the media element's real
+// position/duration, and mirrors the current position into any read-only
+// labels (e.g. the compact row's time display) that aren't themselves draggable
+function wireTimeControls(
+  record,
+  tab,
+  eid,
+  interactiveSliders,
+  passiveLabels,
+  initialCurrentTime,
+  initialDuration,
+) {
+  record.knownDuration = initialDuration;
+
+  function applyDurationAndValue(input, label, value, duration) {
+    if (isFinite(duration) && duration > 0) {
+      const durInt = Math.floor(duration);
+      if (Number(input.max) !== durInt) {
+        input.max = durInt;
+      }
+      input.disabled = false;
+    } else {
+      input.disabled = true;
+    }
+    if (document.activeElement !== input) {
+      input.value = value;
+    }
+    label.textContent = formatTime(value) + " / " + formatTime(duration);
+  }
+
+  function syncAll(value, duration, skipInput) {
+    record.knownDuration = duration;
+    interactiveSliders.forEach(({ input, label }) => {
+      if (input === skipInput) {
+        // the slider the user is actively dragging keeps its own live value;
+        // just keep its label current
+        label.textContent = formatTime(value) + " / " + formatTime(duration);
+        return;
+      }
+      applyDurationAndValue(input, label, value, duration);
+    });
+    passiveLabels.forEach((label) => {
+      label.textContent = formatTime(value) + " / " + formatTime(duration);
+    });
+  }
+
+  interactiveSliders.forEach(({ input, label }) => {
+    applyDurationAndValue(input, label, initialCurrentTime, initialDuration);
+    input.addEventListener("input", (evt) => {
+      const t = parseInt(evt.target.value, 10);
+      browser.tabs.sendMessage(tab.id, {
+        cmd: "currentTime",
+        id: eid,
+        currentTime: t,
+      });
+      syncAll(t, record.knownDuration, input);
+    });
+  });
+  passiveLabels.forEach((label) => {
+    label.textContent =
+      formatTime(initialCurrentTime) + " / " + formatTime(initialDuration);
+  });
+
+  record.syncTime = syncAll;
 }
 
 // builds one media element: a compact always-visible row plus a detached
@@ -309,10 +440,13 @@ function buildMediaElement(tab, url, e) {
 
   let info = document.createElement("span");
   info.classList.add("elementInfo");
-  info.textContent =
-    (e.type === "video" ? "video" : "audio") + " · " + formatTime(e.duration);
+  info.textContent = e.type === "video" ? "video" : "audio";
   summary.appendChild(info);
   record.infoSpan = info;
+
+  let quickTimeLabel = document.createElement("span");
+  quickTimeLabel.classList.add("quickTimeLabel");
+  summary.appendChild(quickTimeLabel);
 
   let chevron = document.createElement("span");
   chevron.classList.add("openChevron");
@@ -442,14 +576,9 @@ function buildMediaElement(tab, url, e) {
   let currentTimebtn = document.createElement("input");
   currentTimebtn.setAttribute("type", "range");
   currentTimebtn.setAttribute("min", "0");
-  currentTimebtn.setAttribute("max", "" + parseInt(e.duration));
-  if (e.duration === -1 || isNaN(e.duration)) {
-    currentTimebtn.setAttribute("disabled", "disabled");
-  }
-  currentTimebtn.setAttribute("value", e.currentTime);
+  currentTimebtn.setAttribute("step", "1");
   currentTimebtn.classList.add("elementTimeBtn");
   currentTimebtn.setAttribute("title", "playback position");
-
   addDataListToRange(
     [
       0,
@@ -462,24 +591,22 @@ function buildMediaElement(tab, url, e) {
     timeRow,
   );
   timeRow.appendChild(currentTimebtn);
-  record.timeBtn = currentTimebtn;
 
   let timeLabel = document.createElement("span");
   timeLabel.classList.add("sliderLabel");
-  timeLabel.textContent =
-    formatTime(e.currentTime) + " / " + formatTime(e.duration);
   timeRow.appendChild(timeLabel);
-  record.timeLabel = timeLabel;
 
-  currentTimebtn.addEventListener("input", (evt) => {
-    const t = parseInt(evt.target.value);
-    browser.tabs.sendMessage(tab.id, {
-      cmd: "currentTime",
-      id: e.id,
-      currentTime: t,
-    });
-    timeLabel.textContent = formatTime(t) + " / " + formatTime(e.duration);
-  });
+  // the compact row's time label mirrors this slider, but only the detail
+  // view's slider is actually draggable
+  wireTimeControls(
+    record,
+    tab,
+    e.id,
+    [{ input: currentTimebtn, label: timeLabel }],
+    [quickTimeLabel],
+    e.currentTime,
+    e.duration,
+  );
 
   record.detailNode = detailWrap;
   record.row = elementRow;
@@ -687,8 +814,9 @@ async function queryTabs() {
           continue;
         }
 
-        rec.infoSpan.textContent =
-          rec.type + " · " + formatTime(newdata.duration);
+        // the quick-seek slider is visible in the compact row too, so this
+        // needs to stay current whether or not the detail view is open
+        rec.syncTime(newdata.currentTime, newdata.duration);
 
         if (openRecord === rec) {
           if (newdata.poster) {
@@ -698,25 +826,6 @@ async function queryTabs() {
           if (document.activeElement !== rec.volBtn) {
             rec.volBtn.value = newdata.volume * 100;
             rec.volLabel.textContent = Math.round(newdata.volume * 100) + "%";
-          }
-          if (document.activeElement !== rec.timeBtn) {
-            // duration may not have been known yet when the slider was first
-            // built (video metadata loads asynchronously) — keep max in sync
-            // or its value gets silently clamped against a stale/default max
-            if (isFinite(newdata.duration) && newdata.duration > 0) {
-              const durInt = Math.floor(newdata.duration);
-              if (Number(rec.timeBtn.max) !== durInt) {
-                rec.timeBtn.max = durInt;
-              }
-              rec.timeBtn.disabled = false;
-            } else {
-              rec.timeBtn.disabled = true;
-            }
-            rec.timeBtn.value = newdata.currentTime;
-            rec.timeLabel.textContent =
-              formatTime(newdata.currentTime) +
-              " / " +
-              formatTime(newdata.duration);
           }
         }
 
