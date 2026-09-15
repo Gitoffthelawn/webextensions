@@ -26,10 +26,65 @@ const ablebtn = document.getElementById("ablebtn");
 const addbtn = document.getElementById("addbtn");
 const dupbtn = document.getElementById("dupbtn");
 const tgladv = document.getElementById("tgladv");
+const themebtn = document.getElementById("themebtn");
 const toastcontainer = document.getElementById("toastcontainer");
 const statuscount = document.getElementById("statuscount");
 const statusselected = document.getElementById("statusselected");
 const statusdirty = document.getElementById("statusdirty");
+
+/* ------------------------------- theme -------------------------------- */
+
+// Defaults to following the system/browser color scheme ("auto"). The
+// button lets the user pin it to "light" or "dark" instead; that choice
+// is remembered until they cycle back to "auto". The actual attribute is
+// also set as early as possible by an inline script in options.html so
+// the page never flashes the wrong theme before this file runs.
+const THEME_PREF_KEY = "ac-theme-pref";
+const THEME_ORDER = ["auto", "light", "dark"];
+const THEME_LABELS = {
+  auto: "\u{1F5A5}\uFE0F Auto", // 🖥️
+  light: "\u2600\uFE0F Light", // ☀️
+  dark: "\u{1F319} Dark", // 🌙
+};
+const darkMediaQuery = window.matchMedia
+  ? window.matchMedia("(prefers-color-scheme: dark)")
+  : null;
+
+function getThemePref() {
+  const pref = localStorage.getItem(THEME_PREF_KEY);
+  return THEME_ORDER.includes(pref) ? pref : "auto";
+}
+
+function effectiveTheme(pref) {
+  if (pref === "dark") return "dark";
+  if (pref === "light") return "light";
+  return darkMediaQuery && darkMediaQuery.matches ? "dark" : "light";
+}
+
+function applyTheme() {
+  const pref = getThemePref();
+  document.documentElement.setAttribute("data-theme", effectiveTheme(pref));
+  themebtn.textContent = THEME_LABELS[pref];
+  themebtn.title =
+    pref === "auto"
+      ? "Theme: follows your system setting — click to override"
+      : "Theme: pinned to " + pref + " — click to change";
+}
+
+themebtn.addEventListener("click", () => {
+  const next =
+    THEME_ORDER[(THEME_ORDER.indexOf(getThemePref()) + 1) % THEME_ORDER.length];
+  localStorage.setItem(THEME_PREF_KEY, next);
+  applyTheme();
+});
+
+if (darkMediaQuery) {
+  darkMediaQuery.addEventListener("change", () => {
+    if (getThemePref() === "auto") applyTheme();
+  });
+}
+
+applyTheme();
 
 /* ---------------------------- toast helper ---------------------------- */
 

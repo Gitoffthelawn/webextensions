@@ -1,5 +1,88 @@
+:root {
+  --ac-bg: #f4f5f7;
+  --ac-surface: #ffffff;
+  --ac-surface-alt: #f4f5f7;
+  --ac-border: #d0d3d9;
+  --ac-border-strong: #c7cad1;
+  --ac-text: #24262b;
+  --ac-text-muted: #5f6672;
+  --ac-btn-bg: #fafbfc;
+  --ac-btn-hover: #eef1f5;
+  --ac-primary: #1565c0;
+  --ac-primary-hover: #0d47a1;
+  --ac-primary-contrast: #ffffff;
+  --ac-danger: #b3261e;
+  --ac-invalid-bg: #ffe3e0;
+  --ac-invalid-border: #d32f2f;
+  --ac-overlay: rgba(20, 22, 26, 0.55);
+  --ac-shadow: rgba(0, 0, 0, 0.2);
+  --ac-instructions-bg: #f4f5f7;
+  --ac-hint: #5f6672;
+  --ac-dot: #d0d3d9;
+
+  /* Tabulator palette (the vendored tabulator.css has no variables of its
+     own, so these are only consumed by the override block below) */
+  --ac-tbl-bg: #ffffff;
+  --ac-tbl-header-bg: #f3f3f3;
+  --ac-tbl-row-bg: #ffffff;
+  --ac-tbl-row-alt-bg: #efefef;
+  --ac-tbl-row-hover-bg: #e2e2e2;
+  --ac-tbl-selected-bg: #9abcea;
+  --ac-tbl-selected-hover-bg: #769bcc;
+  --ac-tbl-border: #ccc;
+  --ac-tbl-text: #333;
+  --ac-tbl-text-muted: #666;
+  --ac-tbl-footer-bg: #f3f3f3;
+  --ac-tbl-menu-bg: #fff;
+  --ac-tbl-menu-hover-bg: #efefef;
+  --ac-tbl-input-bg: #fff;
+  --ac-tbl-input-border: #ccc;
+  --ac-tbl-placeholder: #bbb;
+}
+
+html[data-theme="dark"] {
+  --ac-bg: #1b1c1f;
+  --ac-surface: #232428;
+  --ac-surface-alt: #26282c;
+  --ac-border: #3a3c41;
+  --ac-border-strong: #45474d;
+  --ac-text: #e2e3e6;
+  --ac-text-muted: #a6acb5;
+  --ac-btn-bg: #2b2d31;
+  --ac-btn-hover: #34363c;
+  --ac-primary: #4c8dda;
+  --ac-primary-hover: #6ba1e6;
+  --ac-primary-contrast: #0e1116;
+  --ac-danger: #ff6b64;
+  --ac-invalid-bg: #4a2422;
+  --ac-invalid-border: #ff6b64;
+  --ac-overlay: rgba(0, 0, 0, 0.65);
+  --ac-shadow: rgba(0, 0, 0, 0.5);
+  --ac-instructions-bg: #26282c;
+  --ac-hint: #a6acb5;
+  --ac-dot: #45474d;
+
+  --ac-tbl-bg: #1e1f22;
+  --ac-tbl-header-bg: #26282c;
+  --ac-tbl-row-bg: #1e1f22;
+  --ac-tbl-row-alt-bg: #232428;
+  --ac-tbl-row-hover-bg: #2c2e33;
+  --ac-tbl-selected-bg: #2c4a73;
+  --ac-tbl-selected-hover-bg: #34588a;
+  --ac-tbl-border: #34363a;
+  --ac-tbl-text: #d8d9db;
+  --ac-tbl-text-muted: #9aa0a6;
+  --ac-tbl-footer-bg: #26282c;
+  --ac-tbl-menu-bg: #26282c;
+  --ac-tbl-menu-hover-bg: #34363c;
+  --ac-tbl-input-bg: #1e1f22;
+  --ac-tbl-input-border: #45474d;
+  --ac-tbl-placeholder: #6b6f76;
+}
+
 body {
-  background: #f4f5f7;
+  background: var(--ac-bg);
+  color: var(--ac-text);
   font-family:
     system-ui,
     -apple-system,
@@ -11,9 +94,9 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #d0d3d9;
+  border: 1px solid var(--ac-border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--ac-surface);
   padding: 8px;
   margin: 0 0 6px 0;
 }
@@ -21,18 +104,23 @@ body {
 button {
   min-width: 4.5em;
   padding: 5px 8px;
-  border: 1px solid #c7cad1;
+  border: 1px solid var(--ac-border-strong);
   border-radius: 4px;
-  background: #fafbfc;
+  background: var(--ac-btn-bg);
+  color: var(--ac-text);
   cursor: pointer;
 }
 
 button:hover {
-  background: #eef1f5;
+  background: var(--ac-btn-hover);
 }
 
 #savbtn {
-  border-color: #c7cad1;
+  border-color: var(--ac-border-strong);
+}
+
+#themebtn {
+  min-width: 5.5em;
 }
 
 #statusbar {
@@ -40,7 +128,7 @@ button:hover {
   align-items: center;
   gap: 1.2em;
   font-size: 0.85em;
-  color: #5f6672;
+  color: var(--ac-text-muted);
   padding: 2px 4px 6px 4px;
 }
 
@@ -49,19 +137,19 @@ button:hover {
   align-items: center;
   gap: 6px;
   font-size: 0.85em;
-  color: #5f6672;
+  color: var(--ac-text-muted);
   cursor: pointer;
   white-space: nowrap;
 }
 
 #statusdirty {
-  color: #b3261e;
+  color: var(--ac-danger);
   font-weight: 600;
 }
 
 .ac-invalid-cell {
-  background: #ffe3e0 !important;
-  outline: 2px solid #d32f2f;
+  background: var(--ac-invalid-bg) !important;
+  outline: 2px solid var(--ac-invalid-border);
 }
 
 #toastcontainer {
@@ -81,7 +169,7 @@ button:hover {
   font:
     13px/1.4 system-ui,
     sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--ac-shadow);
   opacity: 0;
   transform: translateY(6px);
   transition:
@@ -122,14 +210,14 @@ button:hover {
 /* ------------------------------ primary CTA ------------------------------ */
 
 .ac-primary {
-  background: #1565c0;
-  border-color: #0d47a1;
-  color: #fff;
+  background: var(--ac-primary);
+  border-color: var(--ac-primary-hover);
+  color: var(--ac-primary-contrast);
   font-weight: 600;
 }
 
 .ac-primary:hover {
-  background: #0d47a1;
+  background: var(--ac-primary-hover);
 }
 
 button:disabled {
@@ -142,7 +230,7 @@ button:disabled {
 .ac-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 22, 26, 0.55);
+  background: var(--ac-overlay);
   display: none;
   align-items: center;
   justify-content: center;
@@ -154,13 +242,14 @@ button:disabled {
 }
 
 .ac-modal {
-  background: #fff;
+  background: var(--ac-surface);
+  color: var(--ac-text);
   border-radius: 10px;
   width: min(560px, 92vw);
   max-height: 88vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 40px var(--ac-shadow);
 }
 
 .ac-modal-header {
@@ -168,7 +257,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-bottom: 1px solid #e3e5e9;
+  border-bottom: 1px solid var(--ac-border);
 }
 
 .ac-modal-header h2 {
@@ -180,13 +269,14 @@ button:disabled {
   min-width: unset;
   border: none;
   background: transparent;
+  color: var(--ac-text);
   font-size: 1.4em;
   line-height: 1;
   padding: 0 4px;
 }
 
 .ac-modal-close:hover {
-  background: #eef1f5;
+  background: var(--ac-btn-hover);
 }
 
 .ac-modal-steps {
@@ -216,7 +306,9 @@ button:disabled {
   margin-top: 4px;
   padding: 7px 8px;
   font-weight: normal;
-  border: 1px solid #c7cad1;
+  background: var(--ac-btn-bg);
+  color: var(--ac-text);
+  border: 1px solid var(--ac-border-strong);
   border-radius: 4px;
 }
 
@@ -240,7 +332,7 @@ button:disabled {
 }
 
 .ac-instructions {
-  background: #f4f5f7;
+  background: var(--ac-instructions-bg);
   border-radius: 6px;
   padding: 12px 12px 12px 30px;
   line-height: 1.6;
@@ -259,16 +351,16 @@ button:disabled {
 }
 
 .ac-test-result.success {
-  color: #2e7d32;
+  color: #4caf50;
 }
 
 .ac-test-result.error {
-  color: #c62828;
+  color: #ff6b64;
 }
 
 .ac-hint {
   font-size: 0.85em;
-  color: #5f6672;
+  color: var(--ac-hint);
 }
 
 .ac-modal-footer {
@@ -276,7 +368,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-top: 1px solid #e3e5e9;
+  border-top: 1px solid var(--ac-border);
 }
 
 .ac-modal-buttons {
@@ -293,9 +385,217 @@ button:disabled {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d0d3d9;
+  background: var(--ac-dot);
 }
 
 .ac-wizard-dot.active {
-  background: #1565c0;
+  background: var(--ac-primary);
+}
+
+/* -------------------------------------------------------------------- */
+/* Dark-mode overrides for the vendored Tabulator theme (tabulator.css). */
+/* That file ships with hardcoded light colors and no variables of its  */
+/* own, so it's skinned here instead of edited directly.                */
+/* -------------------------------------------------------------------- */
+
+html[data-theme="dark"] .tabulator {
+  background: var(--ac-tbl-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-header {
+  background: var(--ac-tbl-header-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-header .tabulator-col {
+  background: var(--ac-tbl-header-bg);
+  color: var(--ac-tbl-text);
+  border-right-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-header
+  .tabulator-col.tabulator-sortable:hover,
+html[data-theme="dark"] .tabulator .tabulator-col-resize-handle:hover {
+  background: var(--ac-tbl-row-hover-bg) !important;
+}
+
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-header
+  .tabulator-col
+  .tabulator-header-filter
+  input,
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-header
+  .tabulator-col
+  .tabulator-header-filter
+  select,
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-header
+  .tabulator-col
+  .tabulator-header-filter
+  textarea,
+html[data-theme="dark"] .tabulator-edit-select-list {
+  background: var(--ac-tbl-input-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-input-border);
+}
+
+html[data-theme="dark"] .tabulator-row .tabulator-cell.tabulator-editing input,
+html[data-theme="dark"]
+  .tabulator-row
+  .tabulator-cell.tabulator-editing
+  textarea,
+html[data-theme="dark"] .tabulator-row .tabulator-cell.tabulator-editing select,
+html[data-theme="dark"] .tabulator-title-editor {
+  background: var(--ac-tbl-input-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-primary);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-tableholder,
+html[data-theme="dark"] .tabulator .tabulator-tableholder .tabulator-table {
+  background: var(--ac-tbl-bg);
+}
+
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-tableholder
+  .tabulator-placeholder
+  span {
+  color: var(--ac-tbl-placeholder);
+}
+
+html[data-theme="dark"] .tabulator-row {
+  background: var(--ac-tbl-row-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-row-even {
+  background: var(--ac-tbl-row-alt-bg);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-selectable:hover {
+  background: var(--ac-tbl-row-hover-bg);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-selected,
+html[data-theme="dark"] .tabulator-row.tabulator-selected:hover {
+  background: var(--ac-tbl-selected-bg);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-selected:hover {
+  background: var(--ac-tbl-selected-hover-bg);
+}
+
+html[data-theme="dark"] .tabulator-row .tabulator-cell {
+  border-right-color: var(--ac-tbl-border);
+  color: var(--ac-tbl-text);
+}
+
+html[data-theme="dark"]
+  .tabulator-row
+  .tabulator-cell.tabulator-row-handle
+  .tabulator-row-handle-box,
+html[data-theme="dark"] .tabulator-row-handle-bar {
+  background: var(--ac-tbl-text-muted);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-group {
+  background: var(--ac-tbl-header-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-group:hover {
+  background: var(--ac-tbl-row-hover-bg);
+}
+
+html[data-theme="dark"] .tabulator-row.tabulator-group span {
+  color: var(--ac-tbl-text-muted);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-footer {
+  background: var(--ac-tbl-footer-bg);
+  color: var(--ac-tbl-text-muted);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-footer .tabulator-page {
+  background: var(--ac-tbl-input-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-input-border);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-footer .tabulator-page.active {
+  color: var(--ac-primary-contrast);
+  background: var(--ac-primary);
+}
+
+html[data-theme="dark"]
+  .tabulator
+  .tabulator-footer
+  .tabulator-page:not(.disabled):hover {
+  background: var(--ac-tbl-row-hover-bg);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-loader {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="dark"] .tabulator .tabulator-loader .tabulator-loader-msg {
+  background: var(--ac-tbl-menu-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"] .tabulator-menu {
+  background: var(--ac-tbl-menu-bg);
+  color: var(--ac-tbl-text);
+  border-color: var(--ac-tbl-border);
+  box-shadow: 0 2px 10px var(--ac-shadow);
+}
+
+html[data-theme="dark"] .tabulator-menu .tabulator-menu-item {
+  color: var(--ac-tbl-text);
+}
+
+html[data-theme="dark"]
+  .tabulator-menu
+  .tabulator-menu-item:not(.tabulator-menu-item-disabled):hover {
+  background: var(--ac-tbl-menu-hover-bg);
+}
+
+html[data-theme="dark"] .tabulator-menu .tabulator-menu-separator {
+  border-color: var(--ac-tbl-border);
+}
+
+html[data-theme="dark"]
+  .tabulator-edit-select-list
+  .tabulator-edit-select-list-item.active,
+html[data-theme="dark"]
+  .tabulator-edit-select-list
+  .tabulator-edit-select-list-item.focused {
+  background: var(--ac-tbl-selected-bg);
+  color: var(--ac-tbl-text);
+}
+
+html[data-theme="dark"]
+  .tabulator-edit-select-list
+  .tabulator-edit-select-list-item:hover {
+  background: var(--ac-tbl-menu-hover-bg);
+}
+
+html[data-theme="dark"]
+  .tabulator-edit-select-list
+  .tabulator-edit-select-list-notice {
+  color: var(--ac-tbl-text-muted);
 }
