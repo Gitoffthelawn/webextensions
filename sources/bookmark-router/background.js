@@ -46,6 +46,7 @@ async function updateBookmarkFoldersCache() {
     out = new Map([...out, ...recGetFolders(node, depth)]);
   }
   bookmarkFoldersCache = out;
+  return bookmarkFoldersCache;
 }
 
 function delay_updateBookmarkFoldesCache() {
@@ -54,15 +55,27 @@ function delay_updateBookmarkFoldesCache() {
 }
 
 function onBAClicked() {
-  browser.windows.create({
-    url: ["options.html"],
-    type: "popup",
-  });
+  browser.runtime.openOptionsPage();
 }
 
 // send the cachedFolders to the options page
-function onMessage(/*data, sender*/) {
-  return Promise.resolve(bookmarkFoldersCache);
+// guarded so the options page never receives `undefined` on first load
+async function onMessage(/*data, sender*/) {
+  if (typeof bookmarkFoldersCache === "undefined") {
+    await updateBookmarkFoldersCache();
+  }
+  return bookmarkFoldersCache;
+}
+
+// compile a regex safely; returns null (and logs) instead of throwing
+// on a malformed pattern, so one bad rule can't break the others
+function safeRegExp(pattern) {
+  try {
+    return new RegExp(pattern);
+  } catch (e) {
+    console.warn(extname + ": invalid url_regex '" + pattern + "':", e);
+    return null;
+  }
 }
 
 async function onBookmarkCreated(id, bookmark) {
@@ -92,28 +105,48 @@ async function onBookmarkCreated(id, bookmark) {
 
   for (let selector of store.selectors) {
     // check activ
-    if (typeof selector.activ === "boolean") {
-      if (selector.activ === true) {
-        // check url regex
-        if (typeof selector.url_regex === "string") {
-          selector.url_regex = selector.url_regex.trim();
-          if (selector.url_regex !== "") {
-            if (new RegExp(selector.url_regex).test(bookmark.url)) {
-              if (typeof selector.bookmarkId === "string") {
-                if (selector.bookmarkId !== "") {
-                  browser.bookmarks.move(id, { parentId: selector.bookmarkId });
-                  const bm = (
-                    await browser.bookmarks.get(selector.bookmarkId)
-                  )[0];
-                  notify(extname, "Moved to '" + bm.title + "'");
-                  return;
-                }
-              }
-            }
-          }
-        }
-      }
+    if (selector.activ !== true) {
+      continue;
     }
+
+    // check url regex
+    if (typeof selector.url_regex !== "string") {
+      continue;
+    }
+    const pattern = selector.url_regex.trim();
+    if (pattern === "") {
+      continue;
+    }
+
+    const re = safeRegExp(pattern);
+    if (re === null || !re.test(bookmark.url)) {
+      continue;
+    }
+
+    if (typeof selector.bookmarkId !== "string" || selector.bookmarkId === "") {
+      continue;
+    }
+
+    // attempt the move; if the target folder was since deleted (or any
+    // other error occurs) fall through and let the next matching rule try
+    try {
+      await browser.bookmarks.move(id, { parentId: selector.bookmarkId });
+    } catch (e) {
+      console.warn(
+        extname + ": failed to move bookmark to '" + selector.bookmarkId + "':",
+        e,
+      );
+      notify(extname, "Couldn't move bookmark - target folder missing?");
+      continue;
+    }
+
+    try {
+      const bm = (await browser.bookmarks.get(selector.bookmarkId))[0];
+      notify(extname, "Moved to '" + bm.title + "'");
+    } catch (e) {
+      notify(extname, "Moved bookmark");
+    }
+    return;
   } // for
 }
 
@@ -124,9 +157,13 @@ function onBookmarkChanged(id, changeInfo) {
   }
 }
 
-async function onStorageChanged() {
-  notifications = await getFromStorage("boolean", "notifications", true);
-  console.debug("notifications (2) ", notifications);
+async function onStorageChanged(changes, area) {
+  if (
+    area === "local" &&
+    Object.prototype.hasOwnProperty.call(changes, "notifications")
+  ) {
+    notifications = await getFromStorage("boolean", "notifications", true);
+  }
 }
 
 // open option
@@ -145,5 +182,7 @@ browser.storage.onChanged.addListener(onStorageChanged);
 
 (async () => {
   notifications = await getFromStorage("boolean", "notifications", true);
-  console.debug("notifications (1) ", notifications);
+  // populate the cache immediately rather than waiting for onStartup/onInstalled,
+  // so the options page always has folders to show
+  await updateBookmarkFoldersCache();
 })();

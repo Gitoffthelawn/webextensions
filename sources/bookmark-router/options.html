@@ -1,34 +1,131 @@
 <!doctype html>
-<head>
-  <title>Bookmark Router: Options</title>
-  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-  <head> </head>
-  <body style="background-color: lightgray">
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Bookmark Router: Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <h1>Bookmark Router</h1>
+    <div id="status" class="hidden"></div>
+
     <form id="mainForm" accept-charset="utf-8">
-      <span> | Local:</span>
-      <input type="submit" value="Save" />
-      <input id="impbtn_wrapper" type="button" value="Import" />
-      <input id="impbtn" type="file" value="" style="display: none" />
-      <input id="expbtn" type="button" value="Export" />
-      <span> | FF Sync:</span>
-      <input id="syncgetbtn" type="button" value="Restore" />
-      <input id="syncsetbtn" type="button" value="Backup" />
-      <span>
-        | Notifications:
-        <input id="notifications" type="checkbox" value="" checked
-      /></span>
-      <table id="mainTable" border="1" style="width: 100%">
+      <div class="toolbar">
+        <div class="group">
+          <button id="newRuleBtn" type="button" class="primary">
+            + New Rule
+          </button>
+          <input type="submit" value="Save" />
+          <input id="impbtn_wrapper" type="button" value="Import" />
+          <input
+            id="impbtn"
+            type="file"
+            accept="application/json"
+            style="display: none"
+          />
+          <input id="expbtn" type="button" value="Export" />
+        </div>
+        <div class="group">
+          <label>FF Sync:</label>
+          <input id="syncgetbtn" type="button" value="Restore" />
+          <input id="syncsetbtn" type="button" value="Backup" />
+        </div>
+        <div class="group">
+          <label for="notifications">Notifications:</label>
+          <input id="notifications" type="checkbox" checked />
+        </div>
+        <div class="group">
+          <label for="testurl">Test a URL:</label>
+          <input
+            id="testurl"
+            class="test-url-input"
+            type="text"
+            placeholder="Paste a URL to see which rule would match…"
+          />
+        </div>
+      </div>
+
+      <table id="mainTable">
         <thead>
           <tr>
             <th style="width: 0">Enabled</th>
-            <th style="45%;">Bookmark Folder</th>
+            <th style="width: 45%">Bookmark Folder</th>
             <th style="width: 45%">URL RegEx</th>
-            <th style="width: 0"></th>
+            <th style="width: 0">Actions</th>
           </tr>
         </thead>
-        <tbody id="mainTableBody" />
+        <tbody id="mainTableBody"></tbody>
       </table>
     </form>
+
+    <div id="wizardOverlay" class="modal-overlay hidden">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wizardTitle"
+      >
+        <div class="modal-header">
+          <h2 id="wizardTitle">New Rule</h2>
+          <button id="wizardClose" type="button" class="icon" title="Close">
+            &#x2715;
+          </button>
+        </div>
+        <div class="modal-steps">
+          <span class="step-dot" data-step="1"></span>
+          <span class="step-dot" data-step="2"></span>
+          <span class="step-dot" data-step="3"></span>
+        </div>
+        <div class="modal-body">
+          <div class="wizard-step" data-step="1">
+            <p>
+              Which bookmark folder should matching bookmarks be moved into?
+            </p>
+            <select id="wizardFolder"></select>
+            <p id="wizardFolderHint" class="hint"></p>
+          </div>
+          <div class="wizard-step" data-step="2" hidden>
+            <p>
+              What URL pattern should trigger this rule? This is a regular
+              expression.
+            </p>
+            <input
+              id="wizardRegex"
+              type="text"
+              placeholder="e.g. ^https://github\.com/"
+            />
+            <p id="wizardRegexHint" class="hint"></p>
+            <label for="wizardTestUrl">Try it on a URL (optional):</label>
+            <input
+              id="wizardTestUrl"
+              class="test-url-input"
+              type="text"
+              placeholder="Paste a URL to check the pattern against"
+            />
+            <p id="wizardTestHint" class="hint"></p>
+          </div>
+          <div class="wizard-step" data-step="3" hidden>
+            <p>Review your rule:</p>
+            <ul class="wizard-summary">
+              <li><strong>Folder:</strong> <span id="summaryFolder"></span></li>
+              <li><strong>Pattern:</strong> <span id="summaryRegex"></span></li>
+            </ul>
+            <label
+              ><input id="wizardActiv" type="checkbox" checked /> Enable this
+              rule immediately</label
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="wizardBack" type="button">Back</button>
+          <button id="wizardNext" type="button" class="primary">Next</button>
+          <button id="wizardFinish" type="button" class="primary" hidden>
+            Add Rule
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script src="options.js"></script>
   </body>
-</head>
+</html>
