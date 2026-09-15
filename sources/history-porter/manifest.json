@@ -1,5 +1,12 @@
 {
   "author": "igorlogius",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "background": {
     "scripts": ["background.js"]
   },
@@ -19,6 +26,6 @@
     "page": "options.html"
   },
   "name": "History Porter",
-  "permissions": ["history"],
+  "permissions": ["history", "storage"],
   "version": "1.0.4"
 }

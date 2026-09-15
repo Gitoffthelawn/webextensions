@@ -1,26 +1,398 @@
 <!doctype html>
-<head>
-  <meta content="text/html;charset=utf-8" />
-  <style>
-    body {
-      background-color: lightgray;
-    }
-    #impbtn {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <fieldset>
-    <legend>Export History</legend>
-    <button id="expbtn">click here to save a copy</button>
-  </fieldset>
-  <fieldset>
-    <legend>Import History</legend>
-    <input id="impbtn" type="file" value="" />
-  </fieldset>
-  <fieldset>
-    <p id="message" />
-  </fieldset>
-  <script src="options.js"></script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>History Porter</title>
+    <style>
+      :root {
+        --bg: #f5f4f0;
+        --panel-bg: #ffffff;
+        --ink: #22252b;
+        --ink-soft: #5b5f66;
+        --line: #dedad0;
+        --blue: #2f5d8a;
+        --blue-soft: #e7eef4;
+        --amber: #96591a;
+        --amber-soft: #f3e6d4;
+        --danger: #9c3b3b;
+        --control-bg: #ffffff;
+      }
+
+      /* Follow the system/browser theme by default (no explicit choice made) */
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #1b1c1f;
+          --panel-bg: #232427;
+          --ink: #e9e8e4;
+          --ink-soft: #9a9a96;
+          --line: #35363a;
+          --blue: #7fa8d6;
+          --blue-soft: #263646;
+          --amber: #d9a25c;
+          --amber-soft: #3a2f1e;
+          --danger: #d98686;
+          --control-bg: #2b2c30;
+        }
+      }
+
+      /* Explicit overrides win regardless of system setting */
+      :root[data-theme="dark"] {
+        --bg: #1b1c1f;
+        --panel-bg: #232427;
+        --ink: #e9e8e4;
+        --ink-soft: #9a9a96;
+        --line: #35363a;
+        --blue: #7fa8d6;
+        --blue-soft: #263646;
+        --amber: #d9a25c;
+        --amber-soft: #3a2f1e;
+        --danger: #d98686;
+        --control-bg: #2b2c30;
+      }
+
+      :root[data-theme="light"] {
+        --bg: #f5f4f0;
+        --panel-bg: #ffffff;
+        --ink: #22252b;
+        --ink-soft: #5b5f66;
+        --line: #dedad0;
+        --blue: #2f5d8a;
+        --blue-soft: #e7eef4;
+        --amber: #96591a;
+        --amber-soft: #f3e6d4;
+        --danger: #9c3b3b;
+        --control-bg: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        transition:
+          background-color 160ms ease,
+          color 160ms ease;
+      }
+
+      .page {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 40px 24px 32px;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .masthead img {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+      }
+
+      .masthead-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .masthead h1 {
+        margin: 0;
+        font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .masthead p {
+        margin: 4px 0 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+
+      .theme-switch {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .theme-switch button {
+        appearance: none;
+        border: none;
+        background: var(--control-bg);
+        color: var(--ink-soft);
+        font-size: 12px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .theme-switch button + button {
+        border-left: 1px solid var(--line);
+      }
+
+      .theme-switch button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--bg);
+      }
+
+      .theme-switch button:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: -2px;
+      }
+
+      .panels {
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr;
+        background: var(--panel-bg);
+        border: 1px solid var(--line);
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .divider {
+        background: var(--line);
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      .panel h2 {
+        margin: 0 0 8px;
+        font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-export h2 {
+        color: var(--blue);
+      }
+
+      .panel-import h2 {
+        color: var(--amber);
+      }
+
+      .panel p {
+        margin: 0 0 18px;
+        color: var(--ink-soft);
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        padding: 9px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: #fff;
+      }
+
+      .btn:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .btn-export {
+        background: var(--blue);
+      }
+
+      .btn-export:hover:not(:disabled) {
+        filter: brightness(0.9);
+      }
+
+      .file-label {
+        display: block;
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-bottom: 6px;
+      }
+
+      input[type="file"] {
+        display: block;
+        width: 100%;
+        font-size: 13px;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 7px 8px;
+        background: var(--bg);
+      }
+
+      input[type="file"]:focus-visible {
+        outline: 2px solid var(--amber);
+        outline-offset: 1px;
+      }
+
+      input[type="file"]:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      input[type="file"]::file-selector-button {
+        appearance: none;
+        border: none;
+        border-radius: 3px;
+        background: var(--amber);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        margin-right: 10px;
+        cursor: pointer;
+      }
+
+      .progress {
+        margin-top: 16px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--amber-soft);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--amber);
+        transition: width 160ms ease;
+      }
+
+      .progress-count {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+
+      .status {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-bg);
+        font-size: 13px;
+        min-height: 1.2em;
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          color 160ms ease;
+      }
+
+      .status[data-tone="error"] {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .status[data-tone="warning"] {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+
+      .status[data-tone="success"] {
+        border-color: var(--blue);
+        color: var(--blue);
+      }
+
+      @media (max-width: 520px) {
+        .panels {
+          grid-template-columns: 1fr;
+        }
+        .divider {
+          height: 1px;
+          width: auto;
+        }
+        .masthead {
+          flex-wrap: wrap;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .progress-fill,
+        body,
+        .panels,
+        .status {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <img src="icon.png" alt="" />
+        <div class="masthead-text">
+          <h1>History Porter</h1>
+          <p>Carry your browsing history between profiles and browsers.</p>
+        </div>
+        <div class="theme-switch" role="group" aria-label="Theme">
+          <button type="button" id="theme-auto" aria-pressed="true">
+            Auto
+          </button>
+          <button type="button" id="theme-light" aria-pressed="false">
+            Light
+          </button>
+          <button type="button" id="theme-dark" aria-pressed="false">
+            Dark
+          </button>
+        </div>
+      </header>
+
+      <div class="panels">
+        <section class="panel panel-export">
+          <h2>Export</h2>
+          <p>
+            Save your full browsing history to a JSON file you can keep or move
+            elsewhere.
+          </p>
+          <button id="expbtn" class="btn btn-export">Save a copy</button>
+        </section>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <section class="panel panel-import">
+          <h2>Import</h2>
+          <p>
+            Load a previously exported JSON file to add its entries back into
+            your history.
+          </p>
+          <span class="file-label" id="impbtn-label"
+            >Choose a history.json file</span
+          >
+          <input
+            id="impbtn"
+            type="file"
+            accept="application/json"
+            aria-labelledby="impbtn-label"
+          />
+          <div class="progress" id="progress" hidden>
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <p class="progress-count" id="progress-count" hidden></p>
+        </section>
+      </div>
+
+      <footer
+        class="status"
+        id="message"
+        role="status"
+        aria-live="polite"
+      ></footer>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
