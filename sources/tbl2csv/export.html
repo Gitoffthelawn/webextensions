@@ -1,20 +1,156 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="icon.png" />
-  <title></title>
-  <style>
-    #output {
-      width: 99%;
-      height: 95vh;
-      white-space: nowrap;
-      overflow-wrap: normal;
-      overflow-x: scroll;
-      overflow-y: scroll;
-    }
-  </style>
-</head>
-<body>
-  <textarea id="output" spellcheck="false" wrap="no">please wait </textarea>
-  <script src="export.js"></script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <title>Table to CSV</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --surface: #f7f8f9;
+        --border: #d8dbe0;
+        --text: #1c1e21;
+        --text-muted: #6b7078;
+        --accent: #1f8a5f;
+        --accent-text: #ffffff;
+        --focus-ring: #1f8a5faa;
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1b1c1e;
+          --surface: #232427;
+          --border: #3a3c40;
+          --text: #e7e8ea;
+          --text-muted: #9a9ea5;
+          --accent: #3ecf8e;
+          --accent-text: #0c1210;
+          --focus-ring: #3ecf8eaa;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .title {
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .badge {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .status {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-right: auto;
+        white-space: nowrap;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        font: inherit;
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 1px;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-text);
+        font-weight: 600;
+      }
+      button.primary:hover {
+        filter: brightness(1.05);
+      }
+      main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+      }
+      #output {
+        flex: 1;
+        width: 100%;
+        margin: 0;
+        padding: 14px;
+        border: none;
+        resize: none;
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text);
+        background: var(--bg);
+        white-space: pre;
+        overflow: auto;
+      }
+      #output:focus-visible {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="title">Table to CSV</span>
+      <span class="badge" id="mode-badge">…</span>
+      <span class="status" id="status" aria-live="polite">Reading table…</span>
+      <div class="actions">
+        <button id="copy" type="button">Copy</button>
+        <button id="download" class="primary" type="button">Download</button>
+      </div>
+    </header>
+    <main>
+      <textarea
+        id="output"
+        spellcheck="false"
+        wrap="off"
+        aria-label="Exported data"
+      ></textarea>
+    </main>
+    <script src="export.js"></script>
+  </body>
+</html>
