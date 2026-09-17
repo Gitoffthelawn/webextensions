@@ -463,6 +463,44 @@
             <input type="number" id="openDelay" min="0" value="0" />s</span
           >
         </div>
+        <div class="row" id="tabgrouprow">
+          <span class="field-inline"
+            ><input type="checkbox" id="groupTabs" /> add to a tab group</span
+          >
+          <select id="groupMode" disabled>
+            <option value="new">New group</option>
+            <option value="existing">Existing group</option>
+          </select>
+        </div>
+        <div class="row" id="groupNewFields">
+          <span class="field-inline">named</span>
+          <input
+            type="text"
+            id="groupName"
+            placeholder="Group name (optional)"
+            disabled
+          />
+          <select id="groupColor" disabled>
+            <option value="">Default color</option>
+            <option value="blue">Blue</option>
+            <option value="cyan">Cyan</option>
+            <option value="grey">Grey</option>
+            <option value="green">Green</option>
+            <option value="orange">Orange</option>
+            <option value="pink">Pink</option>
+            <option value="purple">Purple</option>
+            <option value="red">Red</option>
+            <option value="yellow">Yellow</option>
+          </select>
+        </div>
+        <div class="row" id="groupExistingFields" style="display: none">
+          <select id="existingGroupSelect" disabled>
+            <option value="">Select a group&hellip;</option>
+          </select>
+          <button id="refreshGroupsBtn" type="button" class="subtle">
+            Refresh list
+          </button>
+        </div>
 
         <div class="divider-or">or</div>
 

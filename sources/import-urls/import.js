@@ -30,6 +30,15 @@ const urllist = document.getElementById("urllist");
 const urlsopen = document.getElementById("urlsopen");
 const openLoad = document.getElementById("openLoad");
 const openDelay = document.getElementById("openDelay");
+const groupTabs = document.getElementById("groupTabs");
+const groupMode = document.getElementById("groupMode");
+const groupNewFields = document.getElementById("groupNewFields");
+const groupName = document.getElementById("groupName");
+const groupColor = document.getElementById("groupColor");
+const groupExistingFields = document.getElementById("groupExistingFields");
+const existingGroupSelect = document.getElementById("existingGroupSelect");
+const refreshGroupsBtn = document.getElementById("refreshGroupsBtn");
+const tabGroupsSupported = typeof browser.tabs.group === "function";
 
 const folders = document.getElementById("folders");
 const addbookmarksbtn = document.getElementById("addbookmarksbtn");
@@ -316,7 +325,64 @@ addbookmarksbtn.addEventListener("click", async () => {
   updateCounts();
 });
 
-// --- Step 3: open tabs ---
+// --- Step 3: open tabs (optionally as a tab group) ---
+
+async function populateExistingGroups() {
+  if (!tabGroupsSupported) return;
+  const prevValue = existingGroupSelect.value;
+  existingGroupSelect.innerHTML =
+    '<option value="">Select a group&hellip;</option>';
+  try {
+    const win = await browser.windows.getCurrent();
+    const groups = await browser.tabGroups.query({ windowId: win.id });
+    for (const g of groups) {
+      const label =
+        g.title && g.title.trim() ? g.title : `(untitled, ${g.color})`;
+      existingGroupSelect.add(new Option(label, String(g.id)));
+    }
+    if ([...existingGroupSelect.options].some((o) => o.value === prevValue)) {
+      existingGroupSelect.value = prevValue;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function syncGroupModeFields() {
+  const useExisting = groupMode.value === "existing";
+  groupNewFields.style.display = useExisting ? "none" : "";
+  groupExistingFields.style.display = useExisting ? "" : "none";
+}
+
+if (!tabGroupsSupported) {
+  groupTabs.disabled = true;
+  groupTabs.title = "Tab groups aren't supported in this browser version.";
+} else {
+  groupTabs.addEventListener("change", () => {
+    const on = groupTabs.checked;
+    groupMode.disabled = !on;
+    groupName.disabled = !on || groupMode.value === "existing";
+    groupColor.disabled = !on || groupMode.value === "existing";
+    existingGroupSelect.disabled = !on || groupMode.value !== "existing";
+    if (on) populateExistingGroups();
+    browser.storage.local.set({ groupTabs: on });
+  });
+
+  groupMode.addEventListener("change", () => {
+    syncGroupModeFields();
+    const on = groupTabs.checked;
+    groupName.disabled = !on || groupMode.value === "existing";
+    groupColor.disabled = !on || groupMode.value === "existing";
+    existingGroupSelect.disabled = !on || groupMode.value !== "existing";
+    if (on && groupMode.value === "existing") populateExistingGroups();
+    browser.storage.local.set({ groupMode: groupMode.value });
+  });
+
+  refreshGroupsBtn.addEventListener("click", populateExistingGroups);
+
+  groupName.addEventListener("input", onPersistedChange);
+  groupColor.addEventListener("change", onPersistedChange);
+}
 
 urlsopen.addEventListener("click", async () => {
   const urls = selectedUrls();
@@ -331,24 +397,62 @@ urlsopen.addEventListener("click", async () => {
     .length;
   const discarded = !openLoad.checked;
   const delay = Number(openDelay.value) || 0;
+  const shouldGroup = tabGroupsSupported && groupTabs.checked;
+  const useExistingGroup = shouldGroup && groupMode.value === "existing";
+
+  if (useExistingGroup && !existingGroupSelect.value) {
+    showStatus(actionstatus, "error", "Pick an existing tab group first.");
+    return;
+  }
 
   let count = 0;
+  const createdTabIds = [];
   for (const url of urls) {
-    await browser.tabs.create({
+    const tab = await browser.tabs.create({
       active: false,
       discarded,
       url,
       index: index_offset + count,
     });
+    createdTabIds.push(tab.id);
     count++;
     if (!discarded && delay > 0) {
       await sleep(delay * 1000);
     }
   }
+
+  let groupNote = "";
+  if (shouldGroup && createdTabIds.length > 0) {
+    try {
+      if (useExistingGroup) {
+        const groupId = Number(existingGroupSelect.value);
+        await browser.tabs.group({ tabIds: createdTabIds, groupId });
+        groupNote = " into the selected tab group";
+      } else {
+        const groupId = await browser.tabs.group({ tabIds: createdTabIds });
+        const updateProps = {};
+        if (groupName.value.trim()) updateProps.title = groupName.value.trim();
+        if (groupColor.value) updateProps.color = groupColor.value;
+        if (Object.keys(updateProps).length > 0) {
+          await browser.tabGroups.update(groupId, updateProps);
+        }
+        groupNote = " in a new tab group";
+      }
+    } catch (e) {
+      console.error(e);
+      showStatus(
+        actionstatus,
+        "error",
+        `Opened ${count} tab${count === 1 ? "" : "s"}, but couldn't add them to a tab group (it may no longer exist).`,
+      );
+      return;
+    }
+  }
+
   showStatus(
     actionstatus,
     "success",
-    `Opened ${count} tab${count === 1 ? "" : "s"}.`,
+    `Opened ${count} tab${count === 1 ? "" : "s"}${groupNote}.`,
   );
 });
 
@@ -367,7 +471,16 @@ async function onLoad() {
     await initFolderSelect();
   }
 
-  const persistedFields = ["extractregex", "openLoad", "openDelay", "dedupe"];
+  const persistedFields = [
+    "extractregex",
+    "openLoad",
+    "openDelay",
+    "dedupe",
+    "groupTabs",
+    "groupMode",
+    "groupName",
+    "groupColor",
+  ];
   const stored = await browser.storage.local.get(persistedFields);
 
   if (typeof stored.extractregex === "string") {
@@ -379,6 +492,23 @@ async function onLoad() {
   if (typeof stored.openDelay !== "undefined")
     openDelay.value = stored.openDelay;
   if (typeof stored.dedupe === "boolean") dedupe.checked = stored.dedupe;
+  if (tabGroupsSupported) {
+    if (typeof stored.groupTabs === "boolean")
+      groupTabs.checked = stored.groupTabs;
+    if (typeof stored.groupMode === "string")
+      groupMode.value = stored.groupMode;
+    if (typeof stored.groupName === "string")
+      groupName.value = stored.groupName;
+    if (typeof stored.groupColor === "string")
+      groupColor.value = stored.groupColor;
+    groupMode.disabled = !groupTabs.checked;
+    groupName.disabled = !groupTabs.checked || groupMode.value === "existing";
+    groupColor.disabled = !groupTabs.checked || groupMode.value === "existing";
+    existingGroupSelect.disabled =
+      !groupTabs.checked || groupMode.value !== "existing";
+    syncGroupModeFields();
+    if (groupTabs.checked) populateExistingGroups();
+  }
 
   openLoad.addEventListener("change", onPersistedChange);
   openDelay.addEventListener("input", onPersistedChange);
