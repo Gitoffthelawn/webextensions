@@ -5,8 +5,25 @@ const extname = manifest.name;
 
 let tempData = new Map();
 
-let audioElement = new Audio();
-audioElement.src = "shutter.mp3";
+const DEFAULT_SETTINGS = {
+  soundEnabled: true,
+  customSound: null, // data URL string, or null to use the bundled default
+};
+
+async function getSettings() {
+  const stored = await browser.storage.local.get(DEFAULT_SETTINGS);
+  return { ...DEFAULT_SETTINGS, ...stored };
+}
+
+async function playShutter() {
+  const settings = await getSettings();
+  if (!settings.soundEnabled) {
+    return;
+  }
+  const src = settings.customSound || "shutter.mp3";
+  const audioElement = new Audio(src);
+  audioElement.play().catch((e) => console.error(e));
+}
 
 // tabId => dataURI
 
@@ -106,7 +123,7 @@ restricted;
         }, 750);
       }
       // success feedback
-      audioElement.play();
+      playShutter();
     } catch (e) {
       console.error(e);
       show_error(e.toString());
@@ -142,5 +159,11 @@ browser.runtime.onMessage.addListener((data, sender) => {
 browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
   if (tempData.has(tabId)) {
     tempData.delete(tabId);
+  }
+});
+
+browser.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    browser.runtime.openOptionsPage();
   }
 });

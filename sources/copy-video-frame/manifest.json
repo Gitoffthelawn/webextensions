@@ -17,7 +17,11 @@
   },
   "manifest_version": 2,
   "name": "Copy Video Frame",
-  "permissions": ["menus", "activeTab"],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "permissions": ["menus", "activeTab", "storage"],
   "optional_permissions": ["clipboardWrite"],
   "version": "1.1.13"
 }
