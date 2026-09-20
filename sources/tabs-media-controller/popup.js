@@ -131,6 +131,55 @@ const ICON_BUILDERS = {
     s.appendChild(svgEl("path", { d: "M9 6l6 6-6 6" }));
     return s;
   },
+  grid: () => {
+    const s = svgEl("svg", { viewBox: "0 0 24 24" });
+    [
+      [4, 4],
+      [13, 4],
+      [4, 13],
+      [13, 13],
+    ].forEach(([x, y]) => {
+      s.appendChild(
+        svgEl("rect", {
+          x,
+          y,
+          width: 7,
+          height: 7,
+          rx: 1.5,
+          fill: "currentColor",
+        }),
+      );
+    });
+    return s;
+  },
+  expand: () => {
+    const s = svgEl("svg", {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 2,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    });
+    s.appendChild(
+      svgEl("path", { d: "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" }),
+    );
+    return s;
+  },
+  collapse: () => {
+    const s = svgEl("svg", {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 2,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    });
+    s.appendChild(
+      svgEl("path", { d: "M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" }),
+    );
+    return s;
+  },
 };
 
 // replaces a button's content with an icon (+ optional text label), using
@@ -154,12 +203,40 @@ function formatTime(sec) {
   return m + ":" + String(s).padStart(2, "0");
 }
 
+// live streams report a duration with no real end: the spec says Infinity,
+// but plenty of real players hand back NaN or a huge placeholder number
+// instead — any of which renders as a nonsense "very large" end time if fed
+// straight into formatTime. Treat anything past a few days as "no real end"
+// rather than a genuine duration.
+const LIVE_DURATION_THRESHOLD = 60 * 60 * 24 * 3; // 3 days, in seconds
+
+function isLiveDuration(duration) {
+  return !isFinite(duration) || duration > LIVE_DURATION_THRESHOLD;
+}
+
+// the "elapsed / total" label used everywhere a time display shows up —
+// collapses to a plain "LIVE" indicator instead of a bogus end time
+function formatTimeLabel(value, duration) {
+  if (isLiveDuration(duration)) {
+    return "LIVE";
+  }
+  return formatTime(value) + " / " + formatTime(duration);
+}
+
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   return typeof tmp[id] === type ? tmp[id] : fallback;
 }
 
 const tablist = document.getElementById("tabs");
+
+// every control message needs to reach the exact frame the media element
+// lives in — a bare tabs.sendMessage only reliably reaches the top frame,
+// so anything living in an iframe would otherwise be uncontrollable
+function sendToFrame(tabId, frameId, msg) {
+  const opts = typeof frameId === "number" ? { frameId } : undefined;
+  return browser.tabs.sendMessage(tabId, msg, opts);
+}
 
 function addDataListToRange(numberArray, rangeEl, attachEl) {
   const datalistid =
@@ -194,6 +271,19 @@ detailBackBtn.classList.add("detailBackBtn");
 setButtonIcon(detailBackBtn, "back", "Back");
 detailHeader.appendChild(detailBackBtn);
 
+// always available — a quick way back to the top-level list. Shown next to
+// "Back" when the site has multiple media elements (so both this site's
+// overview and the full list are one tap away), or alone when it doesn't
+// (that site never had an overview page to go "back" to in the first place)
+const detailAllSitesBtn = document.createElement("button");
+detailAllSitesBtn.classList.add("detailBackBtn", "detailAllSitesBtn");
+setButtonIcon(detailAllSitesBtn, "grid", "All sites");
+detailAllSitesBtn.onclick = () => {
+  selectedOrigin = null;
+  renderView();
+};
+detailHeader.appendChild(detailAllSitesBtn);
+
 const detailTitle = document.createElement("span");
 detailTitle.classList.add("detailTitle");
 detailHeader.appendChild(detailTitle);
@@ -220,6 +310,29 @@ function openDetail(record) {
   detailNextBtn.disabled = mediaRegistry.length < 2;
   detailView.hidden = false;
   tablist.hidden = true;
+
+  // a site with only one media element never gets an intermediate overview
+  // page (see renderSiteList), so there's nothing for "Back" to go back to
+  // — hide it and leave only the always-available All-sites button
+  const siteEntries = lastSiteGroups.get(record.origin) || [];
+  const siteMediaCount = siteEntries.reduce(
+    (sum, entry) => sum + entry.res.length,
+    0,
+  );
+  detailBackBtn.hidden = siteMediaCount <= 1;
+
+  // remember this element so the next time the popup opens, if it's still
+  // around, we can jump straight back into its detail view instead of the
+  // site list
+  browser.storage.local
+    .set({
+      lastOpenedMedia: {
+        tabId: record.tabId,
+        frameId: record.frameId,
+        eid: record.eid,
+      },
+    })
+    .catch(() => {});
 }
 
 function closeDetail() {
@@ -242,6 +355,22 @@ detailNextBtn.onclick = () => {
 // without caring whether the row is collapsed or its detail view is open
 let mediaRegistry = [];
 
+// results of the last full queryTabs() pass, kept around so switching
+// between the site list and a site's media doesn't require re-querying
+// every tab again
+let lastSiteOrder = [];
+let lastSiteGroups = new Map();
+
+// origin of the site the user picked from the top-level list, or null while
+// the list itself is showing. Media elements are only ever rendered (and
+// only ever polled, via mediaRegistry) for this one site at a time.
+let selectedOrigin = null;
+
+// tried at most once per popup session: on the very first queryTabs() pass,
+// look up whichever element's detail view was last opened and, if it's
+// still around, jump straight back into it instead of showing the site list
+let autoReopenChecked = false;
+
 // wires up a set of mute buttons (list row + detail view) that all reflect
 // and control the same underlying media element
 // disables a set of buttons and gives them a pulsing "in progress" look while
@@ -253,14 +382,97 @@ function setPending(buttons, pending) {
   });
 }
 
-function wireMuteButtons(record, tab, eid, buttons) {
-  const paint = () =>
-    buttons.forEach((b) =>
-      setButtonIcon(b, record.muteCmd === "mute" ? "mute" : "volume"),
+// applies a play/pause/mute/volume state update to a record's UI, whether
+// it came from a poll round-trip or a live push notification from the page
+function applyPlaybackState(rec, data, requestedAt) {
+  if (typeof data.hasAudio === "boolean" && data.hasAudio !== rec.hasAudio) {
+    rec.hasAudio = data.hasAudio;
+    if (rec.paintMute) {
+      rec.paintMute();
+    }
+    if (rec.paintVolume) {
+      rec.paintVolume();
+    }
+  }
+
+  if (openRecord === rec) {
+    if (data.poster) {
+      rec.previewImg.src = data.poster;
+    }
+    // don't yank a slider out from under the user while they're dragging it
+    if (
+      typeof data.volume === "number" &&
+      document.activeElement !== rec.volBtn
+    ) {
+      rec.volBtn.value = data.volume * 100;
+      rec.volLabel.textContent = Math.round(data.volume * 100) + "%";
+    }
+  }
+
+  // don't clobber a just-clicked button with an update that predates the click
+  if (rec.lastInteraction >= requestedAt) {
+    return;
+  }
+  if (typeof data.muted === "boolean") {
+    rec.muteCmd = data.muted ? "unmute" : "mute";
+  }
+  if (typeof data.playing === "boolean") {
+    rec.playCmd = data.playing ? "pause" : "play";
+  }
+  rec.row
+    .querySelectorAll(".elementMuteBtn")
+    .forEach((b) =>
+      setButtonIcon(b, rec.muteCmd === "mute" ? "mute" : "volume"),
     );
+  rec.row
+    .querySelectorAll(".elementPlayPauseBtn")
+    .forEach((b) => setButtonIcon(b, rec.playCmd));
+  if (rec.detailNode) {
+    rec.detailNode
+      .querySelectorAll(".elementMuteBtn")
+      .forEach((b) =>
+        setButtonIcon(b, rec.muteCmd === "mute" ? "mute" : "volume"),
+      );
+    rec.detailNode
+      .querySelectorAll(".elementPlayPauseBtn")
+      .forEach((b) => setButtonIcon(b, rec.playCmd));
+  }
+  // buttons wired in from outside the compact row/detail view (the
+  // site-list row's mute/pause buttons, for a site with a single media
+  // element) aren't reachable by the querySelectorAll calls above since
+  // they don't live inside rec.row or rec.detailNode
+  (rec.extraMuteButtons || []).forEach((b) =>
+    setButtonIcon(b, rec.muteCmd === "mute" ? "mute" : "volume"),
+  );
+  (rec.extraPlayButtons || []).forEach((b) => setButtonIcon(b, rec.playCmd));
+}
+
+// content.js pushes state changes (play/pause/mute/rate) the instant they
+// happen on the page, so the popup doesn't have to wait for the next poll
+// tick to reflect someone using the site's own controls
+browser.runtime.onMessage.addListener((msg) => {
+  if (!msg || msg.cmd !== "mediaStateChanged") {
+    return;
+  }
+  const rec = mediaRegistry.find((r) => r.eid === msg.id);
+  if (!rec) {
+    return;
+  }
+  applyPlaybackState(rec, msg, Date.now());
+});
+
+function wireMuteButtons(record, tab, eid, buttons, frameId) {
+  const paint = () => {
+    const disabled = record.hasAudio === false;
+    buttons.forEach((b) => {
+      setButtonIcon(b, record.muteCmd === "mute" ? "mute" : "volume");
+      b.disabled = disabled;
+      b.title = disabled ? "no audio track detected" : "mute / unmute element";
+    });
+  };
   paint();
+  record.paintMute = paint;
   buttons.forEach((b) => {
-    b.setAttribute("title", "mute / unmute element");
     b.onclick = async (evt) => {
       evt.stopPropagation();
       const cmdToSend = record.muteCmd;
@@ -272,7 +484,7 @@ function wireMuteButtons(record, tab, eid, buttons) {
       paint();
       record.lastInteraction = Date.now();
       try {
-        await browser.tabs.sendMessage(tab.id, { cmd: cmdToSend, ids: [eid] });
+        await sendToFrame(tab.id, frameId, { cmd: cmdToSend, ids: [eid] });
       } catch (e) {
         // the next poll will reconcile the icon if this didn't actually land
       } finally {
@@ -282,7 +494,7 @@ function wireMuteButtons(record, tab, eid, buttons) {
   });
 }
 
-function wirePlayPauseButtons(record, tab, eid, buttons) {
+function wirePlayPauseButtons(record, tab, eid, buttons, frameId) {
   const paint = () => buttons.forEach((b) => setButtonIcon(b, record.playCmd));
   paint();
   buttons.forEach((b) => {
@@ -295,7 +507,7 @@ function wirePlayPauseButtons(record, tab, eid, buttons) {
       paint();
       record.lastInteraction = Date.now();
       try {
-        await browser.tabs.sendMessage(tab.id, { cmd: cmdToSend, ids: [eid] });
+        await sendToFrame(tab.id, frameId, { cmd: cmdToSend, ids: [eid] });
       } catch (e) {
         // the next poll will reconcile the icon if this didn't actually land
       } finally {
@@ -305,7 +517,7 @@ function wirePlayPauseButtons(record, tab, eid, buttons) {
   });
 }
 
-function wireFocusButtons(tab, eid, buttons) {
+function wireFocusButtons(tab, eid, buttons, frameId) {
   buttons.forEach((b) => {
     setButtonIcon(b, "focus");
     b.setAttribute("title", "scroll element into view");
@@ -318,7 +530,7 @@ function wireFocusButtons(tab, eid, buttons) {
           windowId: tab.windowId,
           tabs: [tab.index],
         });
-        await browser.tabs.sendMessage(tab.id, { cmd: "focus", id: eid });
+        await sendToFrame(tab.id, frameId, { cmd: "focus", id: eid });
       } catch (e) {
         // ignore — nothing to reconcile for a one-shot action
       } finally {
@@ -339,11 +551,12 @@ function wireTimeControls(
   passiveLabels,
   initialCurrentTime,
   initialDuration,
+  frameId,
 ) {
   record.knownDuration = initialDuration;
 
   function applyDurationAndValue(input, label, value, duration) {
-    if (isFinite(duration) && duration > 0) {
+    if (!isLiveDuration(duration) && duration > 0) {
       const durInt = Math.floor(duration);
       if (Number(input.max) !== durInt) {
         input.max = durInt;
@@ -355,7 +568,7 @@ function wireTimeControls(
     if (document.activeElement !== input) {
       input.value = value;
     }
-    label.textContent = formatTime(value) + " / " + formatTime(duration);
+    label.textContent = formatTimeLabel(value, duration);
   }
 
   function syncAll(value, duration, skipInput) {
@@ -364,13 +577,13 @@ function wireTimeControls(
       if (input === skipInput) {
         // the slider the user is actively dragging keeps its own live value;
         // just keep its label current
-        label.textContent = formatTime(value) + " / " + formatTime(duration);
+        label.textContent = formatTimeLabel(value, duration);
         return;
       }
       applyDurationAndValue(input, label, value, duration);
     });
     passiveLabels.forEach((label) => {
-      label.textContent = formatTime(value) + " / " + formatTime(duration);
+      label.textContent = formatTimeLabel(value, duration);
     });
   }
 
@@ -378,7 +591,7 @@ function wireTimeControls(
     applyDurationAndValue(input, label, initialCurrentTime, initialDuration);
     input.addEventListener("input", (evt) => {
       const t = parseInt(evt.target.value, 10);
-      browser.tabs.sendMessage(tab.id, {
+      sendToFrame(tab.id, frameId, {
         cmd: "currentTime",
         id: eid,
         currentTime: t,
@@ -387,8 +600,7 @@ function wireTimeControls(
     });
   });
   passiveLabels.forEach((label) => {
-    label.textContent =
-      formatTime(initialCurrentTime) + " / " + formatTime(initialDuration);
+    label.textContent = formatTimeLabel(initialCurrentTime, initialDuration);
   });
 
   record.syncTime = syncAll;
@@ -396,11 +608,14 @@ function wireTimeControls(
 
 // builds one media element: a compact always-visible row plus a detached
 // "detail" panel that gets moved into the full-popup overlay when opened
-function buildMediaElement(tab, url, e) {
+function buildMediaElement(tab, url, e, frameId) {
   const record = {
     tabId: tab.id,
+    frameId: frameId,
     eid: e.id,
+    origin: url.origin,
     type: e.type,
+    hasAudio: e.hasAudio !== false,
     muteCmd: e.muted ? "unmute" : "mute",
     playCmd: e.playing ? "pause" : "play",
     lastInteraction: 0,
@@ -467,18 +682,46 @@ function buildMediaElement(tab, url, e) {
   previewImg.classList.add("previewImg");
   previewBox.appendChild(previewImg);
   previewBox.onclick = async () => {
-    await browser.tabs.sendMessage(tab.id, { cmd: "pip", ids: [e.id] });
+    await sendToFrame(tab.id, frameId, { cmd: "pip", ids: [e.id] });
   };
   // size the box itself to the media's real aspect ratio (from the loaded
   // thumbnail's natural dimensions) instead of always being a fixed shape —
   // object-fit alone only letterboxes inside whatever shape the box already is
   previewImg.addEventListener("load", () => {
-    if (previewImg.naturalWidth && previewImg.naturalHeight) {
+    if (
+      previewImg.naturalWidth &&
+      previewImg.naturalHeight &&
+      !detailWrap.classList.contains("previewFullscreen")
+    ) {
       previewBox.style.aspectRatio =
         previewImg.naturalWidth + " / " + previewImg.naturalHeight;
     }
   });
   record.previewImg = previewImg;
+
+  // lets the preview take over the detail view, hiding the action row and
+  // sliders below it — handy for actually looking at the picture rather
+  // than just using it as a picture-in-picture launcher
+  let fullscreenBtn = document.createElement("button");
+  fullscreenBtn.classList.add("previewFullscreenBtn");
+  setButtonIcon(fullscreenBtn, "expand");
+  fullscreenBtn.setAttribute("title", "fullscreen preview");
+  fullscreenBtn.onclick = (evt) => {
+    evt.stopPropagation(); // don't also trigger the picture-in-picture click
+    const isFull = detailWrap.classList.toggle("previewFullscreen");
+    if (isFull) {
+      previewBox.dataset.prevAspectRatio = previewBox.style.aspectRatio || "";
+      previewBox.style.aspectRatio = "";
+    } else {
+      previewBox.style.aspectRatio = previewBox.dataset.prevAspectRatio || "";
+    }
+    setButtonIcon(fullscreenBtn, isFull ? "collapse" : "expand");
+    fullscreenBtn.setAttribute(
+      "title",
+      isFull ? "exit fullscreen preview" : "fullscreen preview",
+    );
+  };
+  previewBox.appendChild(fullscreenBtn);
 
   let detailActionRow = document.createElement("div");
   detailActionRow.classList.add("elementActionRow", "detailActionRow");
@@ -496,9 +739,9 @@ function buildMediaElement(tab, url, e) {
   dPlay.classList.add("elementPlayPauseBtn");
   detailActionRow.appendChild(dPlay);
 
-  wireFocusButtons(tab, e.id, [focusbtn, dFocus]);
-  wireMuteButtons(record, tab, e.id, [mutebtn, dMute]);
-  wirePlayPauseButtons(record, tab, e.id, [playpausebtn, dPlay]);
+  wireFocusButtons(tab, e.id, [focusbtn, dFocus], frameId);
+  wireMuteButtons(record, tab, e.id, [mutebtn, dMute], frameId);
+  wirePlayPauseButtons(record, tab, e.id, [playpausebtn, dPlay], frameId);
 
   let controls = document.createElement("div");
   controls.classList.add("elementControlsDiv", "detailControlsDiv");
@@ -531,7 +774,7 @@ function buildMediaElement(tab, url, e) {
 
   playbackRatebtn.addEventListener("input", (evt) => {
     const rate = evt.target.value / 100;
-    browser.tabs.sendMessage(tab.id, {
+    sendToFrame(tab.id, frameId, {
       cmd: "playbackRate",
       id: e.id,
       playbackRate: rate,
@@ -551,10 +794,18 @@ function buildMediaElement(tab, url, e) {
   volumebtn.setAttribute("step", "1");
   volumebtn.setAttribute("value", e.volume * 100);
   volumebtn.classList.add("elementVolumeBtn");
-  volumebtn.setAttribute("title", "volume");
   addDataListToRange([0, 25, 50, 75, 100], volumebtn, volRow);
   volRow.appendChild(volumebtn);
   record.volBtn = volumebtn;
+  // a slider that changes the volume of a track that isn't there is just
+  // as pointless as a mute button for the same element
+  const paintVolume = () => {
+    const disabled = record.hasAudio === false;
+    volumebtn.disabled = disabled;
+    volumebtn.title = disabled ? "no audio track detected" : "volume";
+  };
+  paintVolume();
+  record.paintVolume = paintVolume;
 
   let volLabel = document.createElement("span");
   volLabel.classList.add("sliderLabel");
@@ -564,7 +815,7 @@ function buildMediaElement(tab, url, e) {
 
   volumebtn.addEventListener("input", (evt) => {
     const vol = evt.target.value / 100;
-    browser.tabs.sendMessage(tab.id, { cmd: "volume", id: e.id, volume: vol });
+    sendToFrame(tab.id, frameId, { cmd: "volume", id: e.id, volume: vol });
     volLabel.textContent = Math.round(vol * 100) + "%";
   });
 
@@ -580,13 +831,15 @@ function buildMediaElement(tab, url, e) {
   currentTimebtn.classList.add("elementTimeBtn");
   currentTimebtn.setAttribute("title", "playback position");
   addDataListToRange(
-    [
-      0,
-      parseInt(e.duration) / 4,
-      parseInt(e.duration) / 2,
-      (parseInt(e.duration) / 4) * 3,
-      parseInt(e.duration),
-    ],
+    isLiveDuration(e.duration)
+      ? []
+      : [
+          0,
+          parseInt(e.duration) / 4,
+          parseInt(e.duration) / 2,
+          (parseInt(e.duration) / 4) * 3,
+          parseInt(e.duration),
+        ],
     currentTimebtn,
     timeRow,
   );
@@ -606,18 +859,17 @@ function buildMediaElement(tab, url, e) {
     [quickTimeLabel],
     e.currentTime,
     e.duration,
+    frameId,
   );
 
   record.detailNode = detailWrap;
   record.row = elementRow;
+  elementRow._record = record;
   mediaRegistry.push(record);
   return elementRow;
 }
 
 async function queryTabs() {
-  mediaRegistry = [];
-  closeDetail();
-
   const tabs = await browser.tabs.query({
     url: ["<all_urls>"],
     discarded: false,
@@ -636,46 +888,92 @@ async function queryTabs() {
   });
 
   // first pass: find out which tabs actually have media, keeping the
-  // audible-first order established above
+  // audible-first order established above. Each tab may have media in more
+  // than one frame (a same- or cross-origin <iframe> embed), so every frame
+  // is queried individually — a bare tabs.sendMessage only ever reaches one
+  // frame's response, silently dropping the rest.
   let tabEntries = [];
   for (const tab of tabs) {
+    let frames;
     try {
-      const res = await browser.tabs.sendMessage(tab.id, { cmd: "queryAll" });
-      if (res && res.length > 0) {
-        res.sort((a, b) => {
-          if (a.playing && !b.playing) {
-            return -1;
-          }
-          if (b.playing && !a.playing) {
-            return 1;
-          }
-          if (a.playing && b.playing) {
-            if (!a.muted && b.muted) {
+      frames = await browser.webNavigation.getAllFrames({ tabId: tab.id });
+    } catch (e) {
+      frames = null;
+    }
+    if (!frames || frames.length === 0) {
+      frames = [{ frameId: 0, url: tab.url }];
+    }
+
+    for (const frame of frames) {
+      let frameUrl;
+      try {
+        frameUrl = new URL(frame.url);
+      } catch (e) {
+        continue; // about:blank, data:, etc. — not usable as a grouping key
+      }
+      if (frameUrl.protocol !== "http:" && frameUrl.protocol !== "https:") {
+        continue;
+      }
+
+      try {
+        const res = await sendToFrame(tab.id, frame.frameId, {
+          cmd: "queryAll",
+        });
+        if (res && res.length > 0) {
+          res.sort((a, b) => {
+            if (a.playing && !b.playing) {
               return -1;
             }
-            if (a.muted && !b.muted) {
+            if (b.playing && !a.playing) {
               return 1;
             }
-          }
-          return 0;
-        });
-        tabEntries.push({ tab, res, url: new URL(tab.url) });
+            if (a.playing && b.playing) {
+              if (!a.muted && b.muted) {
+                return -1;
+              }
+              if (a.muted && !b.muted) {
+                return 1;
+              }
+            }
+            return 0;
+          });
+          tabEntries.push({
+            tab,
+            frameId: frame.frameId,
+            res,
+            url: frameUrl,
+          });
+        }
+      } catch (e) {
+        // no content script reachable in this frame (blocked, sandboxed,
+        // or torn down mid-query) — skip just this frame, not the whole tab
       }
-    } catch (e) {
-      console.error("tab ", tab.index, e);
     }
   }
 
-  if (tabEntries.length === 0) {
-    let empty = document.createElement("div");
-    empty.classList.add("emptyState");
-    empty.textContent = "No media playing right now";
-    tablist.replaceChildren(empty);
-    tablist.focus();
-    return;
+  // once per popup session: see if the element last viewed in detail is
+  // still present, and if so pre-select its site so it opens straight up
+  let autoReopenTarget = null;
+  if (!autoReopenChecked) {
+    autoReopenChecked = true;
+    try {
+      const stored = await browser.storage.local.get("lastOpenedMedia");
+      const last = stored.lastOpenedMedia;
+      if (last) {
+        for (const entry of tabEntries) {
+          if (entry.tab.id === last.tabId && entry.frameId === last.frameId) {
+            if (entry.res.some((r) => r.id === last.eid)) {
+              autoReopenTarget = last;
+              selectedOrigin = entry.url.origin;
+            }
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      // storage errors just mean we fall back to the normal site list
+    }
   }
-
-  tablist.textContent = "";
 
   // group tabs by origin, preserving the audible-first order they were found in
   let siteOrder = [];
@@ -689,15 +987,77 @@ async function queryTabs() {
     siteGroups.get(origin).push(entry);
   }
 
-  for (const origin of siteOrder) {
-    const entries = siteGroups.get(origin);
+  lastSiteOrder = siteOrder;
+  lastSiteGroups = siteGroups;
+
+  // if the site the user had drilled into no longer has any media (tab
+  // closed, page navigated away, playback ended and was cleaned up), fall
+  // back to the site list instead of showing a stale/empty detail view
+  if (selectedOrigin && !siteGroups.has(selectedOrigin)) {
+    selectedOrigin = null;
+  }
+
+  renderView();
+
+  if (autoReopenTarget) {
+    const target = mediaRegistry.find(
+      (r) =>
+        r.tabId === autoReopenTarget.tabId &&
+        r.frameId === autoReopenTarget.frameId &&
+        r.eid === autoReopenTarget.eid,
+    );
+    if (target) {
+      openDetail(target);
+    }
+  }
+}
+
+// redraws #tabs from the last queryTabs() results: either the top-level
+// list of sites, or (once one is picked) that site's media elements
+function renderView() {
+  mediaRegistry = [];
+  closeDetail();
+  tablist.textContent = "";
+
+  if (lastSiteOrder.length === 0) {
+    let empty = document.createElement("div");
+    empty.classList.add("emptyState");
+    empty.textContent = "No media playing right now";
+    tablist.appendChild(empty);
+    tablist.focus();
+    return;
+  }
+
+  if (selectedOrigin) {
+    renderSiteDetail(selectedOrigin);
+  } else {
+    renderSiteList();
+  }
+
+  tablist.focus();
+}
+
+// top-level view: one row per site that currently has media, so the user
+// picks a site before any of its media elements are built/shown
+function renderSiteList() {
+  for (const origin of lastSiteOrder) {
+    const entries = lastSiteGroups.get(origin);
     const firstUrl = entries[0].url;
+    const hostname = firstUrl.hostname.replace(/^www\./, "");
+    const mediaCount = entries.reduce(
+      (sum, entry) => sum + entry.res.length,
+      0,
+    );
+    const isAudible = entries.some((entry) =>
+      entry.res.some((m) => m.playing && !m.muted),
+    );
 
     let siteDiv = document.createElement("div");
-    siteDiv.classList.add("siteDiv");
+    siteDiv.classList.add("siteDiv", "siteListRow");
     tablist.appendChild(siteDiv);
 
-    // site header: favicon, then site-wide actions, then the hostname
+    // ---- top line: favicon, site-wide actions, hostname — always on its
+    // own line so it stays readable no matter how long a tab title below it is
     let headerRow = document.createElement("div");
     headerRow.classList.add("tabHeaderRow");
     siteDiv.appendChild(headerRow);
@@ -707,69 +1067,261 @@ async function queryTabs() {
       let favImg = document.createElement("img");
       favImg.classList.add("tabFavImg");
       favImg.src = favIconUrl;
+      favImg.setAttribute("title", hostname);
       headerRow.appendChild(favImg);
     }
 
+    // quick site-wide actions, right here in the list — no need to enter
+    // the site just to mute/pause everything it's playing
     let muteSiteBtn = document.createElement("button");
-    setButtonIcon(muteSiteBtn, "mute", "site");
+    setButtonIcon(muteSiteBtn, "mute");
     muteSiteBtn.classList.add("siteMuteBtn");
     muteSiteBtn.setAttribute("title", "mute media on every tab from this site");
-    headerRow.appendChild(muteSiteBtn);
-    muteSiteBtn.onclick = () => {
+    muteSiteBtn.onclick = (evt) => {
+      evt.stopPropagation();
       for (const entry of entries) {
-        browser.tabs.sendMessage(entry.tab.id, { cmd: "muteAll" });
+        sendToFrame(entry.tab.id, entry.frameId, { cmd: "muteAll" });
       }
     };
+    headerRow.appendChild(muteSiteBtn);
 
     let pauseSiteBtn = document.createElement("button");
-    setButtonIcon(pauseSiteBtn, "pause", "site");
+    setButtonIcon(pauseSiteBtn, "pause");
     pauseSiteBtn.classList.add("sitePauseBtn");
     pauseSiteBtn.setAttribute(
       "title",
       "pause media on every tab from this site",
     );
-    headerRow.appendChild(pauseSiteBtn);
-    pauseSiteBtn.onclick = () => {
+    pauseSiteBtn.onclick = (evt) => {
+      evt.stopPropagation();
       for (const entry of entries) {
-        browser.tabs.sendMessage(entry.tab.id, { cmd: "pauseAll" });
+        sendToFrame(entry.tab.id, entry.frameId, { cmd: "pauseAll" });
       }
     };
+    headerRow.appendChild(pauseSiteBtn);
 
     let hostSpan = document.createElement("span");
     hostSpan.classList.add("siteLabel");
-    hostSpan.textContent = firstUrl.hostname.replace(/^www\./, "");
+    hostSpan.textContent = hostname;
+    hostSpan.setAttribute("title", hostname);
     headerRow.appendChild(hostSpan);
 
-    // one sub-group per tab on this site
-    for (const entry of entries) {
-      const { tab, res, url } = entry;
+    // ---- second line: either this site's one media element (title +
+    // short info), or the item count for multiple — plus the entry chevron
+    let secondRow = document.createElement("div");
+    secondRow.classList.add("tabHeaderRow", "siteSecondRow");
+    siteDiv.appendChild(secondRow);
 
-      let tabGroup = document.createElement("div");
-      tabGroup.classList.add("tabGroup");
-      siteDiv.appendChild(tabGroup);
+    if (mediaCount === 1) {
+      // only one media element on the whole site — skip the intermediate
+      // per-tab list entirely: show its info right here and go straight
+      // to the full detail view on click
+      const onlyEntry = entries[0];
+      const onlyElement = onlyEntry.res[0];
+      const elementRow = buildMediaElement(
+        onlyEntry.tab,
+        onlyEntry.url,
+        onlyElement,
+        onlyEntry.frameId,
+      );
+      const record = elementRow._record;
 
-      let tabRow = document.createElement("div");
-      tabRow.classList.add("tabSubRow");
-      tabGroup.appendChild(tabRow);
+      // for a single element, mute/pause on the site row are just this
+      // element's own controls — wire them into the same toggle group as
+      // the compact row and detail view's buttons, rather than leaving
+      // them as blanket mute-all/pause-all commands
+      const muteButtons = Array.from(
+        record.row.querySelectorAll(".elementMuteBtn"),
+      ).concat(
+        Array.from(record.detailNode.querySelectorAll(".elementMuteBtn")),
+      );
+      muteButtons.push(muteSiteBtn);
+      wireMuteButtons(
+        record,
+        onlyEntry.tab,
+        record.eid,
+        muteButtons,
+        onlyEntry.frameId,
+      );
+      record.extraMuteButtons = [muteSiteBtn];
 
-      let tablink = document.createElement("button");
-      tablink.classList.add("tabFocusBtn", "tabSubFocusBtn");
-      tablink.setAttribute("title", "focus tab");
-      let tablinkLabel = document.createElement("span");
-      tablinkLabel.textContent = "#" + tab.index + " " + tab.title;
-      tablink.appendChild(tablinkLabel);
-      tablink.onclick = () => {
-        browser.tabs.highlight({ windowId: tab.windowId, tabs: [tab.index] });
-      };
-      tabRow.appendChild(tablink);
+      const playButtons = Array.from(
+        record.row.querySelectorAll(".elementPlayPauseBtn"),
+      ).concat(
+        Array.from(record.detailNode.querySelectorAll(".elementPlayPauseBtn")),
+      );
+      playButtons.push(pauseSiteBtn);
+      wirePlayPauseButtons(
+        record,
+        onlyEntry.tab,
+        record.eid,
+        playButtons,
+        onlyEntry.frameId,
+      );
+      record.extraPlayButtons = [pauseSiteBtn];
 
-      for (const e of res) {
-        tabGroup.appendChild(buildMediaElement(tab, url, e));
+      // one-shot "jump to this tab" action, right next to mute/pause —
+      // wired together with the compact row/detail view's own focus
+      // buttons so they all show the same pending state while it runs
+      let focusSiteBtn = document.createElement("button");
+      focusSiteBtn.classList.add("siteFocusBtn");
+      headerRow.insertBefore(focusSiteBtn, hostSpan);
+
+      const focusButtons = Array.from(
+        record.row.querySelectorAll(".elementFocusBtn"),
+      ).concat(
+        Array.from(record.detailNode.querySelectorAll(".elementFocusBtn")),
+      );
+      focusButtons.push(focusSiteBtn);
+      wireFocusButtons(
+        onlyEntry.tab,
+        record.eid,
+        focusButtons,
+        onlyEntry.frameId,
+      );
+
+      let titleWrap = document.createElement("span");
+      titleWrap.classList.add("siteTabTitleWrap");
+      secondRow.appendChild(titleWrap);
+
+      let titleText = document.createElement("span");
+      titleText.classList.add("siteTabTitleText");
+      titleText.textContent = onlyEntry.tab.title || "";
+      titleText.setAttribute("title", onlyEntry.tab.title || "");
+      titleWrap.appendChild(titleText);
+
+      // only scroll it if it's actually too long to fit — a short title
+      // just sits still like any other label (the title attribute above
+      // still lets it be read in full on hover either way)
+      const overflowPx = titleText.scrollWidth - titleWrap.clientWidth;
+      if (overflowPx > 4) {
+        titleText.style.setProperty("--marquee-shift", -overflowPx + "px");
+        titleText.classList.add("marqueeAnimate");
       }
+
+      let infoSpan = document.createElement("span");
+      infoSpan.classList.add("siteMediaCount", "siteMediaCountFixed");
+      infoSpan.textContent =
+        (onlyElement.type === "video" ? "video" : "audio") +
+        " · " +
+        formatTimeLabel(onlyElement.currentTime, onlyElement.duration);
+      secondRow.appendChild(infoSpan);
+
+      siteDiv.setAttribute("title", "open media controls");
+      siteDiv.onclick = () => openDetail(record);
+    } else {
+      let countSpan = document.createElement("span");
+      countSpan.classList.add("siteMediaCount");
+      countSpan.textContent =
+        mediaCount +
+        (mediaCount === 1 ? " item" : " items") +
+        (isAudible ? " · playing" : "");
+      secondRow.appendChild(countSpan);
+
+      siteDiv.setAttribute("title", "show media from this site");
+      siteDiv.onclick = () => {
+        selectedOrigin = origin;
+        renderView();
+      };
     }
+
+    let chevron = document.createElement("span");
+    chevron.classList.add("openChevron");
+    chevron.appendChild(ICON_BUILDERS.chevron());
+    secondRow.appendChild(chevron);
+  }
+}
+
+// detail view for one site: a "back to sites" row, then the same
+// site-wide mute/pause header and per-tab media groups as before
+function renderSiteDetail(origin) {
+  const entries = lastSiteGroups.get(origin);
+  const firstUrl = entries[0].url;
+
+  let backRow = document.createElement("div");
+  backRow.classList.add("siteBackRow");
+  tablist.appendChild(backRow);
+
+  let backBtn = document.createElement("button");
+  backBtn.classList.add("detailBackBtn");
+  setButtonIcon(backBtn, "back", "All sites");
+  backBtn.onclick = () => {
+    selectedOrigin = null;
+    renderView();
+  };
+  backRow.appendChild(backBtn);
+
+  let siteDiv = document.createElement("div");
+  siteDiv.classList.add("siteDiv");
+  tablist.appendChild(siteDiv);
+
+  // site header: favicon, then site-wide actions, then the hostname
+  let headerRow = document.createElement("div");
+  headerRow.classList.add("tabHeaderRow");
+  siteDiv.appendChild(headerRow);
+
+  const favIconUrl = entries[0].tab.favIconUrl || "";
+  if (favIconUrl) {
+    let favImg = document.createElement("img");
+    favImg.classList.add("tabFavImg");
+    favImg.src = favIconUrl;
+    headerRow.appendChild(favImg);
   }
 
-  tablist.focus();
+  let muteSiteBtn = document.createElement("button");
+  setButtonIcon(muteSiteBtn, "mute");
+  muteSiteBtn.classList.add("siteMuteBtn");
+  muteSiteBtn.setAttribute("title", "mute media on every tab from this site");
+  headerRow.appendChild(muteSiteBtn);
+  muteSiteBtn.onclick = () => {
+    for (const entry of entries) {
+      sendToFrame(entry.tab.id, entry.frameId, { cmd: "muteAll" });
+    }
+  };
+
+  let pauseSiteBtn = document.createElement("button");
+  setButtonIcon(pauseSiteBtn, "pause");
+  pauseSiteBtn.classList.add("sitePauseBtn");
+  pauseSiteBtn.setAttribute("title", "pause media on every tab from this site");
+  headerRow.appendChild(pauseSiteBtn);
+  pauseSiteBtn.onclick = () => {
+    for (const entry of entries) {
+      sendToFrame(entry.tab.id, entry.frameId, { cmd: "pauseAll" });
+    }
+  };
+
+  let hostSpan = document.createElement("span");
+  hostSpan.classList.add("siteLabel");
+  hostSpan.textContent = firstUrl.hostname.replace(/^www\./, "");
+  headerRow.appendChild(hostSpan);
+
+  // one sub-group per tab (or frame within a tab) on this site
+  for (const entry of entries) {
+    const { tab, frameId, res, url } = entry;
+
+    let tabGroup = document.createElement("div");
+    tabGroup.classList.add("tabGroup");
+    siteDiv.appendChild(tabGroup);
+
+    let tabRow = document.createElement("div");
+    tabRow.classList.add("tabSubRow");
+    tabGroup.appendChild(tabRow);
+
+    let tablink = document.createElement("button");
+    tablink.classList.add("tabFocusBtn", "tabSubFocusBtn");
+    tablink.setAttribute("title", "focus tab");
+    let tablinkLabel = document.createElement("span");
+    tablinkLabel.textContent = "#" + tab.index + " " + tab.title;
+    tablink.appendChild(tablinkLabel);
+    tablink.onclick = () => {
+      browser.tabs.highlight({ windowId: tab.windowId, tabs: [tab.index] });
+    };
+    tabRow.appendChild(tablink);
+
+    for (const e of res) {
+      tabGroup.appendChild(buildMediaElement(tab, url, e, frameId));
+    }
+  }
 }
 
 (async () => {
@@ -801,7 +1353,7 @@ async function queryTabs() {
         const requestedAt = Date.now();
         let newdata;
         try {
-          newdata = await browser.tabs.sendMessage(rec.tabId, {
+          newdata = await sendToFrame(rec.tabId, rec.frameId, {
             cmd: "query",
             id: rec.eid,
             // no point decoding a video frame for a row that isn't even open
@@ -811,6 +1363,8 @@ async function queryTabs() {
           continue;
         }
         if (!newdata) {
+          // element vanished from the page (SPA re-render, player torn
+          // down) — nothing to sync until the next full queryTabs pass
           continue;
         }
 
@@ -818,40 +1372,7 @@ async function queryTabs() {
         // needs to stay current whether or not the detail view is open
         rec.syncTime(newdata.currentTime, newdata.duration);
 
-        if (openRecord === rec) {
-          if (newdata.poster) {
-            rec.previewImg.src = newdata.poster;
-          }
-          // don't yank a slider out from under the user while they're dragging it
-          if (document.activeElement !== rec.volBtn) {
-            rec.volBtn.value = newdata.volume * 100;
-            rec.volLabel.textContent = Math.round(newdata.volume * 100) + "%";
-          }
-        }
-
-        // don't clobber a just-clicked button with a reply that predates the click
-        if (rec.lastInteraction < requestedAt) {
-          rec.muteCmd = newdata.muted ? "unmute" : "mute";
-          rec.playCmd = newdata.playing ? "pause" : "play";
-          rec.row
-            .querySelectorAll(".elementMuteBtn")
-            .forEach((b) =>
-              setButtonIcon(b, rec.muteCmd === "mute" ? "mute" : "volume"),
-            );
-          rec.row
-            .querySelectorAll(".elementPlayPauseBtn")
-            .forEach((b) => setButtonIcon(b, rec.playCmd));
-          if (rec.detailNode) {
-            rec.detailNode
-              .querySelectorAll(".elementMuteBtn")
-              .forEach((b) =>
-                setButtonIcon(b, rec.muteCmd === "mute" ? "mute" : "volume"),
-              );
-            rec.detailNode
-              .querySelectorAll(".elementPlayPauseBtn")
-              .forEach((b) => setButtonIcon(b, rec.playCmd));
-          }
-        }
+        applyPlaybackState(rec, newdata, requestedAt);
       }
     } finally {
       pollRunning = false;

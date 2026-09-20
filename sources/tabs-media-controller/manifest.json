@@ -28,7 +28,8 @@
   "content_scripts": [
     {
       "js": ["content.js"],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>"],
+      "all_frames": true
     }
   ],
   "icons": {
@@ -39,7 +40,7 @@
   "options_ui": {
     "page": "options.html"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "webNavigation"],
   "version": "1.5.25",
   "web_accessible_resources": ["attach.js"]
 }
