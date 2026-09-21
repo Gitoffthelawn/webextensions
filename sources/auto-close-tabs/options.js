@@ -196,7 +196,9 @@ function parseIgnoreRulesStorage(leftStr, rightStr) {
 
 function serializeCloseRules(rows) {
   return {
-    left: rows.map((r) => `${Math.round(r.value * r.unitMs)},${r.container}`).join("\n"),
+    left: rows
+      .map((r) => `${Math.round(r.value * r.unitMs)},${r.container}`)
+      .join("\n"),
     right: rows.map((r) => r.url).join("\n"),
   };
 }
@@ -679,7 +681,10 @@ function validateAll() {
       !isValidRegexOrEmpty(rule.container)
     ) {
       msg = "Container pattern is not a valid regular expression.";
-    } else if (kind === "close" && (!Number.isInteger(rule.value) || rule.value < 1)) {
+    } else if (
+      kind === "close" &&
+      (!Number.isInteger(rule.value) || rule.value < 1)
+    ) {
       msg = "Idle time must be a whole number of at least 1.";
     }
 
@@ -903,8 +908,7 @@ importFileEl.addEventListener("change", async () => {
   closeRules = data.closeRules
     .filter((r) => r && typeof r.url === "string")
     .map((r) => ({
-      value:
-        Number.isInteger(r.value) && r.value >= 1 ? r.value : 10,
+      value: Number.isInteger(r.value) && r.value >= 1 ? r.value : 10,
       unitMs: validUnit(r.unitMs) ? r.unitMs : 60000,
       container: typeof r.container === "string" ? r.container : "",
       url: r.url,
@@ -976,15 +980,13 @@ async function loadOpenTabSuggestions() {
   }
   openTabUrls = urls;
 
-  [...hostnames]
-    .sort()
-    .forEach((host) => {
-      const escaped = host.replace(/\./g, "\\.");
-      const opt = document.createElement("option");
-      opt.value = `^https?:\\/\\/(www\\.)?${escaped}\\/.*`;
-      opt.textContent = `open tab: ${host}`;
-      datalist.appendChild(opt);
-    });
+  [...hostnames].sort().forEach((host) => {
+    const escaped = host.replace(/\./g, "\\.");
+    const opt = document.createElement("option");
+    opt.value = `^https?:\\/\\/(www\\.)?${escaped}\\/.*`;
+    opt.textContent = `open tab: ${host}`;
+    datalist.appendChild(opt);
+  });
 
   refreshAllMatchHints();
 }

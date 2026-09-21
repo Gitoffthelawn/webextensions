@@ -30,6 +30,6 @@
   "options_ui": {
     "page": "options.html"
   },
-  "incognito": "not_allowed",
+  "incognito": "spanning",
   "version": "1.8.35"
 }
