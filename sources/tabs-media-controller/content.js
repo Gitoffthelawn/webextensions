@@ -136,6 +136,7 @@ function handleQuery(id, skipPoster) {
           ? getThumbnail(el)
           : ""
         : "audio.png",
+    type: isVideo ? "video" : "audio",
     duration: el.duration,
     currentTime: el.currentTime,
     playing: !el.paused,

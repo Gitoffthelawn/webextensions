@@ -180,6 +180,24 @@ const ICON_BUILDERS = {
     );
     return s;
   },
+  detach: () => {
+    const s = svgEl("svg", {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 2,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    });
+    s.appendChild(svgEl("path", { d: "M14 4h6v6" }));
+    s.appendChild(svgEl("path", { d: "M20 4l-9 9" }));
+    s.appendChild(
+      svgEl("path", {
+        d: "M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
+      }),
+    );
+    return s;
+  },
 };
 
 // replaces a button's content with an icon (+ optional text label), using
@@ -287,6 +305,35 @@ detailHeader.appendChild(detailAllSitesBtn);
 const detailTitle = document.createElement("span");
 detailTitle.classList.add("detailTitle");
 detailHeader.appendChild(detailTitle);
+
+// pops this element's controls out into their own standalone browser
+// window — that window has no notion of "all sites" or any of the site
+// list, it just controls this one element by tab/frame/id on its own,
+// so it works the same regardless of how many elements the site has
+const detailDetachBtn = document.createElement("button");
+detailDetachBtn.classList.add("detailBackBtn", "detailDetachBtn");
+setButtonIcon(detailDetachBtn, "detach");
+detailDetachBtn.setAttribute("title", "open in its own window");
+detailDetachBtn.onclick = async () => {
+  if (!openRecord) {
+    return;
+  }
+  const params = new URLSearchParams({
+    tabId: String(openRecord.tabId),
+    eid: openRecord.eid,
+  });
+  if (typeof openRecord.frameId === "number") {
+    params.set("frameId", String(openRecord.frameId));
+  }
+  await browser.windows.create({
+    url: browser.runtime.getURL("detached.html?" + params.toString()),
+    type: "popup",
+    width: 420,
+    height: 520,
+  });
+  window.close();
+};
+detailHeader.appendChild(detailDetachBtn);
 
 const detailNextBtn = document.createElement("button");
 detailNextBtn.classList.add("detailBackBtn", "detailNextBtn");
@@ -701,20 +748,61 @@ function buildMediaElement(tab, url, e, frameId) {
 
   // lets the preview take over the detail view, hiding the action row and
   // sliders below it — handy for actually looking at the picture rather
-  // than just using it as a picture-in-picture launcher
+  // than just using it as a picture-in-picture launcher. Driven with
+  // direct inline styles (rather than just a CSS class) so it can't be
+  // silently defeated by some other rule elsewhere in the stylesheet
   let fullscreenBtn = document.createElement("button");
   fullscreenBtn.classList.add("previewFullscreenBtn");
   setButtonIcon(fullscreenBtn, "expand");
   fullscreenBtn.setAttribute("title", "fullscreen preview");
   fullscreenBtn.onclick = (evt) => {
     evt.stopPropagation(); // don't also trigger the picture-in-picture click
-    const isFull = detailWrap.classList.toggle("previewFullscreen");
+    const isFull = !detailWrap.classList.contains("previewFullscreen");
+    detailWrap.classList.toggle("previewFullscreen", isFull);
+
     if (isFull) {
       previewBox.dataset.prevAspectRatio = previewBox.style.aspectRatio || "";
-      previewBox.style.aspectRatio = "";
+      previewBox.style.aspectRatio = "unset";
+      previewBox.style.width = "100%";
+      previewBox.style.maxHeight = "none";
+      // flex-grow to fill whatever space the (now hidden) action row and
+      // controls freed up, instead of guessing a fixed pixel height —
+      // min-height: 0 is needed because flex items default to
+      // min-height: auto, which otherwise refuses to shrink below content
+      // size and is exactly what was pushing the popup a few pixels past
+      // its scrollable area and triggering the scrollbar
+      previewBox.style.flex = "1 1 auto";
+      previewBox.style.minHeight = "0";
+      detailWrap.style.flex = "1 1 auto";
+      detailWrap.style.minHeight = "0";
+      // the captured thumbnail is a small fixed-resolution image (up to
+      // 300x200) and the img tag normally renders it at that native size
+      // (width/height: auto) — stretch it to fill the enlarged box instead,
+      // letting object-fit: contain scale it up without distorting it
+      previewImg.style.width = "100%";
+      previewImg.style.height = "100%";
+      previewImg.style.maxWidth = "100%";
+      previewImg.style.maxHeight = "100%";
+      detailWrap.style.gap = "0";
+      detailActionRow.style.display = "none";
+      controls.style.display = "none";
     } else {
       previewBox.style.aspectRatio = previewBox.dataset.prevAspectRatio || "";
+      previewBox.style.width = "";
+      previewBox.style.maxHeight = "";
+      previewBox.style.flex = "";
+      previewBox.style.minHeight = "";
+      detailWrap.style.flex = "";
+      detailWrap.style.minHeight = "";
+      previewImg.style.width = "";
+      previewImg.style.height = "";
+      previewImg.style.maxWidth = "";
+      previewImg.style.maxHeight = "";
+      detailWrap.style.gap = "";
+      detailActionRow.style.display = "";
+      controls.style.display = "";
     }
+
     setButtonIcon(fullscreenBtn, isFull ? "collapse" : "expand");
     fullscreenBtn.setAttribute(
       "title",

@@ -401,6 +401,10 @@ button svg {
   padding: 6px;
 }
 
+.detailDetachBtn {
+  padding: 6px;
+}
+
 .detailTitle {
   flex: 1 1 auto;
   min-width: 0;
