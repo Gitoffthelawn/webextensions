@@ -50,6 +50,28 @@ function onChange(evt) {
   el.addEventListener("input", onChange);
 });
 
+// The popup-mode radios share one storage key ("popupMode") rather than
+// each having their own, so they're handled separately from the generic
+// per-id loop above.
+browser.storage.local
+  .get("popupMode")
+  .then((obj) => {
+    const mode = obj.popupMode === "toolbar" ? "toolbar" : "window"; // default
+    document.querySelector(`input[name="popupMode"][value="${mode}"]`).checked =
+      true;
+  })
+  .catch(console.error);
+
+document.querySelectorAll('input[name="popupMode"]').forEach((el) => {
+  el.addEventListener("change", (evt) => {
+    if (evt.target.checked) {
+      browser.storage.local
+        .set({ popupMode: evt.target.value })
+        .catch(console.error);
+    }
+  });
+});
+
 document.getElementById("reset").addEventListener("click", async () => {
   if (
     !confirm(

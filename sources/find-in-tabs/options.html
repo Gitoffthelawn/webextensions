@@ -5,6 +5,13 @@
     body {
       background-color: silver;
     }
+    #popupModeGroup {
+      margin-bottom: 1em;
+    }
+    #popupModeGroup label {
+      display: block;
+      margin: 0.3em 0;
+    }
     #styles {
       width: 100%;
       height: 50em;
@@ -18,6 +25,28 @@
   </style>
 </head>
 <body>
+  <h3>How should the search open?</h3>
+  <div id="popupModeGroup">
+    <label>
+      <input
+        type="radio"
+        name="popupMode"
+        id="popupModeWindow"
+        value="window"
+      />
+      Standalone window (stays open after selecting a hit, can be moved/resized)
+    </label>
+    <label>
+      <input
+        type="radio"
+        name="popupMode"
+        id="popupModeToolbar"
+        value="toolbar"
+      />
+      Classic toolbar popup (closes as soon as you select a hit)
+    </label>
+  </div>
+
   <h3>Edit popup stylesheet information here</h3>
   <textarea
     autocomplete="off"

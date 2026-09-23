@@ -47,7 +47,7 @@ body {
   margin: 0;
   width: 480px;
   max-height: 600px;
-  overflow: hidden; /* the popup panel sizes to its content, up to
+  overflow: hidden; /* the toolbar panel sizes to its content, up to
                         max-height; #resultlist scrolls internally */
   display: flex;
   flex-direction: column;
@@ -58,13 +58,20 @@ body {
   line-height: 1.4;
 }
 
-/* When opened as its own tab (see popup.js), a real viewport exists, so
-   percentage/vh sizing is safe here — let it use the full window and
-   center the content into a comfortably readable column. */
-body.detached {
+/* Our own compact popup window and a normal browser tab (detach button /
+   "Open in Tab") are real, independently-sized windows rather than a
+   panel that auto-sizes to its content — let them fill whatever size
+   they actually are instead of the panel's fixed dimensions above. */
+body.full-window {
   width: 100%;
   max-height: none;
   height: 100vh;
+}
+
+/* When opened as a normal browser tab (detach button / "Open in Tab"),
+   center the content into a comfortably readable column instead of
+   stretching it edge-to-edge across a full browser window. */
+body.detached {
   align-items: center;
 }
 
@@ -153,7 +160,7 @@ body.detached #resultlist {
   filter: grayscale(1) opacity(0.6);
 }
 
-#detach {
+/*#detach {
   flex: none;
   width: 26px;
   height: 26px;
@@ -178,7 +185,7 @@ body.detached #resultlist {
   background: var(--surface-hover);
   color: var(--accent);
   outline: none;
-}
+}*/
 
 .options-row {
   display: flex;
@@ -354,4 +361,15 @@ body.detached #resultlist {
   color: var(--highlight-text);
   border-radius: 3px;
   padding: 0 2px;
+}
+
+/* Keyboard-navigation selection: either a whole entry (no hit lines) or
+   one specific hit line within .result ul. */
+a.nav-selected {
+  background: var(--surface-hover);
+}
+
+.result ul li.nav-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
 }

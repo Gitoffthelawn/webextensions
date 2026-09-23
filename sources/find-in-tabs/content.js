@@ -7,6 +7,7 @@ let lastCacheUpdateTime = null;
 // Highlight box shown briefly around the exact match that was jumped to.
 let jumpHighlightEl = null;
 let jumpHighlightTimer = null;
+let jumpHighlightVisibilityListener = null;
 
 browser.runtime.onMessage.addListener((request, sender) => {
   if (request.cmd === "scroll") {
@@ -250,6 +251,14 @@ function showJumpHighlight(rect) {
     jumpHighlightEl.remove();
     clearTimeout(jumpHighlightTimer);
   }
+  if (jumpHighlightVisibilityListener) {
+    document.removeEventListener(
+      "visibilitychange",
+      jumpHighlightVisibilityListener,
+    );
+    jumpHighlightVisibilityListener = null;
+  }
+
   const el = document.createElement("div");
   el.style.position = "absolute";
   el.style.top = `${rect.top - 3}px`;
@@ -264,13 +273,37 @@ function showJumpHighlight(rect) {
   el.style.transition = "opacity 0.4s ease";
   document.documentElement.appendChild(el);
   jumpHighlightEl = el;
-  jumpHighlightTimer = setTimeout(() => {
+
+  const fadeOut = () => {
     el.style.opacity = "0";
     setTimeout(() => el.remove(), 400);
     if (jumpHighlightEl === el) {
       jumpHighlightEl = null;
     }
-  }, 4600);
+  };
+
+  if (document.hidden) {
+    // Jumped to in the background (plain click keeps the popup open and
+    // doesn't switch to the tab): the fade timer only starts once the tab
+    // is actually switched to, otherwise the highlight is gone long
+    // before the user gets there.
+    jumpHighlightVisibilityListener = () => {
+      if (!document.hidden) {
+        document.removeEventListener(
+          "visibilitychange",
+          jumpHighlightVisibilityListener,
+        );
+        jumpHighlightVisibilityListener = null;
+        jumpHighlightTimer = setTimeout(fadeOut, 4600);
+      }
+    };
+    document.addEventListener(
+      "visibilitychange",
+      jumpHighlightVisibilityListener,
+    );
+  } else {
+    jumpHighlightTimer = setTimeout(fadeOut, 4600);
+  }
 }
 
 function getStartEndIdxs(regexStr, str, maxhits) {
