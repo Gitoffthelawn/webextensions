@@ -7,9 +7,22 @@
       }
     }
   },
+  "commands": {
+    "copy-video-frame": {
+      "suggested_key": {
+        "default": "Alt+Shift+V"
+      },
+      "description": "Capture the video under the mouse (or the first playing video)"
+    }
+  },
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/sources/copy-video-frame",
   "background": {
     "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_area": "navbar",
+    "default_icon": "icon.png",
+    "default_title": "Copy Video Frame — capture the first visible video"
   },
   "description": "Adds a context menu entry that allows to capture a still frame image from a html video element",
   "icons": {

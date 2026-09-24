@@ -120,13 +120,15 @@ resetSoundEl.addEventListener("click", () => {
   showStatus("Reset to default sound");
 });
 
-testSoundEl.addEventListener("click", () => {
+testSoundEl.addEventListener("click", async () => {
   const src = settings.customSound || "shutter.mp3";
   const audio = new Audio(src);
-  audio.play().catch((e) => {
+  try {
+    await audio.play();
+  } catch (e) {
     console.error(e);
     showStatus("Could not play sound", true);
-  });
+  }
 });
 
 document.addEventListener("DOMContentLoaded", loadSettings);

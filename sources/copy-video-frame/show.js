@@ -6,7 +6,8 @@ async function onDOMContentLoaded() {
   const error = params.get("error");
 
   if (typeof error === "string") {
-    document.body.innerText = error;
+    document.body.classList.add("has-error");
+    document.querySelector(".error-box").textContent = error;
     return;
   }
 

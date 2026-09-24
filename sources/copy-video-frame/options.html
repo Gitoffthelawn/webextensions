@@ -14,10 +14,11 @@
           -apple-system,
           "Segoe UI",
           sans-serif;
-        max-width: 460px;
+        max-width: 480px;
         margin: 1.5em auto;
         padding: 0 1em;
         color: #222;
+        line-height: 1.45;
       }
       header {
         display: flex;
@@ -110,6 +111,75 @@
       #status.error {
         color: #c0392b;
       }
+      kbd {
+        font: inherit;
+        font-weight: 600;
+        background: rgba(127, 127, 127, 0.25);
+        border-radius: 4px;
+        padding: 0.05em 0.4em;
+      }
+      details.how-to-use {
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        border-radius: 8px;
+        margin: 0 0 1.2em;
+        padding: 0.7em 1em;
+      }
+      details.how-to-use summary {
+        cursor: pointer;
+        font-weight: 600;
+        list-style: none;
+      }
+      details.how-to-use summary::-webkit-details-marker {
+        display: none;
+      }
+      details.how-to-use summary::before {
+        content: "▸ ";
+      }
+      details.how-to-use[open] summary::before {
+        content: "▾ ";
+      }
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8em;
+        margin: 0.9em 0;
+      }
+      .step {
+        display: flex;
+        gap: 0.7em;
+        align-items: flex-start;
+      }
+      .step .num {
+        flex-shrink: 0;
+        width: 1.5em;
+        height: 1.5em;
+        border-radius: 50%;
+        background: rgba(127, 127, 127, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.85em;
+      }
+      .step h2 {
+        font-size: 0.95em;
+        margin: 0 0 0.2em;
+      }
+      .step p {
+        margin: 0;
+        font-size: 0.88em;
+      }
+      .drm-note {
+        font-size: 0.88em;
+        background: rgba(127, 127, 127, 0.1);
+        border-radius: 6px;
+        padding: 0.7em 0.9em;
+        margin-top: 0.9em;
+      }
+      .drm-note strong {
+        display: block;
+        margin-bottom: 0.25em;
+      }
       @media (prefers-color-scheme: dark) {
         body {
           color: #eee;
@@ -125,6 +195,66 @@
       <img src="icon.png" alt="" />
       <h1>Copy Video Frame</h1>
     </header>
+
+    <details class="how-to-use" open>
+      <summary>How to use</summary>
+
+      <div class="steps">
+        <div class="step">
+          <span class="num">1</span>
+          <div>
+            <h2>Hold <kbd>Shift</kbd> and right-click a video</h2>
+            <p>
+              This bypasses the page's own player menu so Firefox's normal
+              context menu — and "Copy Video Frame" in it — shows up.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">2</span>
+          <div>
+            <h2>Click "Copy Video Frame"</h2>
+            <p>
+              The current frame is captured. If clipboard access has been
+              granted, it's copied straight to your clipboard.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">3</span>
+          <div>
+            <h2>No clipboard access yet?</h2>
+            <p>
+              The frame opens in a small popup window instead, where you can
+              right-click the image to copy or save it.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="drm-note">
+        <strong>Protected (DRM) videos</strong>
+        Some streaming sites block direct frame capture. For those, the addon
+        falls back to capturing the visible area of the tab instead — it'll
+        still work, just via a slightly different path.
+      </div>
+
+      <div class="drm-note">
+        <strong>Keyboard shortcut</strong>
+        Press <kbd>Alt+Shift+V</kbd> to capture whichever video the mouse is
+        over — no need to open the context menu. If nothing's hovered, it
+        captures the first playing video on the page instead. Change the key
+        combo any time in Firefox's <code>about:addons</code> → gear icon →
+        "Manage Extension Shortcuts".
+      </div>
+
+      <div class="drm-note">
+        <strong>Toolbar button</strong>
+        Click the extension's toolbar icon to capture the first video currently
+        visible in the tab — handy when you'd rather not hover the video or use
+        the keyboard shortcut.
+      </div>
+    </details>
 
     <fieldset>
       <legend>Shutter sound</legend>

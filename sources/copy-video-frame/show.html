@@ -1,17 +1,64 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="icon.png" />
-  <title></title>
-  <style>
-    body,
-    img {
-      margin: 0;
-      padding: 0;
-    }
-  </style>
-</head>
-<body>
-  <img src="" />
-  <script src="show.js"></script>
-</body>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <title>Copy Video Frame</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #111;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+      }
+      .error-box {
+        display: none;
+        max-width: 90%;
+        margin: 1em;
+        padding: 1em 1.2em;
+        border-radius: 8px;
+        background: rgba(192, 57, 43, 0.12);
+        border: 1px solid rgba(192, 57, 43, 0.4);
+        color: #e57368;
+        font-size: 0.95em;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      }
+      body.has-error {
+        background: #1a1a1a;
+      }
+      body.has-error .error-box {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="" alt="" />
+    <div class="error-box"></div>
+    <script src="show.js"></script>
+  </body>
+</html>
