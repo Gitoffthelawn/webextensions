@@ -6,20 +6,18 @@
       "Failed to process video element\nIf possible please report this issue on the support site.",
     );
   }
-  const tmp = vidEl.getBoundingClientRect();
-  let element = vidEl;
-  var top = 0,
-    left = 0;
-  do {
-    top += element.offsetTop + element.clientTop;
-    left += element.offsetLeft + element.clientLeft;
-    element = element.offsetParent;
-  } while (element);
-
+  // getBoundingClientRect() is viewport-relative (and scroll-aware),
+  // which is the coordinate space captureVisibleTab's `rect` crop needs
+  // — it crops out of whatever is currently visible on screen, not the
+  // full page. The previous version computed x/y via an offsetTop/
+  // offsetLeft walk up the page instead, which ignores scroll position
+  // entirely; on any page scrolled away from the very top, that shifted
+  // the crop away from the video's actual on-screen position.
+  const rect = vidEl.getBoundingClientRect();
   return {
-    x: left,
-    y: top,
-    width: tmp.width,
-    height: tmp.height,
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
   };
 })();

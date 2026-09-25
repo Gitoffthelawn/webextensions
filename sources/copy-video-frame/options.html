@@ -286,6 +286,27 @@
       <div id="status"></div>
     </fieldset>
 
+    <fieldset>
+      <legend>Capture method</legend>
+
+      <div class="switch-row">
+        <input type="checkbox" id="forceScreenshotCapture" />
+        <label for="forceScreenshotCapture"
+          >Always use screenshot capture</label
+        >
+      </div>
+
+      <p class="hint">
+        Normally, frames are read directly from the video, which is sharper but
+        skips anything drawn on top of it — subtitles, captions, or a custom
+        player's on-screen overlays. Turning this on always uses the same
+        screenshot-based method the addon already falls back to for
+        DRM-protected videos, which captures everything visible on screen —
+        subtitles included. The video needs to actually be on screen (not
+        scrolled out of view) for this to work.
+      </p>
+    </fieldset>
+
     <script src="options.js"></script>
   </body>
 </html>

@@ -3,6 +3,7 @@
 const DEFAULT_SETTINGS = {
   soundEnabled: true,
   customSound: null, // data URL string, or null to use the bundled default
+  captureMethod: "auto",
 };
 
 const MAX_SOUND_BYTES = 500 * 1024; // 500 KB
@@ -23,6 +24,9 @@ const chooseFileEl = document.getElementById("chooseFile");
 const soundFileEl = document.getElementById("soundFile");
 const resetSoundEl = document.getElementById("resetSound");
 const statusEl = document.getElementById("status");
+const forceScreenshotCaptureEl = document.getElementById(
+  "forceScreenshotCapture",
+);
 
 let settings = { ...DEFAULT_SETTINGS };
 let statusTimer = null;
@@ -43,6 +47,7 @@ function refreshUI() {
   currentSoundEl.textContent = hasCustom ? "custom" : "default";
   soundInfoEl.classList.toggle("custom", hasCustom);
   resetSoundEl.disabled = !hasCustom;
+  forceScreenshotCaptureEl.checked = settings.captureMethod === "screenshot";
 }
 
 async function loadSettings() {
@@ -79,6 +84,12 @@ function isAllowedType(file) {
 
 soundEnabledEl.addEventListener("change", () => {
   saveSettings({ soundEnabled: soundEnabledEl.checked });
+});
+
+forceScreenshotCaptureEl.addEventListener("change", () => {
+  saveSettings({
+    captureMethod: forceScreenshotCaptureEl.checked ? "screenshot" : "auto",
+  });
 });
 
 chooseFileEl.addEventListener("click", () => {

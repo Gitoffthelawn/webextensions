@@ -8,6 +8,16 @@ let tempData = new Map();
 const DEFAULT_SETTINGS = {
   soundEnabled: true,
   customSound: null, // data URL string, or null to use the bundled default
+  // "auto": draw straight from the video (fast, works even when the
+  // video is scrolled out of view) unless the video is DRM/restricted,
+  // in which case fall back to a screenshot anyway.
+  // "screenshot": always use the screenshot fallback, even for ordinary
+  // videos — slower and requires the video to be visible in the
+  // viewport, but captures whatever is actually on screen, including
+  // subtitle overlays and custom player UI that a direct canvas draw
+  // can't see (canvas.drawImage only reads the video's own decoded
+  // pixels, not other DOM/CSS layers on top of it).
+  captureMethod: "auto",
 };
 
 const MAX_POPUP_SCREEN_RATIO = 0.9;
@@ -136,8 +146,19 @@ ${flashCode("state.vidEl")}
 // (non-restricted) success path this also fires the capture flash
 // inline, since by then the canvas has already read the video's pixels
 // and the flash can't affect that — see finishRestrictedCapture() for
-// why the restricted path defers its flash instead.
-function makeCaptureCode(getVidElExpr, invocationId, noVideoMessage) {
+// why the restricted path defers its flash instead. When
+// `forceScreenshot` is true, the canvas-draw attempt is skipped
+// entirely and the capture always takes the restricted/screenshot path
+// — canvas.drawImage(video) only reads the video's own decoded pixels,
+// not any DOM/CSS layers rendered on top of it (subtitle overlays,
+// custom player controls, etc.), so a real screenshot is the only way
+// to capture those.
+function makeCaptureCode(
+  getVidElExpr,
+  invocationId,
+  noVideoMessage,
+  forceScreenshot,
+) {
   return `
 (() => {
   window.__cvf_state = window.__cvf_state || new Map();
@@ -160,7 +181,7 @@ function makeCaptureCode(getVidElExpr, invocationId, noVideoMessage) {
   // second executeScript call (restricted/fallback path only)
   window.__cvf_state.set(${JSON.stringify(invocationId)}, { vidEl, controlsStatus });
 
-  let restricted = vidEl.mediaKeys !== null;
+  let restricted = ${JSON.stringify(Boolean(forceScreenshot))} || vidEl.mediaKeys !== null;
   let dataURI = null;
 
   if (!restricted) {
@@ -200,6 +221,8 @@ async function captureFromTab(
   noVideoMessage = "No video found on this page.",
 ) {
   const invocationId = newInvocationId();
+  const settings = await getSettings();
+  const forceScreenshot = settings.captureMethod === "screenshot";
 
   // 1. identify the video element, hide its controls for a clean
   //    capture, and try to draw it straight to a canvas.
@@ -212,7 +235,12 @@ async function captureFromTab(
   const result = (
     await browser.tabs.executeScript(tab.id, {
       frameId,
-      code: makeCaptureCode(getVidElExpr, invocationId, noVideoMessage),
+      code: makeCaptureCode(
+        getVidElExpr,
+        invocationId,
+        noVideoMessage,
+        forceScreenshot,
+      ),
     })
   )[0];
 
