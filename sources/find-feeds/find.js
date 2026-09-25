@@ -5,92 +5,104 @@ function openFeedInTab(evt) {
   evt.preventDefault();
   browser.tabs.create({
     active: true,
-    url: evt.target.href,
+    url: evt.currentTarget.href,
   });
+}
+
+function copyFeedUrl(evt, url, btn) {
+  evt.stopPropagation();
+  evt.preventDefault();
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      const original = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => {
+        btn.textContent = original;
+      }, 1200);
+    })
+    .catch(() => {
+      // clipboard API unavailable/blocked; nothing more we can do here
+    });
 }
 
 function decodeQueryParam(p) {
   return decodeURIComponent(p.replace(/\+/g, " "));
 }
 
-async function init() {
+function addFeedRow(obj) {
   const tbl = document.getElementById("feedlist");
-  const msg = document.getElementById("msg");
 
-  // update progress
-  await browser.runtime.onMessage.addListener((data, sender) => {
+  const li = document.createElement("li");
+
+  const badge = document.createElement("span");
+  badge.className = "type-badge " + (obj.type === "json" ? "json" : "xml");
+  badge.textContent = obj.type;
+
+  const link = document.createElement("a");
+  link.className = "feed-link";
+  link.href = obj.url;
+  link.textContent = obj.url;
+  link.title = obj.url;
+  link.addEventListener("click", openFeedInTab, false);
+
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "copy-btn";
+  copyBtn.textContent = "Copy";
+  copyBtn.addEventListener(
+    "click",
+    (evt) => copyFeedUrl(evt, obj.url, copyBtn),
+    false,
+  );
+
+  li.appendChild(badge);
+  li.appendChild(link);
+  li.appendChild(copyBtn);
+  tbl.appendChild(li);
+}
+
+async function init() {
+  const msg = document.getElementById("msg");
+  const target = document.getElementById("target");
+  const progress = document.getElementById("urls2checkProgress");
+
+  browser.runtime.onMessage.addListener((data) => {
     if (data.nburls2check) {
-      document
-        .getElementById("urls2checkProgress")
-        .setAttribute("max", parseInt(data.nburls2check));
+      progress.setAttribute("max", parseInt(data.nburls2check));
     }
     if (data.urls2checkProgress) {
-      document
-        .getElementById("urls2checkProgress")
-        .setAttribute("value", data.urls2checkProgress);
+      progress.setAttribute("value", data.urls2checkProgress);
       if (data.feed !== false) {
-        const obj = data.feed;
-
-        const tr = tbl.insertRow();
-        const a1 = document.createElement("a");
-        //const abbr = document.createElement("abbr");
-        const abbrType = document.createElement("abbr");
-        //abbr.setAttribute("title", obj.url);
-        abbrType.setAttribute("title", obj.type);
-        abbrType.textContent = obj.type === "json" ? "{;}" : "</>";
-
-        a1.textContent = obj.url;
-        //a1.appendChild(abbr);
-        a1.title = obj.type;
-        a1.href = obj.url;
-        a1.addEventListener("click", openFeedInTab, false);
-
-        //var td1 = tr.insertCell();
-        //td1.textContent = idCounter;
-
-        //var td3 = tr.insertCell();
-        //td3.textContent = obj.type;
-        //td3.appendChild(abbrType);
-
-        var td2 = tr.insertCell();
-        td2.appendChild(a1);
-
-        //var td4 = tr.insertCell();
-        //td4.textContent = "🔍";
-        //td4.title = obj.url;
-        //td4.href = obj.url;
-        //td4.addEventListener("click", openFeedInTab, false);
-
-        //var td5 = tr.insertCell();
-        //td5.appendChild(cpybtn);
-
-        //idCounter++;
+        addFeedRow(data.feed);
       }
     }
   });
 
   const popupsearchparams = new URL(document.location.href).searchParams;
+  const pageUrl = decodeQueryParam(popupsearchparams.get("url"));
 
-  msg.textContent =
-    "Looking for feed-like URLs on " +
-    decodeQueryParam(popupsearchparams.get("url"));
+  msg.textContent = "Looking for feed-like URLs";
+  target.textContent = pageUrl;
+  document.title = pageUrl;
 
-  let objs_length = await browser.runtime.sendMessage({
+  const found = await browser.runtime.sendMessage({
     tabId: popupsearchparams.get("tabId"),
-    url: decodeQueryParam(popupsearchparams.get("url")),
+    url: pageUrl,
   });
-  //
-  document.title = decodeQueryParam(popupsearchparams.get("url"));
-  if (objs_length < 1) {
-    msg.textContent =
-      "No feed-like URLs found on " +
-      decodeQueryParam(popupsearchparams.get("url"));
+
+  progress.style.display = "none";
+
+  if (found < 1) {
+    msg.textContent = "No feed-like URLs found on";
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "Nothing matched the built-in or custom detectors.";
+    document.getElementById("feedlist").after(empty);
     return;
   }
   msg.textContent =
-    objs_length +
-    " feed-like URLs found on " +
-    decodeQueryParam(popupsearchparams.get("url"));
+    found + (found === 1 ? " feed-like URL found on" : " feed-like URLs found on");
 }
 
 init();

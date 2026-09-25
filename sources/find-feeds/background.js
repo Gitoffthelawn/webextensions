@@ -6,6 +6,7 @@ const xml_substring_matchers = ["rdf", "rss", "atom", "xml"];
 const json_substring_matchers = ["json"];
 
 const resource_cache = new Map();
+const RESOURCE_CACHE_MAX = 2000;
 
 async function checkResource(url) {
   let ret = false;
@@ -15,9 +16,8 @@ async function checkResource(url) {
       try {
         const res = await fetch(url, {
           method: "HEAD",
-          mode: "no-cors",
           signal: AbortSignal.timeout(5000),
-        }); // if we dont get a reply within 10 seconds ... lets just ignore/skip it for now
+        }); // if we dont get a reply within 5 seconds ... lets just ignore/skip it for now
         if (res.ok) {
           // 2xx
           //  The name is case-insensitive.
@@ -40,8 +40,7 @@ async function checkResource(url) {
           }
         }
       } catch (e) {
-        //console.warn(e);
-        // noop
+        console.debug("checkResource failed for", url, e);
       }
     }
   }
@@ -96,6 +95,9 @@ async function onMessage(indata, sender) {
       tmp = resource_cache.get(u);
     } else {
       tmp = await checkResource(u);
+      if (resource_cache.size >= RESOURCE_CACHE_MAX) {
+        resource_cache.delete(resource_cache.keys().next().value);
+      }
       resource_cache.set(u, tmp);
     }
     if (tmp !== false) {

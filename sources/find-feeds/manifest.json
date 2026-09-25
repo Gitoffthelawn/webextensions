@@ -1,5 +1,12 @@
 {
   "author": "igorlogius",
+  "browser_specific_settings": {
+    "gecko": {
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "icons": {
     "266": "icon.png"
   },

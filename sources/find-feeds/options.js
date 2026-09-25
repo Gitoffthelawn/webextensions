@@ -1,114 +1,97 @@
 /* global browser */
 
-function onChange(evt) {
-  let id = evt.target.id;
-  let el = document.getElementById(id);
+function deleteRule(card) {
+  card.remove();
+}
 
-  let value = el.type === "checkbox" ? el.checked : el.value;
-  let obj = {};
-
-  if (value === "") {
+function validateRegexInput(input) {
+  if (input.value.trim() === "") {
+    input.classList.remove("is-invalid");
     return;
   }
-  if (el.type === "number") {
-    try {
-      value = parseInt(value);
-      if (isNaN(value)) {
-        value = el.min;
-      }
-      if (value < el.min) {
-        value = el.min;
-      }
-    } catch (e) {
-      value = el.min;
-    }
+  try {
+    new RegExp(input.value);
+    input.classList.remove("is-invalid");
+    input.title = "";
+  } catch (e) {
+    input.classList.add("is-invalid");
+    input.title = "Invalid regex: " + e.message;
   }
-  obj[id] = value;
-  browser.storage.local.set(obj).catch(console.error);
 }
 
-function deleteRow(rowTr) {
-  var mainTableBody = document.getElementById("mainTableBody");
-  mainTableBody.removeChild(rowTr);
-}
+function createRuleCard(feed) {
+  const rulesContainer = document.getElementById("mainTableBody");
+  const isNew = feed.action === "save";
 
-function createTableRow(feed) {
-  var mainTableBody = document.getElementById("mainTableBody");
-  var tr = mainTableBody.insertRow();
-  tr.style = "vertical-align:top;";
+  const card = document.createElement("div");
+  card.className = "rule-card" + (isNew ? " is-new" : "");
 
-  Object.keys(feed)
-    .sort()
-    .forEach((key) => {
-      var input;
-      if (key === "activ") {
-        input = document.createElement("input");
-        input.className = key;
-        input.placeholder = key;
-        input.style.width = "99%";
-        input.type = "checkbox";
-        input.checked = typeof feed[key] === "boolean" ? feed[key] : true;
-        tr.insertCell().appendChild(input);
-      } else if (key === "code") {
-        input = document.createElement("textarea");
-        input.className = key;
-        input.placeholder = key;
-        input.style.width = "98%";
-        //input.style.height= '1em';
-        input.style.height = "1em";
-        input.addEventListener("focus", function () {
-          this.style.height = "";
-          this.style.height = this.scrollHeight + "px";
-        });
-        input.addEventListener("focusout", function () {
-          //this.style.height = "";this.style.height = this.scrollHeight + "px";
-          input.style.height = "1em";
-        });
-        input.value = feed[key];
-        tr.insertCell().appendChild(input);
-      } else if (key === "url_regex") {
-        input = document.createElement("input");
-        input.className = key;
-        input.placeholder = key;
-        input.style.width = "99%";
-        input.value = feed[key];
-        tr.insertCell().appendChild(input);
-      }
-    });
+  const head = document.createElement("div");
+  head.className = "rule-head";
 
-  var button;
-  if (feed.action === "save") {
-    button = createButton("Add", "saveButton", function () {}, true);
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "rule-toggle";
+  const toggleInput = document.createElement("input");
+  toggleInput.type = "checkbox";
+  toggleInput.className = "activ";
+  toggleInput.checked = typeof feed.activ === "boolean" ? feed.activ : true;
+  toggleLabel.appendChild(toggleInput);
+  toggleLabel.appendChild(document.createTextNode("Enabled"));
+
+  const regexLabel = document.createElement("span");
+  regexLabel.className = "rule-label";
+  regexLabel.textContent = "URL matches";
+
+  const regexInput = document.createElement("input");
+  regexInput.className = "url_regex";
+  regexInput.placeholder = "^https:\\/\\/example\\.com\\/.*";
+  regexInput.value = feed.url_regex || "";
+  regexInput.spellcheck = false;
+  regexInput.addEventListener("input", () => validateRegexInput(regexInput));
+  validateRegexInput(regexInput);
+
+  head.appendChild(toggleLabel);
+  head.appendChild(regexLabel);
+  head.appendChild(regexInput);
+
+  if (!isNew) {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "btn-danger-text";
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", () => deleteRule(card));
+    head.appendChild(deleteBtn);
+  }
+
+  const codeArea = document.createElement("textarea");
+  codeArea.className = "code";
+  codeArea.placeholder =
+    "(async () => {\n  // return an array of candidate feed URLs\n  return [];\n})();";
+  codeArea.value = feed.code || "";
+  codeArea.spellcheck = false;
+
+  card.appendChild(head);
+  card.appendChild(codeArea);
+
+  if (isNew) {
+    rulesContainer.insertBefore(card, rulesContainer.firstChild);
   } else {
-    button = createButton(
-      "Delete",
-      "deleteButton",
-      function () {
-        deleteRow(tr);
-      },
-      false,
-    );
+    rulesContainer.appendChild(card);
   }
-  tr.insertCell().appendChild(button);
+
+  return card;
 }
 
 function collectConfig() {
-  // collect configuration from DOM
-  var mainTableBody = document.getElementById("mainTableBody");
-  var feeds = [];
-  for (var row = 0; row < mainTableBody.rows.length; row++) {
+  const cards = document.querySelectorAll("#mainTableBody .rule-card");
+  const feeds = [];
+  for (const card of cards) {
     try {
-      var url_regex = mainTableBody.rows[row]
-        .querySelector(".url_regex")
-        .value.trim();
-      var ses = mainTableBody.rows[row].querySelector(".code").value.trim();
-      var check = mainTableBody.rows[row].querySelector(".activ").checked;
-      if (url_regex !== "" && ses !== "") {
-        feeds.push({
-          activ: check,
-          code: ses,
-          url_regex: url_regex,
-        });
+      const url_regex = card.querySelector(".url_regex").value.trim();
+      const code = card.querySelector(".code").value.trim();
+      const activ = card.querySelector(".activ").checked;
+      if (url_regex !== "" && code !== "") {
+        feeds.push({ activ, code, url_regex });
       }
     } catch (e) {
       console.error(e);
@@ -117,45 +100,32 @@ function collectConfig() {
   return feeds;
 }
 
-function createButton(text, id, callback, submit) {
-  var span = document.createElement("span");
-  var button = document.createElement("button");
-  button.id = id;
-  button.textContent = text;
-  button.className = "browser-style";
-  button.style.width = "99%";
-  if (submit) {
-    button.type = "submit";
-  } else {
-    button.type = "button";
-  }
-  button.name = id;
-  button.value = id;
-  button.addEventListener("click", callback);
-  span.appendChild(button);
-  return span;
+function flashSaveStatus() {
+  const status = document.getElementById("saveStatus");
+  status.classList.add("is-visible");
+  clearTimeout(flashSaveStatus._t);
+  flashSaveStatus._t = setTimeout(() => {
+    status.classList.remove("is-visible");
+  }, 1500);
 }
 
-async function saveOptions() {
-  var config = collectConfig();
-  //config = sanatizeConfig(config);
+async function saveOptions(evt) {
+  evt.preventDefault();
+  const config = collectConfig();
   await browser.storage.local.set({ selectors: config });
+  flashSaveStatus();
 }
 
 async function restoreOptions() {
-  createTableRow({
-    activ: 1,
-    code: "",
-    url_regex: "",
-    action: "save",
-  });
-  var res = await browser.storage.local.get("selectors");
+  // the always-present card at the top for adding a new rule
+  createRuleCard({ activ: true, code: "", url_regex: "", action: "save" });
+
+  const res = await browser.storage.local.get("selectors");
   if (!Array.isArray(res.selectors)) {
     return;
   }
   res.selectors.forEach((selector) => {
-    selector.action = "delete";
-    createTableRow(selector);
+    createRuleCard(selector);
   });
 }
 
@@ -167,9 +137,9 @@ const impbtn = document.getElementById("impbtn");
 const expbtn = document.getElementById("expbtn");
 
 expbtn.addEventListener("click", async function () {
-  var dl = document.createElement("a");
-  var res = await browser.storage.local.get("selectors");
-  var content = JSON.stringify(res.selectors, null, 4);
+  const dl = document.createElement("a");
+  const res = await browser.storage.local.get("selectors");
+  const content = JSON.stringify(res.selectors, null, 4);
   dl.setAttribute(
     "href",
     "data:application/json;charset=utf-8," + encodeURIComponent(content),
@@ -188,13 +158,15 @@ impbtnWrp.addEventListener("click", function () {
 });
 
 impbtn.addEventListener("input", function () {
-  var file = this.files[0];
-  var reader = new FileReader();
+  const file = this.files[0];
+  const reader = new FileReader();
   reader.onload = async function () {
     try {
-      var config = JSON.parse(reader.result);
+      const config = JSON.parse(reader.result);
       await browser.storage.local.set({ selectors: config });
-      document.querySelector("form").submit();
+      document.getElementById("mainTableBody").innerHTML = "";
+      await restoreOptions();
+      flashSaveStatus();
     } catch (e) {
       console.error("error loading file: " + e);
     }
