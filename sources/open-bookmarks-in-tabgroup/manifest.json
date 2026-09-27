@@ -18,6 +18,10 @@
   "description": "Open a bookmark folder as a tabgroup",
   "manifest_version": 2,
   "name": "Open Bookmarks in Tabgroup",
-  "permissions": ["bookmarks", "menus", "tabGroups"],
-  "version": "1.0.6"
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": false
+  },
+  "permissions": ["bookmarks", "menus", "storage", "tabGroups"],
+  "version": "1.1.0"
 }

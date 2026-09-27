@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <img src="icon.png" alt="" />
+        <div>
+          <h1>Open Bookmarks in Tabgroup</h1>
+          <p>Options</p>
+        </div>
+      </div>
+
+      <p class="welcome">
+        Welcome! Choose how bookmark folders open as tab groups below.
+      </p>
+
+      <p class="note">
+        The tab group's color is derived automatically from the bookmark
+        folder's name — the same folder name always gets the same color.
+      </p>
+
+      <p class="note">
+        If a tab group with the folder's name already exists, it's closed first,
+        then reopened fresh from the bookmarks.
+      </p>
+
+      <div class="card">
+        <div class="setting">
+          <div class="setting-text">
+            <h2>Collapse the tab group</h2>
+            <p>Start each new tab group collapsed instead of expanded.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="collapseGroup" checked />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+
+        <div class="setting">
+          <div class="setting-text">
+            <h2>Load tabs immediately</h2>
+            <p>
+              Turn off to open tabs unloaded — they only load once clicked,
+              which is faster for large folders.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="loadTabs" checked />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <p class="footer">Changes are saved automatically.</p>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>
