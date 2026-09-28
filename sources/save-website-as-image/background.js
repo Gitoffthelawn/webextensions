@@ -1,4 +1,4 @@
-/* global browser, JSZip, DEFAULT_SETTINGS, playSound */
+/* global browser, JSZip, DEFAULT_SETTINGS, playSound, buildFilename, getTimeStampStr */
 
 const STEP_HEIGHT = 10000;
 const BADGE_FRAMES = "▖▘▝▗";
@@ -158,61 +158,43 @@ async function captureTab(tabId, y, width, height, format, quality) {
   return browser.tabs.captureTab(tabId, config);
 }
 
-function sanitizeFilename(rawName) {
-  const illegal = /[\\\/:*?"<>|[\x00-\x1F\x7F-\x9F]/g;
-  let name = rawName.replace(illegal, "_");
-
-  name = name.replace(/[\s]+/g, "_");
-  name = name.replace(/[_]+/g, "_");
-
-  const MAX_BYTES = 255;
-  const encoder = new TextEncoder();
-  if (encoder.encode(name).length <= MAX_BYTES) {
-    return name;
-  }
-
-  const dotIdx = name.lastIndexOf(".");
-  const ext = dotIdx === -1 ? "" : name.slice(dotIdx);
-  const base = dotIdx === -1 ? name : name.slice(0, dotIdx);
-
-  const maxBaseBytes = MAX_BYTES - encoder.encode(ext).length;
-
-  let truncated = "";
-  for (const ch of base) {
-    if (encoder.encode(truncated + ch).length > maxBaseBytes) {
-      break;
-    }
-    truncated += ch;
-  }
-  return truncated + ext;
-}
-
-function getTimeStampStr() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const hh = d.getHours();
-  const mm = d.getMinutes();
-  const ss = d.getSeconds();
-
-  const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
-  // format: year-month-day_hour-minute-second
-  return `${y}-${pad2(m)}-${pad2(day)}_${pad2(hh)}-${pad2(mm)}-${pad2(ss)}`;
+function startDownload(url, filename) {
+  return browser.downloads.download({
+    url,
+    filename,
+    conflictAction: "uniquify",
+  });
 }
 
 // Resolves once the download has been started. `onInterrupted(errorCode)` is called
 // if the download later fails or is cancelled.
-async function saveAs(tabTitle, tabURL, linkURL, extension, onInterrupted) {
-  const filename = sanitizeFilename(
-    `${getTimeStampStr()} ${tabTitle} ${tabURL}.${extension}`,
-  );
-
-  const downloadId = await browser.downloads.download({
-    url: linkURL,
-    filename,
-    conflictAction: "uniquify",
-  });
+async function saveAs(
+  tabTitle,
+  tabURL,
+  linkURL,
+  extension,
+  onInterrupted,
+  settings,
+) {
+  let downloadId;
+  try {
+    downloadId = await startDownload(
+      linkURL,
+      buildFilename(tabTitle, tabURL, extension, settings),
+    );
+  } catch (err) {
+    // last resort: a plain timestamp name cannot be invalid
+    console.warn("download with generated filename failed, retrying", err);
+    try {
+      downloadId = await startDownload(
+        linkURL,
+        `${getTimeStampStr()}.${extension}`,
+      );
+    } catch (err2) {
+      URL.revokeObjectURL(linkURL);
+      throw err2;
+    }
+  }
 
   let done = false;
   const finish = (state, error) => {
@@ -315,25 +297,30 @@ function getChunking(height, width) {
   return { segments, chunkHeight };
 }
 
-async function onBAClicked(tab) {
+// Captures one tab and starts its download. Never throws, the outcome is
+// returned and shown later with reportResult().
+async function captureAndSave(tab, settings, playSoundNow) {
   const tabId = tab.id;
-  const startUrl = tab.url;
-  startProcessing(tabId);
-
-  let errorMessage = "";
-  let pendingFailure = null; // download failure reported before the result was shown
-  let finalized = false;
-  const onInterrupted = (code) => {
+  const result = {
+    tabId,
+    startUrl: tab.url,
+    captured: false,
+    errorMessage: "",
+    pendingFailure: null, // download failure reported before the result was shown
+    finalized: false,
+  };
+  result.onInterrupted = (code) => {
     const msg = `download failed (${code || "interrupted"})`;
-    if (finalized) {
-      setCaptureStatus(tabId, startUrl, false, msg);
+    if (result.finalized) {
+      setCaptureStatus(tabId, result.startUrl, false, msg);
     } else {
-      pendingFailure = msg;
+      result.pendingFailure = msg;
     }
   };
 
   try {
-    const settings = await getSettings();
+    if (tab.discarded) throw new Error("tab is not loaded (discarded)");
+
     const { format, quality } = settings;
     const imgExtension = format === "png" ? "png" : "jpg";
 
@@ -386,25 +373,90 @@ async function onBAClicked(tab) {
     }
 
     // the screenshot has been taken
-    if (settings.soundEnabled) {
+    result.captured = true;
+    if (playSoundNow && settings.soundEnabled) {
       playSound(settings).catch((e) => console.warn("could not play sound", e));
     }
 
     const objUrl = URL.createObjectURL(blobOrObjUrl);
-    await saveAs(tab.title, tab.url, objUrl, extension, onInterrupted);
+    await saveAs(
+      tab.title,
+      tab.url,
+      objUrl,
+      extension,
+      result.onInterrupted,
+      settings,
+    );
   } catch (err) {
     console.error(err);
-    errorMessage = err?.message || String(err);
+    result.errorMessage = err?.message || String(err);
+  }
+  return result;
+}
+
+// Shows the outcome (badge + title) on the captured tab
+async function reportResult(result) {
+  const { tabId, startUrl } = result;
+  const errorMessage = result.errorMessage || result.pendingFailure || "";
+  await setCaptureStatus(tabId, startUrl, !errorMessage, errorMessage);
+  result.finalized = true;
+  // a download failure that arrived while the result was being shown
+  if (!errorMessage && result.pendingFailure) {
+    await setCaptureStatus(tabId, startUrl, false, result.pendingFailure);
+  }
+}
+
+// The highlighted (multi-selected) tabs of the window if the clicked tab is
+// one of them, otherwise just the clicked tab.
+async function getTargetTabs(clickedTab) {
+  try {
+    const tabs = await browser.tabs.query({
+      highlighted: true,
+      windowId: clickedTab.windowId,
+    });
+    if (tabs.length > 1 && tabs.some((t) => t.id === clickedTab.id)) {
+      return tabs.sort((a, b) => a.index - b.index);
+    }
+  } catch (err) {
+    console.warn("could not query highlighted tabs", err);
+  }
+  return [clickedTab];
+}
+
+async function onBAClicked(tab) {
+  const tabs = await getTargetTabs(tab);
+  const multi = tabs.length > 1;
+
+  // the progress is shown on the tab whose button was clicked
+  startProcessing(tab.id);
+
+  const results = [];
+  try {
+    const settings = await getSettings();
+
+    // one tab after the other, to keep memory usage and load low
+    for (const [i, t] of tabs.entries()) {
+      if (multi) {
+        browser.browserAction
+          .setTitle({
+            tabId: tab.id,
+            title: `${EXT_NAME} - capturing tab ${i + 1} of ${tabs.length}...`,
+          })
+          .catch(() => {});
+      }
+      results.push(await captureAndSave(t, settings, !multi));
+    }
+
+    // several tabs: one sound when all screenshots have been taken
+    if (multi && settings.soundEnabled && results.some((r) => r.captured)) {
+      playSound(settings).catch((e) => console.warn("could not play sound", e));
+    }
   } finally {
-    await stopProcessing(tabId);
+    await stopProcessing(tab.id);
   }
 
-  if (!errorMessage && pendingFailure) errorMessage = pendingFailure;
-  await setCaptureStatus(tabId, startUrl, !errorMessage, errorMessage);
-  finalized = true;
-  // a download failure that arrived while the result was being shown
-  if (!errorMessage && pendingFailure) {
-    await setCaptureStatus(tabId, startUrl, false, pendingFailure);
+  for (const result of results) {
+    await reportResult(result);
   }
 }
 

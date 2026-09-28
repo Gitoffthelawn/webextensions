@@ -1,6 +1,11 @@
-/* global browser, DEFAULT_SETTINGS, BUILTIN_SOUNDS, playSound */
+/* global browser, DEFAULT_SETTINGS, DEFAULT_FILENAME_PATTERN, FILENAME_PLACEHOLDERS,
+   BUILTIN_SOUNDS, playSound, buildFilename */
 
 const MAX_CUSTOM_SOUND_BYTES = 1024 * 1024; // 1 MB
+
+// example page used for the file name preview
+const SAMPLE_TITLE = "Example Page: Title... (2026)";
+const SAMPLE_URL = "https://www.example.com/articles/42?ref=home#top";
 
 const formatRadios = document.querySelectorAll('input[name="format"]');
 const qualityInput = document.getElementById("quality");
@@ -16,6 +21,13 @@ const soundVolumeValue = document.getElementById("sound-volume-value");
 const customRow = document.getElementById("custom-row");
 const customFile = document.getElementById("custom-file");
 const customName = document.getElementById("custom-name");
+const patternInput = document.getElementById("filename-pattern");
+const patternReset = document.getElementById("pattern-reset");
+const placeholderChips = document.getElementById("placeholder-chips");
+const placeholderLegend = document.getElementById("placeholder-legend");
+const patternWarning = document.getElementById("pattern-warning");
+const underscoresInput = document.getElementById("filename-underscores");
+const filenamePreview = document.getElementById("filename-preview");
 const status = document.getElementById("status");
 const welcome = document.getElementById("welcome");
 const dismissBtn = document.getElementById("dismiss");
@@ -39,6 +51,66 @@ function currentSoundSettings() {
     customSound,
     customSoundName,
   };
+}
+
+function currentFilenameSettings() {
+  return {
+    filenamePattern: patternInput.value.trim() || DEFAULT_FILENAME_PATTERN,
+    filenameUnderscores: underscoresInput.checked,
+  };
+}
+
+function updateFilenamePreview() {
+  const extension = currentFormat() === "png" ? "png" : "jpg";
+  filenamePreview.textContent = buildFilename(
+    SAMPLE_TITLE,
+    SAMPLE_URL,
+    extension,
+    currentFilenameSettings(),
+  );
+
+  const unknown = [
+    ...new Set(
+      [...patternInput.value.matchAll(/\{(\w*)\}/g)]
+        .map((m) => m[0])
+        .filter(
+          (p) => !(p.slice(1, -1).toLowerCase() in FILENAME_PLACEHOLDERS),
+        ),
+    ),
+  ];
+  patternWarning.hidden = unknown.length === 0;
+  patternWarning.textContent = unknown.length
+    ? `Unknown placeholder: ${unknown.join(" ")} (it is ignored)`
+    : "";
+}
+
+function insertPlaceholder(name) {
+  const token = `{${name}}`;
+  const start = patternInput.selectionStart ?? patternInput.value.length;
+  const end = patternInput.selectionEnd ?? start;
+  patternInput.setRangeText(token, start, end, "end");
+  patternInput.focus();
+  save();
+}
+
+function buildPlaceholderUI() {
+  for (const [name, info] of Object.entries(FILENAME_PLACEHOLDERS)) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = `{${name}}`;
+    chip.title = `${info.description}, e.g. ${info.example}`;
+    // keep the focus (and caret position) in the text field
+    chip.addEventListener("mousedown", (e) => e.preventDefault());
+    chip.addEventListener("click", () => insertPlaceholder(name));
+    placeholderChips.append(chip);
+
+    const li = document.createElement("li");
+    const code = document.createElement("code");
+    code.textContent = `{${name}}`;
+    li.append(code, ` ${info.description}, e.g. ${info.example}`);
+    placeholderLegend.append(li);
+  }
 }
 
 function showMessage(text, isError = false) {
@@ -87,10 +159,12 @@ async function save() {
   await browser.storage.local.set({
     format: currentFormat(),
     quality,
+    ...currentFilenameSettings(),
     ...currentSoundSettings(),
   });
   updateQualityState();
   updateSoundState();
+  updateFilenamePreview();
   showMessage("Saved");
 }
 
@@ -120,6 +194,10 @@ async function load() {
   qualityInput.value = s.quality;
   qualityValue.textContent = s.quality;
 
+  buildPlaceholderUI();
+  patternInput.value = s.filenamePattern;
+  underscoresInput.checked = s.filenameUnderscores;
+
   customSound = s.customSound;
   customSoundName = s.customSoundName;
   soundEnabled.checked = s.soundEnabled;
@@ -129,6 +207,7 @@ async function load() {
 
   updateQualityState();
   updateSoundState();
+  updateFilenamePreview();
 
   if (s.showWelcome) {
     welcome.hidden = false;
@@ -147,6 +226,18 @@ qualityInput.addEventListener("input", () => {
   qualityValue.textContent = qualityInput.value;
 });
 qualityInput.addEventListener("change", save);
+
+patternInput.addEventListener("input", updateFilenamePreview);
+patternInput.addEventListener("change", () => {
+  // an empty pattern falls back to the default
+  if (!patternInput.value.trim()) patternInput.value = DEFAULT_FILENAME_PATTERN;
+  save();
+});
+patternReset.addEventListener("click", () => {
+  patternInput.value = DEFAULT_FILENAME_PATTERN;
+  save();
+});
+underscoresInput.addEventListener("change", save);
 
 soundEnabled.addEventListener("change", save);
 

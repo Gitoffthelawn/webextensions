@@ -230,6 +230,73 @@
       #status.error {
         color: #d70022;
       }
+      input[type="text"] {
+        font:
+          14px/1.4 ui-monospace,
+          "SF Mono",
+          Consolas,
+          monospace;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      input[type="text"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      .pattern-row {
+        margin: 6px 0 12px;
+        flex-wrap: nowrap;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .chip {
+        font:
+          13px ui-monospace,
+          "SF Mono",
+          Consolas,
+          monospace;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      #placeholder-legend {
+        margin: 0 0 16px;
+        padding: 0;
+        list-style: none;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      #placeholder-legend code {
+        color: var(--text);
+      }
+      #pattern-warning {
+        color: #d70022;
+      }
+      .preview {
+        display: block;
+        margin-top: 4px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px dashed var(--border);
+        font:
+          13px ui-monospace,
+          "SF Mono",
+          Consolas,
+          monospace;
+        word-break: break-all;
+      }
       [hidden] {
         display: none !important;
       }
@@ -259,6 +326,11 @@
             confirms the capture (you can change or mute it below).
           </li>
         </ol>
+        <p>
+          To capture several pages at once, select the tabs first
+          (Ctrl/Cmd+click or Shift+click on the tabs) and then click the toolbar
+          button. Every selected tab is saved as its own file.
+        </p>
         <p>
           The toolbar button shows ✓ or ✕ to tell you whether the last capture
           of the current page worked. Hover over it for details.
@@ -298,6 +370,42 @@
             Quality only applies to JPEG.
           </p>
         </div>
+      </section>
+
+      <section class="card">
+        <h2>File name</h2>
+        <label for="filename-pattern">Name pattern</label>
+        <div class="row pattern-row">
+          <input
+            type="text"
+            id="filename-pattern"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <button id="pattern-reset" type="button" class="secondary">
+            Reset
+          </button>
+        </div>
+
+        <p class="hint" style="margin: 0 0 8px">
+          Click a placeholder to insert it at the cursor:
+        </p>
+        <div id="placeholder-chips" class="chips"></div>
+        <ul id="placeholder-legend"></ul>
+        <p id="pattern-warning" class="hint" hidden></p>
+
+        <label class="switch-row">
+          <input type="checkbox" id="filename-underscores" />
+          <span>Replace spaces with underscores</span>
+        </label>
+
+        <p class="hint">Preview (example page):</p>
+        <code id="filename-preview" class="preview"></code>
+        <p class="hint">
+          Characters that are not allowed in file names are replaced and very
+          long names are shortened. If the name is already taken, a number is
+          added.
+        </p>
       </section>
 
       <section class="card">
