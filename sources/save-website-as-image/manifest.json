@@ -1,7 +1,7 @@
 {
   "author": "igorlogius",
   "background": {
-    "scripts": ["jszip.js", "background.js"]
+    "scripts": ["jszip.js", "shared.js", "background.js"]
   },
   "browser_action": {
     "default_area": "navbar"
@@ -23,6 +23,10 @@
   },
   "manifest_version": 2,
   "name": "Save Website as Image",
-  "permissions": ["activeTab", "<all_urls>", "downloads"],
-  "version": "1.4.1"
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "permissions": ["activeTab", "<all_urls>", "downloads", "storage"],
+  "version": "1.5.0"
 }
