@@ -1,27 +1,330 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>Dont Load Background Tabs</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #1b1d2b;
+        --muted: #62667a;
+        --border: #dcdfea;
+        --accent: #5b6ee1;
+        --accent-soft: #e9ecfc;
+        --ok: #1f9d55;
+        --ok-soft: #e3f6ea;
+        --warn: #c0392b;
+        --warn-soft: #fbe9e7;
+        --code-bg: #eef0f8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #15161f;
+          --card: #1e2030;
+          --text: #e8e9f2;
+          --muted: #9a9eb5;
+          --border: #34374d;
+          --accent: #8494ff;
+          --accent-soft: #29305a;
+          --ok: #4cd28a;
+          --ok-soft: #1c3a2b;
+          --warn: #ff8b7d;
+          --warn-soft: #3d2320;
+          --code-bg: #2a2d42;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      header img {
+        width: 48px;
+        height: 48px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+      header p {
+        margin: 2px 0 0;
+        color: var(--muted);
+      }
+      .status {
+        margin-left: auto;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .status.on {
+        background: var(--ok-soft);
+        color: var(--ok);
+      }
+      .status.off {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+      }
+      .card h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+      }
+      .card > .hint {
+        margin: 0 0 14px;
+        color: var(--muted);
+      }
+      #welcome {
+        display: none;
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      #welcome.show {
+        display: block;
+      }
+      #welcome h2 {
+        font-size: 17px;
+      }
+      #welcome ol {
+        margin: 10px 0 14px;
+        padding-left: 20px;
+      }
+      #welcome li {
+        margin: 4px 0;
+      }
+      button {
+        font: inherit;
+        font-weight: 600;
+        padding: 7px 16px;
+        border-radius: 8px;
+        border: 0;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.08);
+      }
+      .modes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 560px) {
+        .modes {
+          grid-template-columns: 1fr;
+        }
+      }
+      .mode {
+        position: relative;
+        display: block;
+        padding: 12px 14px 12px 40px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .mode:hover {
+        border-color: var(--accent);
+      }
+      .mode input {
+        position: absolute;
+        left: 14px;
+        top: 15px;
+        accent-color: var(--accent);
+      }
+      .mode.selected {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .mode strong {
+        display: block;
+      }
+      .mode span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 16em;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card);
+        color: var(--text);
+        font:
+          13px/1.5 ui-monospace,
+          "SF Mono",
+          Consolas,
+          monospace;
+        resize: vertical;
+      }
+      textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      textarea.invalid {
+        border-color: var(--warn);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+        min-height: 22px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      #validation {
+        color: var(--warn);
+      }
+      #saved {
+        color: var(--ok);
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #saved.show {
+        opacity: 1;
+      }
+      code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: var(--code-bg);
+        font-size: 12.5px;
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      footer a {
+        color: var(--accent);
+      }
+    </style>
   </head>
   <body>
-    <fieldset>
-      <legend>Operation Mode</legend>
-      <abbr
-        title="This option toggles whitelist (unchecked) (will only allow matching tabs to load) and blacklist (checked) (will only prevent matching tabs from loading)"
-        ><span> Blacklist (?) <input id="mode" type="checkbox" /></span
-      ></abbr>
-      <textarea
-        id="matchers"
-        style="width: 100%; min-height: 20em"
-        placeholder="Enter regular expressions line by line here
-Examples:
-    ^https:\/\/www\.facebook\.com.*
-    ^https:\/\/example\.net.*
-    ^https:\/\/.*\.wikipedia\.org.*
-"
-      ></textarea>
-    </fieldset>
+    <main>
+      <header>
+        <img src="icon.svg" alt="" />
+        <div>
+          <h1>Dont Load Background Tabs</h1>
+          <p>Keep background tabs unloaded until you actually look at them.</p>
+        </div>
+        <span id="status" class="status on">Active</span>
+      </header>
+
+      <section id="welcome" class="card">
+        <h2>👋 Welcome, and thanks for installing!</h2>
+        <p style="margin: 6px 0 0">
+          Tabs opened in the background (middle-click, "open in new tab", links
+          from other apps) are now held back and only load once you switch to
+          them. Here is how to get started:
+        </p>
+        <ol>
+          <li>Choose a <strong>mode</strong> below.</li>
+          <li>
+            Add <strong>URL patterns</strong> (regular expressions), one per
+            line.
+          </li>
+          <li>
+            Use the <strong>toolbar button</strong> to pause or resume the
+            extension at any time.
+          </li>
+        </ol>
+        <p style="margin: 0 0 14px">
+          <strong>Heads up:</strong> the default is Whitelist mode with an empty
+          list, which holds back <em>every</em> background tab. Add patterns for
+          sites that should always load, or switch to Blacklist mode to hold
+          back only specific sites.
+        </p>
+        <button id="dismiss" type="button">Got it</button>
+      </section>
+
+      <section class="card">
+        <h2>Operation mode</h2>
+        <p class="hint">Decide what the patterns below mean.</p>
+        <div class="modes">
+          <label class="mode" id="card-whitelist">
+            <input type="radio" name="mode" id="mode-whitelist" value="false" />
+            <strong>Whitelist</strong>
+            <span
+              >Only matching URLs may load in the background. Everything else is
+              held back.</span
+            >
+          </label>
+          <label class="mode" id="card-blacklist">
+            <input type="radio" name="mode" id="mode-blacklist" value="true" />
+            <strong>Blacklist</strong>
+            <span
+              >Only matching URLs are held back. Everything else loads
+              normally.</span
+            >
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>URL patterns</h2>
+        <p class="hint">
+          One regular expression per line, tested against the full URL. Empty
+          lines are ignored.
+        </p>
+        <textarea
+          id="matchers"
+          spellcheck="false"
+          placeholder="^https:\/\/www\.facebook\.com.*
+^https:\/\/example\.net.*
+^https:\/\/.*\.wikipedia\.org.*"
+        ></textarea>
+        <div class="row">
+          <span id="validation"></span>
+          <span
+            ><span id="count">0 patterns</span> ·
+            <span id="saved">Saved ✓</span></span
+          >
+        </div>
+      </section>
+
+      <footer>
+        <a
+          href="https://github.com/igorlogius/webextensions/tree/main/sources/dont-load-background-tabs"
+          target="_blank"
+          rel="noopener"
+          >Source &amp; feedback on GitHub</a
+        >
+      </footer>
+    </main>
     <script src="options.js"></script>
   </body>
 </html>

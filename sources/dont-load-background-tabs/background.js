@@ -113,5 +113,23 @@ function updateBrowserAction(status, color) {
     storage.set("manually_disabled", !currentState);
   });
 
-  browser.storage.onChanged.addListener(handleStorageChange);
+  browser.storage.onChanged.addListener((changes) => {
+    // ignore unrelated keys (e.g. the welcome flag) so tab state isn't reset
+    if (changes.matchers || changes.mode || changes.manually_disabled) {
+      handleStorageChange();
+    }
+  });
 })();
+
+// open the options page with a welcome message on first install
+browser.runtime.onInstalled.addListener(async ({ reason }) => {
+  if (reason === "install") {
+    const stored = await browser.storage.local.get(["mode", "matchers"]);
+    await browser.storage.local.set({
+      show_welcome: true,
+      mode: typeof stored.mode === "boolean" ? stored.mode : false,
+      matchers: typeof stored.matchers === "string" ? stored.matchers : "",
+    });
+    browser.runtime.openOptionsPage();
+  }
+});

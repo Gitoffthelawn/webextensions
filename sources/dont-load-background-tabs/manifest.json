@@ -18,9 +18,14 @@
     "scripts": ["background.js"]
   },
   "browser_action": {
-    "default_area": "navbar"
+    "default_area": "navbar",
+    "default_icon": "icon.svg"
   },
-  "icons": {},
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg",
+    "128": "icon.svg"
+  },
   "manifest_version": 2,
   "name": "Dont Load Background Tabs",
   "options_ui": {
