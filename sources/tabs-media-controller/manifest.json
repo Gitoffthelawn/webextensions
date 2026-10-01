@@ -37,9 +37,6 @@
   },
   "manifest_version": 2,
   "name": "Tabs Media Controller",
-  "options_ui": {
-    "page": "options.html"
-  },
   "permissions": ["storage", "tabs", "webNavigation"],
   "version": "1.5.25",
   "web_accessible_resources": ["attach.js"]
