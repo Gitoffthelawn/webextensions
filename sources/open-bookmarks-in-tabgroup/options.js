@@ -4,6 +4,7 @@
 const DEFAULTS = {
   collapseGroup: true,
   loadTabs: true,
+  replaceExisting: true,
 };
 
 async function restoreOptions() {

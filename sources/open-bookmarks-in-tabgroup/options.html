@@ -24,12 +24,23 @@
         folder's name — the same folder name always gets the same color.
       </p>
 
-      <p class="note">
-        If a tab group with the folder's name already exists, it's closed first,
-        then reopened fresh from the bookmarks.
-      </p>
-
       <div class="card">
+        <div class="setting">
+          <div class="setting-text">
+            <h2>Replace an existing tab group</h2>
+            <p>
+              If a tab group with the folder's name already exists, close it and
+              reopen it fresh. Turn off to keep it and only add bookmarks whose
+              URLs aren't already open in that group.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="replaceExisting" checked />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>
+        </div>
+
         <div class="setting">
           <div class="setting-text">
             <h2>Collapse the tab group</h2>
