@@ -246,6 +246,45 @@ async function getFromStorage(type, id, fallback) {
   return typeof tmp[id] === type ? tmp[id] : fallback;
 }
 
+// ---- preview frames ----
+// posters arrive as JPEG Blobs; show one via an object URL and revoke the
+// previous one so frames don't pile up in memory (one new URL per poll)
+function setPoster(rec, blob, key) {
+  const url = URL.createObjectURL(blob);
+  const old = rec.posterObjectUrl;
+  rec.posterObjectUrl = url;
+  rec.posterKey = key || "";
+  rec.previewImg.src = url;
+  rec.previewImg.classList.remove("audioIcon");
+  if (old) {
+    URL.revokeObjectURL(old);
+  }
+}
+
+function revokePoster(rec) {
+  if (rec.posterObjectUrl) {
+    URL.revokeObjectURL(rec.posterObjectUrl);
+    rec.posterObjectUrl = "";
+  }
+}
+
+// applies the poster field of a query reply. "" means "skipped, unchanged,
+// or not available" (keep what's showing), a string is the static audio
+// icon, anything else is a captured frame
+function applyPoster(rec, data) {
+  if (!data.poster) {
+    return;
+  }
+  if (typeof data.poster === "string") {
+    if (rec.previewImg.getAttribute("src") !== data.poster) {
+      rec.previewImg.src = data.poster;
+      rec.previewImg.classList.add("audioIcon");
+    }
+    return;
+  }
+  setPoster(rec, data.poster, data.posterKey);
+}
+
 const tablist = document.getElementById("tabs");
 
 // every control message needs to reach the exact frame the media element
@@ -310,30 +349,25 @@ detailHeader.appendChild(detailTitle);
 // window — that window has no notion of "all sites" or any of the site
 // list, it just controls this one element by tab/frame/id on its own,
 // so it works the same regardless of how many elements the site has
-const detailDetachBtn = document.createElement("button");
-detailDetachBtn.classList.add("detailBackBtn", "detailDetachBtn");
-setButtonIcon(detailDetachBtn, "detach");
-detailDetachBtn.setAttribute("title", "open in its own window");
-detailDetachBtn.onclick = async () => {
-  if (!openRecord) {
-    return;
-  }
+// (the button that triggers this lives in each detail view's action row,
+// see buildMediaElement)
+async function detachRecord(rec) {
   const params = new URLSearchParams({
-    tabId: String(openRecord.tabId),
-    eid: openRecord.eid,
+    tabId: String(rec.tabId),
+    eid: rec.eid,
   });
-  if (typeof openRecord.frameId === "number") {
-    params.set("frameId", String(openRecord.frameId));
+  if (typeof rec.frameId === "number") {
+    params.set("frameId", String(rec.frameId));
   }
   await browser.windows.create({
     url: browser.runtime.getURL("detached.html?" + params.toString()),
     type: "popup",
-    width: 420,
+    // wide enough for the doubled (600px) preview plus padding and scrollbar
+    width: 650,
     height: 520,
   });
   window.close();
-};
-detailHeader.appendChild(detailDetachBtn);
+}
 
 const detailNextBtn = document.createElement("button");
 detailNextBtn.classList.add("detailBackBtn", "detailNextBtn");
@@ -443,9 +477,7 @@ function applyPlaybackState(rec, data, requestedAt) {
   }
 
   if (openRecord === rec) {
-    if (data.poster) {
-      rec.previewImg.src = data.poster;
-    }
+    applyPoster(rec, data);
     // don't yank a slider out from under the user while they're dragging it
     if (
       typeof data.volume === "number" &&
@@ -725,7 +757,9 @@ function buildMediaElement(tab, url, e, frameId) {
   detailWrap.appendChild(previewBox);
 
   let previewImg = document.createElement("img");
-  previewImg.src = e.poster || "audio.png";
+  previewImg.src =
+    typeof e.poster === "string" && e.poster ? e.poster : "audio.png";
+  previewImg.classList.add("audioIcon"); // removed again once a frame arrives
   previewImg.classList.add("previewImg");
   previewBox.appendChild(previewImg);
   previewBox.onclick = async () => {
@@ -745,71 +779,11 @@ function buildMediaElement(tab, url, e, frameId) {
     }
   });
   record.previewImg = previewImg;
-
-  // lets the preview take over the detail view, hiding the action row and
-  // sliders below it — handy for actually looking at the picture rather
-  // than just using it as a picture-in-picture launcher. Driven with
-  // direct inline styles (rather than just a CSS class) so it can't be
-  // silently defeated by some other rule elsewhere in the stylesheet
-  let fullscreenBtn = document.createElement("button");
-  fullscreenBtn.classList.add("previewFullscreenBtn");
-  setButtonIcon(fullscreenBtn, "expand");
-  fullscreenBtn.setAttribute("title", "fullscreen preview");
-  fullscreenBtn.onclick = (evt) => {
-    evt.stopPropagation(); // don't also trigger the picture-in-picture click
-    const isFull = !detailWrap.classList.contains("previewFullscreen");
-    detailWrap.classList.toggle("previewFullscreen", isFull);
-
-    if (isFull) {
-      previewBox.dataset.prevAspectRatio = previewBox.style.aspectRatio || "";
-      previewBox.style.aspectRatio = "unset";
-      previewBox.style.width = "100%";
-      previewBox.style.maxHeight = "none";
-      // flex-grow to fill whatever space the (now hidden) action row and
-      // controls freed up, instead of guessing a fixed pixel height —
-      // min-height: 0 is needed because flex items default to
-      // min-height: auto, which otherwise refuses to shrink below content
-      // size and is exactly what was pushing the popup a few pixels past
-      // its scrollable area and triggering the scrollbar
-      previewBox.style.flex = "1 1 auto";
-      previewBox.style.minHeight = "0";
-      detailWrap.style.flex = "1 1 auto";
-      detailWrap.style.minHeight = "0";
-      // the captured thumbnail is a small fixed-resolution image (up to
-      // 300x200) and the img tag normally renders it at that native size
-      // (width/height: auto) — stretch it to fill the enlarged box instead,
-      // letting object-fit: contain scale it up without distorting it
-      previewImg.style.width = "100%";
-      previewImg.style.height = "100%";
-      previewImg.style.maxWidth = "100%";
-      previewImg.style.maxHeight = "100%";
-      detailWrap.style.gap = "0";
-      detailActionRow.style.display = "none";
-      controls.style.display = "none";
-    } else {
-      previewBox.style.aspectRatio = previewBox.dataset.prevAspectRatio || "";
-      previewBox.style.width = "";
-      previewBox.style.maxHeight = "";
-      previewBox.style.flex = "";
-      previewBox.style.minHeight = "";
-      detailWrap.style.flex = "";
-      detailWrap.style.minHeight = "";
-      previewImg.style.width = "";
-      previewImg.style.height = "";
-      previewImg.style.maxWidth = "";
-      previewImg.style.maxHeight = "";
-      detailWrap.style.gap = "";
-      detailActionRow.style.display = "";
-      controls.style.display = "";
-    }
-
-    setButtonIcon(fullscreenBtn, isFull ? "collapse" : "expand");
-    fullscreenBtn.setAttribute(
-      "title",
-      isFull ? "exit fullscreen preview" : "fullscreen preview",
-    );
-  };
-  previewBox.appendChild(fullscreenBtn);
+  record.posterKey = "";
+  record.posterObjectUrl = "";
+  if (e.poster && typeof e.poster !== "string") {
+    setPoster(record, e.poster, e.posterKey);
+  }
 
   let detailActionRow = document.createElement("div");
   detailActionRow.classList.add("elementActionRow", "detailActionRow");
@@ -826,6 +800,15 @@ function buildMediaElement(tab, url, e, frameId) {
   let dPlay = document.createElement("button");
   dPlay.classList.add("elementPlayPauseBtn");
   detailActionRow.appendChild(dPlay);
+
+  // opens this element in its own window (which also has the large preview
+  // mode). Icon-only, so it adds little to the row
+  let dDetach = document.createElement("button");
+  dDetach.classList.add("elementDetachBtn");
+  setButtonIcon(dDetach, "detach");
+  dDetach.setAttribute("title", "open in its own window");
+  dDetach.onclick = () => detachRecord(record);
+  detailActionRow.appendChild(dDetach);
 
   wireFocusButtons(tab, e.id, [focusbtn, dFocus], frameId);
   wireMuteButtons(record, tab, e.id, [mutebtn, dMute], frameId);
@@ -1103,6 +1086,9 @@ async function queryTabs() {
 // redraws #tabs from the last queryTabs() results: either the top-level
 // list of sites, or (once one is picked) that site's media elements
 function renderView() {
+  for (const r of mediaRegistry) {
+    revokePoster(r);
+  }
   mediaRegistry = [];
   closeDetail();
   tablist.textContent = "";
@@ -1446,6 +1432,8 @@ function renderSiteDetail(origin) {
             id: rec.eid,
             // no point decoding a video frame for a row that isn't even open
             skipPoster: openRecord !== rec,
+            // lets the page skip re-encoding a frame we already have
+            posterKey: rec.posterKey,
           });
         } catch (e) {
           continue;

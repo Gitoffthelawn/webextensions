@@ -57,24 +57,99 @@ function elementHasAudio(el) {
   return true;
 }
 
-function getThumbnail(video) {
+// default (compact) thumbnail settings; the popup/detached window can ask
+// for something bigger/sharper while the preview is maximized
+const DEFAULT_THUMB = { maxW: 600, maxH: 400, quality: 0.2 };
+
+function sanitizeThumbOpts(opts) {
+  const out = { ...DEFAULT_THUMB };
+  if (opts && typeof opts === "object") {
+    if (Number.isFinite(opts.maxW) && opts.maxW > 0) {
+      out.maxW = Math.min(Math.round(opts.maxW), 4096);
+    }
+    if (Number.isFinite(opts.maxH) && opts.maxH > 0) {
+      out.maxH = Math.min(Math.round(opts.maxH), 4096);
+    }
+    if (Number.isFinite(opts.quality)) {
+      out.quality = Math.min(Math.max(opts.quality, 0.1), 1);
+    }
+  }
+  return out;
+}
+
+// sources whose frames can't be read back (cross-origin without CORS taints
+// the canvas). That's permanent for a given currentSrc, so remember it and
+// stop burning a draw + failed encode on every poll
+const taintedSources = new WeakMap();
+
+function isTainted(el) {
+  return taintedSources.has(el) && taintedSources.get(el) === el.currentSrc;
+}
+
+// grabs the current frame as a JPEG *Blob*. Blobs go through the extension
+// messaging structured clone as raw bytes, so there's no base64 inflation
+// (+33%) and no giant string to build and parse on either side
+async function getThumbnail(video, opts) {
   try {
+    const { maxW, maxH, quality } = sanitizeThumbOpts(opts);
     const vw = video.videoWidth || 300;
     const vh = video.videoHeight || 200;
-    // scale to fit within a 300x200 bounding box, preserving aspect ratio
-    const scale = Math.min(300 / vw, 200 / vh, 1);
+    // scale to fit within the bounding box, preserving aspect ratio; never
+    // upscale past the video's native resolution (the "1" cap)
+    const scale = Math.min(maxW / vw, maxH / vh, 1);
     let canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(vw * scale));
     canvas.height = Math.max(1, Math.round(vh * scale));
     let ctx = canvas.getContext("2d");
+    // drawImage runs synchronously: the frame is captured right here, the
+    // await below is only the JPEG encode
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.8);
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))),
+        "image/jpeg",
+        quality,
+      );
+    });
   } catch (e) {
-    // a cross-origin ("tainted") video source throws SecurityError on
-    // toDataURL, and a frame that isn't decoded yet can throw too — either
-    // way that's just no poster, not a reason to fail the whole query
+    if (e && e.name === "SecurityError") {
+      taintedSources.set(video, video.currentSrc);
+    }
+    // a frame that isn't decoded yet can throw too — either way that's just
+    // no poster, not a reason to fail the whole query
     return "";
   }
+}
+
+// fingerprint of "what a poster taken right now would look like". The popup
+// sends back the key of the frame it is currently showing; if nothing that
+// affects the picture has changed (paused video, same size/quality) there is
+// no point encoding and shipping the identical image again
+function posterKeyFor(el, opts) {
+  const { maxW, maxH, quality } = sanitizeThumbOpts(opts);
+  return [
+    el.currentSrc,
+    el.currentTime,
+    el.seeking ? 1 : 0,
+    el.videoWidth,
+    el.videoHeight,
+    maxW,
+    maxH,
+    quality,
+  ].join("|");
+}
+
+// -> { poster: Blob | "", posterKey, posterUnchanged? }
+async function capturePoster(el, opts, knownKey) {
+  if (isTainted(el)) {
+    return { poster: "", posterKey: "" };
+  }
+  const posterKey = posterKeyFor(el, opts);
+  if (knownKey && knownKey === posterKey) {
+    return { poster: "", posterKey, posterUnchanged: true };
+  }
+  const poster = await getThumbnail(el, opts);
+  return { poster, posterKey: poster ? posterKey : "" };
 }
 
 // best-effort push notification so the popup can reflect play/pause/mute/
@@ -117,7 +192,7 @@ function trackElement(el, id) {
   );
 }
 
-function handleQuery(id, skipPoster) {
+async function handleQuery(id, skipPoster, posterOpts, knownPosterKey) {
   const el = getMediaElementBy(id);
   if (!el) {
     // the page may have removed/replaced this element since the last
@@ -128,14 +203,11 @@ function handleQuery(id, skipPoster) {
 
   const isVideo = el.tagName.toLowerCase() === "video";
 
-  return {
-    poster: skipPoster
-      ? ""
-      : isVideo
-        ? el.readyState >= 2
-          ? getThumbnail(el)
-          : ""
-        : "audio.png",
+  // read the state first (synchronously) so it matches the frame that is
+  // captured right after, then attach the poster
+  const res = {
+    poster: "",
+    posterKey: "",
     type: isVideo ? "video" : "audio",
     duration: el.duration,
     currentTime: el.currentTime,
@@ -146,11 +218,23 @@ function handleQuery(id, skipPoster) {
     hasAudio: elementHasAudio(el),
     id,
   };
+
+  if (!skipPoster) {
+    if (!isVideo) {
+      res.poster = "audio.png";
+    } else if (el.readyState >= 2) {
+      const cap = await capturePoster(el, posterOpts, knownPosterKey);
+      res.poster = cap.poster; // "" when unchanged since knownPosterKey
+      res.posterKey = cap.posterKey;
+    }
+  }
+  return res;
 }
 
 // get all media elements and their states
-function handleQueryAll() {
+async function handleQueryAll() {
   const ret = [];
+  const captures = [];
   const els = getMediaElements();
   for (const el of els) {
     let tmcuuid = el.getAttribute("tmcuuid");
@@ -167,8 +251,9 @@ function handleQueryAll() {
     // user hasn't touched yet still has neither duration nor readyState,
     // but it's real media and shouldn't be invisible until played
     if (el.readyState >= 1 || hasUsableSource(el)) {
-      ret.push({
-        poster: isVideo && el.readyState >= 2 ? getThumbnail(el) : "",
+      const entry = {
+        poster: "",
+        posterKey: "",
         type: isVideo ? "video" : "audio",
         duration: el.duration,
         currentTime: el.currentTime,
@@ -178,19 +263,30 @@ function handleQueryAll() {
         playbackRate: el.playbackRate,
         hasAudio: elementHasAudio(el),
         id: tmcuuid,
-      });
+      };
+      ret.push(entry);
+      if (isVideo && el.readyState >= 2) {
+        captures.push(
+          capturePoster(el, undefined, "").then((cap) => {
+            entry.poster = cap.poster;
+            entry.posterKey = cap.posterKey;
+          }),
+        );
+      }
     }
   }
 
+  await Promise.all(captures);
   return ret;
 }
 
-function handlePreview(id) {
+// -> { poster: Blob | "", posterKey } (always a fresh capture)
+async function handlePreview(id, posterOpts) {
   let el = getMediaElementBy(id);
-  if (el) {
-    return getThumbnail(el);
+  if (el && el.tagName.toLowerCase() === "video") {
+    return capturePoster(el, posterOpts, "");
   }
-  return "";
+  return { poster: "", posterKey: "" };
 }
 
 function handlePause(ids) {
@@ -331,7 +427,14 @@ browser.runtime.onMessage.addListener((request) => {
   //console.debug("onMessage", JSON.stringify(request, null, 4));
   switch (request.cmd) {
     case "query":
-      return Promise.resolve(handleQuery(request.id, request.skipPoster));
+      return Promise.resolve(
+        handleQuery(
+          request.id,
+          request.skipPoster,
+          request.posterOpts,
+          request.posterKey,
+        ),
+      );
     case "queryAll":
       return Promise.resolve(handleQueryAll());
     case "play":
@@ -363,7 +466,7 @@ browser.runtime.onMessage.addListener((request) => {
     case "focus":
       return Promise.resolve(handleFocus(request.id));
     case "preview":
-      return Promise.resolve(handlePreview(request.id));
+      return Promise.resolve(handlePreview(request.id, request.posterOpts));
     default:
       console.error("unknown request", request);
       break;

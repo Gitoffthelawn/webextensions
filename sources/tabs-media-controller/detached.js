@@ -162,6 +162,99 @@ function formatTimeLabel(value, duration) {
   return formatTime(value) + " / " + formatTime(duration);
 }
 
+// ---- preview quality: compact vs. maximized ----
+// the compact preview is a small, cheap thumbnail (see DEFAULT_THUMB in
+// content.js). Once the preview is maximized it's shown much larger, so ask
+// the page for a frame at the box's real on-screen pixel size (hi-dpi aware)
+// instead of stretching the small one. The JPEG quality used for that is
+// adjustable per media element via the slider on the maximized preview; the
+// content script never upscales past the video's native resolution.
+const DEFAULT_PREVIEW_QUALITY = 0.4;
+
+// remembered per media element so the chosen quality survives the row/detail
+// view being rebuilt (the element id is stable for the page's lifetime)
+const previewQualityByMedia = new Map();
+
+function previewQualityKey(tabId, frameId, eid) {
+  return tabId + ":" + frameId + ":" + eid;
+}
+
+// how long the maximized preview's quality slider stays visible without any
+// mouse movement before it fades out
+const QUALITY_IDLE_MS = 2000;
+
+// posters arrive as JPEG Blobs; show one via an object URL and revoke the
+// previous one so frames don't pile up in memory (one new URL per poll)
+function setPoster(rec, blob, key) {
+  const url = URL.createObjectURL(blob);
+  const old = rec.posterObjectUrl;
+  rec.posterObjectUrl = url;
+  rec.posterKey = key || "";
+  rec.previewImg.src = url;
+  rec.previewImg.classList.remove("audioIcon");
+  if (old) {
+    URL.revokeObjectURL(old);
+  }
+}
+
+function revokePoster(rec) {
+  if (rec.posterObjectUrl) {
+    URL.revokeObjectURL(rec.posterObjectUrl);
+    rec.posterObjectUrl = "";
+  }
+}
+
+// applies the poster field of a query reply. "" means "skipped, unchanged,
+// or not available" (keep what's showing), a string is the static audio
+// icon, anything else is a captured frame
+function applyPoster(rec, data) {
+  if (!data.poster) {
+    return;
+  }
+  if (typeof data.poster === "string") {
+    if (rec.previewImg.getAttribute("src") !== data.poster) {
+      rec.previewImg.src = data.poster;
+      rec.previewImg.classList.add("audioIcon");
+    }
+    return;
+  }
+  setPoster(rec, data.poster, data.posterKey);
+}
+
+function getPosterOpts(rec) {
+  if (!rec.previewMaximized) {
+    return undefined; // content script falls back to its compact defaults
+  }
+  const dpr = window.devicePixelRatio || 1;
+  const w = rec.previewBox.clientWidth || 560;
+  const h = rec.previewBox.clientHeight || 560;
+  return {
+    maxW: Math.round(w * dpr),
+    maxH: Math.round(h * dpr),
+    quality: rec.previewQuality,
+  };
+}
+
+// fetch one fresh frame right away (used when toggling maximize or releasing
+// the quality slider, so the picture changes immediately instead of on the
+// next poll)
+async function refreshPreview(rec, tabId, frameId, eid) {
+  const wasMax = rec.previewMaximized;
+  try {
+    const res = await sendToFrame(tabId, frameId, {
+      cmd: "preview",
+      id: eid,
+      posterOpts: getPosterOpts(rec),
+    });
+    // user may have toggled again while this was in flight
+    if (res && res.poster && rec.previewMaximized === wasMax) {
+      setPoster(rec, res.poster, res.posterKey);
+    }
+  } catch (e) {
+    // page went away; the regular poll will sort it out
+  }
+}
+
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   return typeof tmp[id] === type ? tmp[id] : fallback;
@@ -207,9 +300,7 @@ function applyPlaybackState(rec, data, requestedAt) {
     }
   }
 
-  if (data.poster) {
-    rec.previewImg.src = data.poster;
-  }
+  applyPoster(rec, data);
   if (
     typeof data.volume === "number" &&
     document.activeElement !== rec.volBtn
@@ -396,7 +487,9 @@ function buildDetailPanel(tab, url, e, frameId) {
   detailWrap.appendChild(previewBox);
 
   let previewImg = document.createElement("img");
-  previewImg.src = e.poster || "audio.png";
+  previewImg.src =
+    typeof e.poster === "string" && e.poster ? e.poster : "audio.png";
+  previewImg.classList.add("audioIcon"); // removed again once a frame arrives
   previewImg.classList.add("previewImg");
   previewBox.appendChild(previewImg);
   previewBox.onclick = async () => {
@@ -413,6 +506,16 @@ function buildDetailPanel(tab, url, e, frameId) {
     }
   });
   record.previewImg = previewImg;
+  record.previewBox = previewBox;
+  record.previewMaximized = false;
+  const qualityKey = previewQualityKey(tab.id, frameId, e.id);
+  record.previewQuality =
+    previewQualityByMedia.get(qualityKey) ?? DEFAULT_PREVIEW_QUALITY;
+  record.posterKey = "";
+  record.posterObjectUrl = "";
+  if (e.poster && typeof e.poster !== "string") {
+    setPoster(record, e.poster, e.posterKey);
+  }
 
   let fullscreenBtn = document.createElement("button");
   fullscreenBtn.classList.add("previewFullscreenBtn");
@@ -455,12 +558,80 @@ function buildDetailPanel(tab, url, e, frameId) {
       controls.style.display = "";
     }
     setButtonIcon(fullscreenBtn, isFull ? "collapse" : "expand");
+    // sharper frame while maximized, compact one again afterwards (styles
+    // are already applied above, so the box has its final size here)
+    record.previewMaximized = isFull;
+    refreshPreview(record, tab.id, frameId, e.id);
+    if (isFull) {
+      record.showQualitySlider(); // visible first, then fades after idling
+    } else {
+      record.stopQualityIdleTimer();
+    }
     fullscreenBtn.setAttribute(
       "title",
       isFull ? "exit fullscreen preview" : "fullscreen preview",
     );
   };
   previewBox.appendChild(fullscreenBtn);
+
+  // per-video quality slider, overlaid on the preview and only visible while
+  // it's maximized (see .previewQualityBox in default.css)
+  let qualityBox = document.createElement("div");
+  qualityBox.classList.add("previewQualityBox");
+  qualityBox.setAttribute("title", "preview quality");
+  // don't let interacting with the slider also trigger picture-in-picture
+  qualityBox.onclick = (evt) => evt.stopPropagation();
+
+  let qualitySlider = document.createElement("input");
+  qualitySlider.type = "range";
+  qualitySlider.min = "10";
+  qualitySlider.max = "100";
+  qualitySlider.step = "5";
+  qualitySlider.value = String(Math.round(record.previewQuality * 100));
+  qualitySlider.classList.add("previewQualitySlider");
+
+  let qualityLabel = document.createElement("span");
+  qualityLabel.classList.add("sliderLabel");
+  qualityLabel.textContent = qualitySlider.value + "%";
+
+  qualitySlider.oninput = () => {
+    record.previewQuality = Number(qualitySlider.value) / 100;
+    previewQualityByMedia.set(qualityKey, record.previewQuality);
+    qualityLabel.textContent = qualitySlider.value + "%";
+  };
+  qualitySlider.onchange = () => refreshPreview(record, tab.id, frameId, e.id);
+
+  qualityBox.appendChild(qualitySlider);
+  qualityBox.appendChild(qualityLabel);
+  previewBox.appendChild(qualityBox);
+
+  // auto-hide: fade the slider out after a short stretch without mouse
+  // movement over the maximized preview, bring it back on the next movement
+  let qualityIdleTimer = null;
+  const showQualitySlider = () => {
+    qualityBox.classList.remove("qualityIdle");
+    clearTimeout(qualityIdleTimer);
+    qualityIdleTimer = setTimeout(function hide() {
+      // never hide while the pointer rests on it or a drag is in progress
+      if (qualityBox.matches(":hover, :active")) {
+        qualityIdleTimer = setTimeout(hide, QUALITY_IDLE_MS);
+        return;
+      }
+      qualityBox.classList.add("qualityIdle");
+    }, QUALITY_IDLE_MS);
+  };
+  record.showQualitySlider = showQualitySlider;
+  record.stopQualityIdleTimer = () => {
+    clearTimeout(qualityIdleTimer);
+    qualityBox.classList.remove("qualityIdle");
+  };
+  detailWrap.addEventListener("mousemove", () => {
+    if (record.previewMaximized) {
+      showQualitySlider();
+    }
+  });
+  // keyboard adjustments count as activity too
+  qualitySlider.addEventListener("input", showQualitySlider);
 
   let detailActionRow = document.createElement("div");
   detailActionRow.classList.add("elementActionRow", "detailActionRow");
@@ -656,7 +827,7 @@ async function fitWindowToContent() {
       min-width: 280px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 8px;
       box-sizing: border-box;
     }
     .detailContent {
@@ -732,12 +903,16 @@ async function fitWindowToContent() {
   let missCount = 0;
   setInterval(async () => {
     const requestedAt = Date.now();
+    const askedMaximized = !!record.previewMaximized;
     let newdata;
     try {
       newdata = await sendToFrame(tabId, frameId, {
         cmd: "query",
         id: eid,
         skipPoster: false,
+        posterOpts: getPosterOpts(record),
+        // lets the page skip re-encoding a frame we already have
+        posterKey: record.posterKey,
       });
     } catch (e) {
       newdata = null;
@@ -752,6 +927,10 @@ async function fitWindowToContent() {
       return;
     }
     missCount = 0;
+    // maximize was toggled mid-flight: this poster has the wrong quality
+    if (askedMaximized !== !!record.previewMaximized) {
+      newdata.poster = "";
+    }
     record.syncTime(newdata.currentTime, newdata.duration);
     applyPlaybackState(record, newdata, requestedAt);
   }, 150);

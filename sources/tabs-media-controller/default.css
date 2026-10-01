@@ -372,7 +372,7 @@ button svg {
   background-color: var(--bg);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 #detailView[hidden] {
@@ -401,10 +401,6 @@ button svg {
   padding: 6px;
 }
 
-.detailDetachBtn {
-  padding: 6px;
-}
-
 .detailTitle {
   flex: 1 1 auto;
   min-width: 0;
@@ -420,7 +416,7 @@ button svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
   max-height: 560px;
   overflow-y: auto;
 }
@@ -430,7 +426,7 @@ button svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
 }
 
 .previewBox {
@@ -481,6 +477,12 @@ button svg {
   background: transparent;
 }
 
+/* the static audio icon (audio.png, 300x150) is shown at double size too, to
+   match the doubled video thumbnails; max-width above still caps it to fit */
+.previewImg.audioIcon {
+  width: 600px;
+}
+
 /* preview-fullscreen mode: the picture takes over the detail view and the
    action row / sliders below it are hidden until toggled back */
 .detailBody.previewFullscreen {
@@ -500,39 +502,90 @@ button svg {
   display: none;
 }
 
+/* per-video JPEG quality slider, overlaid on the maximized preview */
+.previewQualityBox {
+  display: none;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: default;
+  transition: opacity 0.25s ease;
+}
+
+/* faded out after a moment of mouse inactivity; brought back by movement */
+.previewQualityBox.qualityIdle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.detailBody.previewFullscreen .previewQualityBox {
+  display: flex;
+}
+
+.previewQualityBox .sliderLabel {
+  color: #fff;
+  min-width: 36px;
+}
+
+.previewQualitySlider {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 20px;
+  cursor: pointer;
+}
+
 .detailActionRow {
   width: 100%;
-  max-width: 320px;
+  max-width: 420px;
 }
 
 .detailActionRow button {
-  padding: 14px 10px;
+  padding: 7px 10px;
 }
 
 .detailActionRow button svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
+/* icon-only extra action (detach) at the end of the action row */
+.elementDetachBtn {
+  flex: none;
+}
+
+/* rate and volume share one line, the seek bar (always the last row) gets
+   the full width below them; in a narrow window it all just stacks */
 .detailControlsDiv {
   width: 100%;
   max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 6px 14px;
+}
+
+.detailControlsDiv .sliderRow:last-child {
+  grid-column: 1 / -1;
 }
 
 .sliderRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .sliderLabel {
   font-size: 12px;
   color: var(--text-muted);
-  min-width: 46px;
+  min-width: 40px;
   flex: none;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -546,7 +599,7 @@ button svg {
   margin-left: 0;
   flex: 1 1 auto;
   accent-color: var(--accent-2);
-  height: 20px;
+  height: 16px;
   cursor: pointer;
 }
 
@@ -558,23 +611,23 @@ input[type="range"] {
 
 /* Firefox (this is a Firefox-only extension, so -moz- is what actually matters) */
 input[type="range"]::-moz-range-track {
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--border);
 }
 
 input[type="range"]::-moz-range-progress {
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--accent-2);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent-2);
-  border: 3px solid var(--surface-2);
+  border: 2px solid var(--surface-2);
   box-shadow: 0 0 0 1px var(--border);
   cursor: pointer;
 }
@@ -585,20 +638,20 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
 /* kept for portability if this popup is ever previewed in a Chromium-based tool */
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--border);
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent-2);
-  border: 3px solid var(--surface-2);
+  border: 2px solid var(--surface-2);
   box-shadow: 0 0 0 1px var(--border);
-  margin-top: -6px;
+  margin-top: -4px;
   cursor: pointer;
 }
 
