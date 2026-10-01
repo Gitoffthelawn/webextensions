@@ -6,7 +6,8 @@
   },
   "browser_action": {
     "default_title": "Group All Tabs by Site",
-    "default_area": "navbar"
+    "default_area": "navbar",
+    "default_icon": "icon.svg"
   },
   "browser_specific_settings": {
     "gecko": {
@@ -25,11 +26,14 @@
     "group-selected-uncollapsed": {
       "description": "Group Selected Sites (uncollapsed)"
     },
-    "group-all-unclollapsed": {
+    "group-all-uncollapsed": {
       "description": "Group All Sites (uncollapsed)"
     }
   },
-  "icons": {},
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg"
+  },
   "description": "Move same site/domain tabs into named collapsed or uncollapsed native tabgroups",
   "manifest_version": 2,
   "name": "Group Same Site Tabs",

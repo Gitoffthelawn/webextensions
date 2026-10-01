@@ -68,7 +68,7 @@ async function grpTabs(tabs) {
       t_hostname = t_hostname.split(".").slice(-2).join(".");
     }
 
-    tmp = hostname_tabIds_map.get(t_hostname);
+    let tmp = hostname_tabIds_map.get(t_hostname);
 
     if (!tmp) {
       tmp = new Set();
