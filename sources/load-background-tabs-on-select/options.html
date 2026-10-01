@@ -2,22 +2,348 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Options</title>
+    <title>Load Background Tabs on Select — Options</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1a1a1a;
+        --muted: #666666;
+        --border: #d0d0d0;
+        --accent: #0060df;
+        --ok: #2b7a2b;
+        --err: #c4302b;
+        --field-bg: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #23222b;
+          --fg: #f2f2f2;
+          --muted: #a8a8b3;
+          --border: #45444f;
+          --accent: #7fb3ff;
+          --ok: #6fcf6f;
+          --err: #ff6b6b;
+          --field-bg: #2c2b35;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        margin: 0;
+        padding: 1.5em;
+        max-width: 40em;
+      }
+
+      h1 {
+        font-size: 1.15em;
+        margin: 0 0 0.75em 0;
+      }
+
+      fieldset {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1em 1.25em 1.25em;
+        margin: 0;
+      }
+
+      legend {
+        padding: 0 0.4em;
+        font-weight: 600;
+      }
+
+      .mode-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6em;
+        margin-bottom: 1em;
+      }
+
+      .mode-row label {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 2.6em;
+        height: 1.5em;
+        flex: none;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch .track {
+        position: absolute;
+        inset: 0;
+        background: var(--border);
+        border-radius: 999px;
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+      }
+
+      .switch .track::before {
+        content: "";
+        position: absolute;
+        height: 1.1em;
+        width: 1.1em;
+        left: 0.2em;
+        top: 0.2em;
+        background: var(--bg);
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      }
+
+      .switch input:checked + .track {
+        background: var(--accent);
+      }
+
+      .switch input:checked + .track::before {
+        transform: translateX(1.1em);
+      }
+
+      .switch input:focus-visible + .track {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .mode-hint {
+        color: var(--muted);
+        font-size: 0.85em;
+        margin: 0.15em 0 1em 0;
+      }
+
+      .editor {
+        position: relative;
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--field-bg);
+      }
+
+      .editor:focus-within {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .gutter {
+        flex: none;
+        width: 3em;
+        padding: 0.7em 0.4em 0.7em 0;
+        text-align: right;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        line-height: 1.4;
+        color: var(--muted);
+        background: var(--field-bg);
+        border-right: 1px solid var(--border);
+        overflow: hidden;
+        white-space: pre;
+        user-select: none;
+      }
+
+      .gutter .line.error {
+        color: var(--err);
+        font-weight: 600;
+      }
+
+      .gutter .line.comment {
+        opacity: 0.5;
+      }
+
+      .gutter .line.match {
+        color: var(--ok);
+        font-weight: 600;
+      }
+
+      textarea {
+        flex: 1;
+        width: 100%;
+        min-height: 16em;
+        resize: vertical;
+        background: transparent;
+        color: var(--fg);
+        border: none;
+        padding: 0.7em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        line-height: 1.4;
+        white-space: pre;
+        overflow: auto;
+      }
+
+      textarea:focus {
+        outline: none;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5em;
+        margin-top: 0.5em;
+      }
+
+      button.tidy {
+        font-size: 0.8em;
+        padding: 0.3em 0.7em;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--field-bg);
+        color: var(--fg);
+        cursor: pointer;
+      }
+
+      button.tidy:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .tester {
+        margin-top: 1.25em;
+        padding-top: 1em;
+        border-top: 1px dashed var(--border);
+      }
+
+      .tester label {
+        display: block;
+        font-size: 0.85em;
+        color: var(--muted);
+        margin-bottom: 0.4em;
+      }
+
+      .tester input[type="text"] {
+        width: 100%;
+        background: var(--field-bg);
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.5em 0.7em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+
+      .tester input[type="text"]:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .test-result {
+        margin-top: 0.5em;
+        font-size: 0.85em;
+        min-height: 1.2em;
+      }
+
+      .test-result.allowed {
+        color: var(--ok);
+      }
+
+      .test-result.blocked {
+        color: var(--err);
+      }
+
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 0.5em;
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+
+      #pattern-count {
+        color: var(--muted);
+      }
+
+      #pattern-errors {
+        color: var(--err);
+        text-align: right;
+      }
+
+      #pattern-errors:empty::before {
+        content: "";
+      }
+
+      .saved-hint {
+        color: var(--ok);
+        font-size: 0.85em;
+        margin-top: 0.4em;
+        min-height: 1.2em;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .saved-hint.visible {
+        opacity: 1;
+      }
+    </style>
   </head>
   <body>
+    <h1>Load Background Tabs on Select</h1>
     <fieldset>
       <legend>Operation Mode</legend>
-      <span> Blacklist Mode? <input id="mode" type="checkbox" /></span>
-      <textarea
-        id="matchers"
-        style="width: 100%; min-height: 20em"
-        placeholder="Enter regular expressions line by line here
+
+      <div class="mode-row">
+        <label class="switch">
+          <input id="mode" type="checkbox" />
+          <span class="track"></span>
+        </label>
+        <label for="mode">Blacklist mode</label>
+      </div>
+      <p class="mode-hint" id="mode-hint">
+        Whitelist mode: only tabs matching a pattern below are allowed to load
+        in the background. Everything else stays discarded until selected.
+      </p>
+
+      <div class="editor">
+        <div class="gutter" id="gutter" aria-hidden="true"></div>
+        <textarea
+          id="matchers"
+          spellcheck="false"
+          wrap="off"
+          placeholder="Enter regular expressions, one per line
 Examples:
     ^https:\/\/www\.facebook\.com.*
     ^https:\/\/example\.net.*
     ^https:\/\/.*\.wikipedia\.org.*
-"
-      ></textarea>
+Lines starting with # are comments and are ignored."
+        ></textarea>
+      </div>
+
+      <div class="status-row">
+        <span id="pattern-count">0 patterns</span>
+        <span id="pattern-errors"></span>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="tidy" id="tidy-btn">
+          Trim &amp; remove duplicates
+        </button>
+      </div>
+      <div class="saved-hint" id="saved-hint">Saved</div>
+
+      <div class="tester">
+        <label for="test-url">Test a URL against these patterns</label>
+        <input
+          type="text"
+          id="test-url"
+          placeholder="https://example.com/some/page"
+          autocomplete="off"
+        />
+        <div class="test-result" id="test-result"></div>
+      </div>
     </fieldset>
     <script src="options.js"></script>
   </body>

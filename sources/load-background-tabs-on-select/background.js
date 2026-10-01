@@ -16,6 +16,8 @@ async function setToStorage(id, value) {
   const manifest = browser.runtime.getManifest();
   const extname = manifest.name;
   let manually_disabled = false;
+  let mode = false;
+  let regexList = [];
 
   async function getMode() {
     return await getFromStorage("boolean", "mode", false);
@@ -27,7 +29,7 @@ async function setToStorage(id, value) {
 
     tmp.split("\n").forEach((line) => {
       line = line.trim();
-      if (line !== "") {
+      if (line !== "" && !line.startsWith("#")) {
         try {
           line = new RegExp(line.trim());
           out.push(line);
@@ -48,25 +50,33 @@ async function setToStorage(id, value) {
     return false;
   }
 
+  function updateBadge() {
+    if (!manually_disabled) {
+      browser.browserAction.setBadgeText({ text: "on" });
+      browser.browserAction.setBadgeBackgroundColor({
+        color: [0, 115, 0, 115],
+      });
+      browser.browserAction.setTitle({
+        title: `${extname}: ON (click to disable)`,
+      });
+    } else {
+      browser.browserAction.setBadgeText({ text: "off" });
+      browser.browserAction.setBadgeBackgroundColor({
+        color: [115, 0, 0, 115],
+      });
+      browser.browserAction.setTitle({
+        title: `${extname}: OFF (click to enable)`,
+      });
+    }
+  }
+
   async function onStorageChange(/*changes, area*/) {
     manually_disabled = await getFromStorage(
       "boolean",
       "manually_disabled",
       false,
     );
-    if (!manually_disabled) {
-      //
-      browser.browserAction.setBadgeText({ text: "on" });
-      browser.browserAction.setBadgeBackgroundColor({
-        color: [0, 115, 0, 115],
-      });
-    } else {
-      //
-      browser.browserAction.setBadgeText({ text: "off" });
-      browser.browserAction.setBadgeBackgroundColor({
-        color: [115, 0, 0, 115],
-      });
-    }
+    updateBadge();
     mode = await getMode();
     regexList = await getRegexList();
   }
@@ -82,9 +92,9 @@ async function setToStorage(id, value) {
       // ignore
       if (
         !(
+          tab.discarded ||
           tab.active ||
           tab.hidden ||
-          tab.discarded ||
           wasActive.has(tabId) ||
           manually_disabled ||
           !changeInfo.url.startsWith("http")
@@ -118,33 +128,27 @@ async function setToStorage(id, value) {
 
   browser.storage.onChanged.addListener(onStorageChange);
   browser.browserAction.onClicked.addListener(() => {
-    if (manually_disabled) {
-      //
-      manually_disabled = false;
-      browser.browserAction.setBadgeText({ text: "on" });
-      browser.browserAction.setBadgeBackgroundColor({
-        color: [0, 115, 0, 115],
-      });
-    } else {
-      //
-      manually_disabled = true;
-      browser.browserAction.setBadgeText({ text: "off" });
-      browser.browserAction.setBadgeBackgroundColor({
-        color: [115, 0, 0, 115],
-      });
-    }
+    manually_disabled = !manually_disabled;
+    updateBadge();
     setToStorage("manually_disabled", manually_disabled);
   });
-  browser.browserAction.setTitle({ title: "Toggle tab background loading" });
 })();
 
 browser.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === "install") {
     browser.runtime.openOptionsPage();
   } else {
-    // Migrate old data
-    let tmp = await getFromStorage("object", "selectors", []);
-    tmp = tmp.map((e) => e.url_regex).join("\n");
-    await setToStorage("matchers", tmp);
+    // Migrate old data (only if there is old data and it hasn't been migrated yet)
+    let oldSelectors = await getFromStorage("object", "selectors", null);
+    let existingMatchers = await getFromStorage("string", "matchers", "");
+    if (
+      Array.isArray(oldSelectors) &&
+      oldSelectors.length > 0 &&
+      existingMatchers === ""
+    ) {
+      let migrated = oldSelectors.map((e) => e.url_regex).join("\n");
+      await setToStorage("matchers", migrated);
+      await browser.storage.local.remove("selectors");
+    }
   }
 });
