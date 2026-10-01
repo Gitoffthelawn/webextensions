@@ -553,9 +553,9 @@ async function onDOMContentLoaded() {
 
   wrapCheckboxEl.addEventListener("click", (evt) => {
     if (evt.target.checked) {
-      textareaEl.style.whiteSpace = "nowrap";
-    } else {
       textareaEl.style.whiteSpace = "wrap";
+    } else {
+      textareaEl.style.whiteSpace = "nowrap";
     }
   });
 } // onDOMContentLoaded
