@@ -169,7 +169,7 @@ function formatTimeLabel(value, duration) {
 // instead of stretching the small one. The JPEG quality used for that is
 // adjustable per media element via the slider on the maximized preview; the
 // content script never upscales past the video's native resolution.
-const DEFAULT_PREVIEW_QUALITY = 0.4;
+const DEFAULT_PREVIEW_QUALITY = 0.8;
 
 // remembered per media element so the chosen quality survives the row/detail
 // view being rebuilt (the element id is stable for the page's lifetime)
@@ -225,12 +225,16 @@ function getPosterOpts(rec) {
   if (!rec.previewMaximized) {
     return undefined; // content script falls back to its compact defaults
   }
+  // The window can be resized at any time while maximized, and resizing must
+  // only rescale the picture on screen (plain CSS), never change what gets
+  // captured. So the capture size doesn't look at the window at all: it is
+  // the largest the preview could ever be shown on this screen. The content
+  // script never upscales past the video's native resolution, so smaller
+  // videos are simply captured at their own size.
   const dpr = window.devicePixelRatio || 1;
-  const w = rec.previewBox.clientWidth || 560;
-  const h = rec.previewBox.clientHeight || 560;
   return {
-    maxW: Math.round(w * dpr),
-    maxH: Math.round(h * dpr),
+    maxW: Math.round(screen.width * dpr),
+    maxH: Math.round(screen.height * dpr),
     quality: rec.previewQuality,
   };
 }
@@ -578,7 +582,7 @@ function buildDetailPanel(tab, url, e, frameId) {
   // it's maximized (see .previewQualityBox in default.css)
   let qualityBox = document.createElement("div");
   qualityBox.classList.add("previewQualityBox");
-  qualityBox.setAttribute("title", "preview quality");
+  qualityBox.setAttribute("title", "preview quality (JPEG)");
   // don't let interacting with the slider also trigger picture-in-picture
   qualityBox.onclick = (evt) => evt.stopPropagation();
 
@@ -601,7 +605,13 @@ function buildDetailPanel(tab, url, e, frameId) {
   };
   qualitySlider.onchange = () => refreshPreview(record, tab.id, frameId, e.id);
 
-  qualityBox.appendChild(qualitySlider);
+  // vertical slider: a normal horizontal range rotated by CSS (works in every
+  // Firefox version, unlike the native vertical range support). The wrapper
+  // reserves the vertical space the rotated slider visually occupies
+  let qualitySliderWrap = document.createElement("div");
+  qualitySliderWrap.classList.add("previewQualitySliderWrap");
+  qualitySliderWrap.appendChild(qualitySlider);
+  qualityBox.appendChild(qualitySliderWrap);
   qualityBox.appendChild(qualityLabel);
   previewBox.appendChild(qualityBox);
 
@@ -833,6 +843,29 @@ async function fitWindowToContent() {
     .detailContent {
       flex: 1 1 auto;
       min-height: 0;
+      max-height: none;
+    }
+    /* the preview follows the window: it fills the available width and,
+       when the window gets too short for the controls below it, shrinks
+       (letterboxed) instead of pushing them out of view. This is pure
+       on-screen scaling of the frame that was already captured. The static
+       audio icon keeps its fixed size. */
+    .detailBody {
+      flex: 0 1 auto;
+      min-height: 0;
+    }
+    .previewBoxLarge:has(> .previewImg:not(.audioIcon)) {
+      width: 100%;
+      max-width: 100%;
+      max-height: none;
+      min-height: 80px;
+    }
+    .previewBoxLarge > .previewImg:not(.audioIcon) {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
       max-height: none;
     }
   `;

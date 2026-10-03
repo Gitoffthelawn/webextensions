@@ -364,7 +364,7 @@ async function detachRecord(rec) {
     type: "popup",
     // wide enough for the doubled (600px) preview plus padding and scrollbar
     width: 650,
-    height: 520,
+    height: 600,
   });
   window.close();
 }

@@ -502,17 +502,22 @@ button svg {
   display: none;
 }
 
-/* per-video JPEG quality slider, overlaid on the maximized preview */
+/* per-video JPEG quality slider, overlaid on the maximized preview as a
+   vertical strip right below the fullscreen toggle (same right edge/width) */
 .previewQualityBox {
+  /* slider length: 140px normally, shrinking in a short window so the strip
+     (offset + padding + label) never gets clipped by the preview box */
+  --qlen: clamp(50px, calc(100vh - 170px), 140px);
   display: none;
   position: absolute;
-  left: 8px;
+  top: 46px;
   right: 8px;
-  bottom: 8px;
+  width: 30px;
   z-index: 2;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 8px 0 6px;
   border-radius: var(--radius-sm);
   background-color: rgba(0, 0, 0, 0.55);
   color: #fff;
@@ -532,13 +537,27 @@ button svg {
 
 .previewQualityBox .sliderLabel {
   color: #fff;
-  min-width: 36px;
+  min-width: 0;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* 20 x --qlen slot for the slider; the slider itself is a --qlen x 16
+   horizontal range centered in it and rotated so that "more" is up */
+.previewQualitySliderWrap {
+  position: relative;
+  width: 20px;
+  height: var(--qlen);
 }
 
 .previewQualitySlider {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 20px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--qlen);
+  height: 16px;
+  margin: -8px 0 0 calc(var(--qlen) / -2);
+  transform: rotate(-90deg);
   cursor: pointer;
 }
 
