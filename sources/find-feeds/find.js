@@ -28,12 +28,24 @@ async function openFeedInTab(evt) {
 }
 
 function openPreview(url) {
-  browser.tabs.create({
+  /*browser.tabs.create({
     active: true,
     url:
       browser.runtime.getURL("preview.html") +
       "?url=" +
       encodeURIComponent(url),
+  });*/
+
+  browser.windows.create({
+    url: [
+      browser.runtime.getURL("preview.html") +
+        "?url=" +
+        encodeURIComponent(url),
+    ],
+    type: "popup",
+    height: 480,
+    width: 680,
+    focused: true,
   });
 }
 
