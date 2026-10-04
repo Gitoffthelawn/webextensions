@@ -1,169 +1,510 @@
 <!doctype html>
-<head>
-  <title>working ...</title>
-  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-  <style>
-    :root {
-      --bg: #fafaf9;
-      --surface: #ffffff;
-      --border: #e1dfdc;
-      --text: #211f1d;
-      --muted: #6b6863;
-      --accent: #e86a2c;
-      --type-xml: #3d7a56;
-      --type-xml-bg: #e8f2ec;
-      --type-json: #33587f;
-      --type-json-bg: #e8eef4;
-      --font-ui:
-        -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-code:
-        ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-        monospace;
-    }
+<html lang="en">
+  <head>
+    <title>working ...</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --surface: #ffffff;
+        --border: #e1dfdc;
+        --text: #211f1d;
+        --muted: #6b6863;
+        --accent: #e86a2c;
+        --accent-ink: #ffffff;
+        --danger: #ae3b27;
+        --ok: #3d7a56;
+        --type-xml: #3d7a56;
+        --type-xml-bg: #e8f2ec;
+        --type-json: #33587f;
+        --type-json-bg: #e8eef4;
+        --font-ui:
+          -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-code:
+          ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+      }
 
-    * {
-      box-sizing: border-box;
-    }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1b1a;
+          --surface: #262422;
+          --border: #3a3835;
+          --text: #ecebe9;
+          --muted: #9b9791;
+          --accent: #f0813f;
+          --accent-ink: #1c1b1a;
+          --danger: #e8806c;
+          --ok: #7fc79a;
+          --type-xml: #7fc79a;
+          --type-xml-bg: #1f3327;
+          --type-json: #8db4e0;
+          --type-json-bg: #1d2c3d;
+        }
+      }
 
-    body {
-      margin: 0;
-      padding: 28px 24px 40px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      line-height: 1.5;
-    }
+      * {
+        box-sizing: border-box;
+      }
 
-    .page {
-      max-width: 760px;
-      margin: 0 auto;
-    }
+      [hidden] {
+        display: none !important;
+      }
 
-    header {
-      margin-bottom: 18px;
-    }
+      body {
+        margin: 0;
+        padding: 28px 24px 40px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-ui);
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-    header h1 {
-      font-size: 17px;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+      }
 
-    header p {
-      margin: 0;
-      color: var(--muted);
-      font-family: var(--font-code);
-      font-size: 12px;
-      word-break: break-all;
-    }
+      header {
+        margin-bottom: 18px;
+      }
 
-    progress {
-      width: 100%;
-      height: 6px;
-      border: none;
-      border-radius: 3px;
-      overflow: hidden;
-      margin-bottom: 20px;
-      accent-color: var(--accent);
-    }
+      .header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
 
-    progress::-webkit-progress-bar {
-      background: var(--border);
-      border-radius: 3px;
-    }
+      .header-text {
+        flex: 1;
+        min-width: 0;
+      }
 
-    progress::-webkit-progress-value {
-      background: var(--accent);
-      border-radius: 3px;
-    }
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-    ul#feedlist {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+      header h1 {
+        font-size: 17px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
 
-    ul#feedlist li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-family: var(--font-code);
+        font-size: 12px;
+        word-break: break-all;
+      }
 
-    .type-badge {
-      flex-shrink: 0;
-      font-family: var(--font-code);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
+      button {
+        font-family: var(--font-ui);
+        font-size: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--muted);
+        border-radius: 5px;
+        padding: 4px 9px;
+        cursor: pointer;
+      }
 
-    .type-badge.xml {
-      color: var(--type-xml);
-      background: var(--type-xml-bg);
-    }
+      button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
 
-    .type-badge.json {
-      color: var(--type-json);
-      background: var(--type-json-bg);
-    }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
 
-    .feed-link {
-      flex: 1;
-      min-width: 0;
-      font-family: var(--font-code);
-      font-size: 13px;
-      color: var(--text);
-      text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
 
-    .feed-link:hover {
-      color: var(--accent);
-      text-decoration: underline;
-    }
+      .copy-all-btn {
+        font-size: 13px;
+        font-weight: 600;
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-radius: 6px;
+        padding: 6px 12px;
+      }
 
-    .copy-btn {
-      flex-shrink: 0;
-      font-family: var(--font-ui);
-      font-size: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--muted);
-      border-radius: 5px;
-      padding: 4px 9px;
-      cursor: pointer;
-    }
+      .copy-all-btn:hover:not(:disabled) {
+        filter: brightness(1.05);
+        color: var(--accent-ink);
+      }
 
-    .copy-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+      .btn-secondary {
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 6px 12px;
+        background: var(--surface);
+        color: var(--text);
+      }
 
-    .empty-state {
-      color: var(--muted);
-      padding: 24px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <header>
-      <h1 id="msg">Looking for feed-like URLs, please wait</h1>
-      <p id="target"></p>
-    </header>
-    <progress id="urls2checkProgress" value="0" max="1"></progress>
-    <ul id="feedlist"></ul>
-  </div>
-  <script src="find.js"></script>
-</body>
+      progress {
+        width: 100%;
+        height: 6px;
+        border: none;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        accent-color: var(--accent);
+      }
+
+      progress::-webkit-progress-bar {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      progress::-webkit-progress-value {
+        background: var(--accent);
+        border-radius: 3px;
+      }
+
+      /* filter / sort toolbar */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .select-all {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .chips {
+        display: flex;
+        gap: 4px;
+      }
+
+      .chip.is-active {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      .chip.is-active:hover:not(:disabled) {
+        color: var(--accent-ink);
+      }
+
+      .toolbar input[type="search"],
+      .toolbar select {
+        font-family: var(--font-ui);
+        font-size: 13px;
+        padding: 5px 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .toolbar input[type="search"] {
+        flex: 1;
+        min-width: 160px;
+      }
+
+      .selection-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        background: var(--surface);
+        font-size: 13px;
+      }
+
+      .selection-bar span {
+        margin-right: auto;
+        font-weight: 600;
+      }
+
+      ul#feedlist,
+      ul#removedlist,
+      ul#checkedlist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      ul#feedlist li,
+      ul#removedlist li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      ul#removedlist li {
+        background: transparent;
+        border-style: dashed;
+        opacity: 0.65;
+      }
+
+      .row-select {
+        flex-shrink: 0;
+        accent-color: var(--accent);
+      }
+
+      .type-badge {
+        flex-shrink: 0;
+        font-family: var(--font-code);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
+      }
+
+      .type-badge.xml {
+        color: var(--type-xml);
+        background: var(--type-xml-bg);
+      }
+
+      .type-badge.json {
+        color: var(--type-json);
+        background: var(--type-json-bg);
+      }
+
+      .declared-tag {
+        flex-shrink: 0;
+        font-size: 11px;
+        color: var(--ok);
+        border: 1px solid var(--ok);
+        border-radius: 4px;
+        padding: 1px 6px;
+      }
+
+      .feed-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .feed-title {
+        font-weight: 600;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feed-link {
+        font-family: var(--font-code);
+        font-size: 13px;
+        color: var(--text);
+        text-decoration: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feed-link:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      .feed-meta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .row-btn {
+        flex-shrink: 0;
+      }
+
+      .remove-btn:hover:not(:disabled) {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      /* active rows: no Restore; removed rows: only Restore */
+      ul#feedlist li .restore-btn {
+        display: none;
+      }
+
+      ul#removedlist li .row-btn:not(.restore-btn) {
+        display: none;
+      }
+
+      .removed-section {
+        margin-top: 28px;
+      }
+
+      .removed-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .removed-head h2 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      details.checked {
+        margin-top: 28px;
+        color: var(--muted);
+      }
+
+      details.checked summary {
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      ul#checkedlist {
+        margin-top: 10px;
+        gap: 4px;
+        font-family: var(--font-code);
+        font-size: 12px;
+      }
+
+      ul#checkedlist li {
+        display: flex;
+        gap: 8px;
+      }
+
+      ul#checkedlist .mark {
+        flex-shrink: 0;
+        width: 1.2em;
+      }
+
+      ul#checkedlist .mark.ok {
+        color: var(--ok);
+      }
+
+      ul#checkedlist .mark.fail {
+        color: var(--danger);
+      }
+
+      ul#checkedlist .url {
+        flex: 1;
+        min-width: 0;
+        word-break: break-all;
+      }
+
+      ul#checkedlist .reason {
+        flex-shrink: 0;
+        max-width: 40%;
+      }
+
+      .empty-state {
+        color: var(--muted);
+        padding: 24px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header-row">
+        <div class="header-text">
+          <h1 id="msg">Looking for feed-like URLs, please wait</h1>
+          <p id="target"></p>
+        </div>
+        <div class="header-actions">
+          <button
+            type="button"
+            id="exportOpmlBtn"
+            class="btn-secondary"
+            title="Download the listed feeds as an OPML file"
+            hidden
+          >
+            Export OPML
+          </button>
+          <button type="button" id="copyAllBtn" class="copy-all-btn" hidden>
+            Copy all
+          </button>
+        </div>
+      </header>
+      <progress id="urls2checkProgress" value="0" max="1"></progress>
+
+      <div id="toolbar" class="toolbar" hidden>
+        <label class="select-all"
+          ><input type="checkbox" id="selectAll" /> Select shown</label
+        >
+        <div class="chips" role="group" aria-label="Feed type">
+          <button type="button" class="chip is-active" data-type="all">
+            All
+          </button>
+          <button type="button" class="chip" data-type="xml">XML</button>
+          <button type="button" class="chip" data-type="json">JSON</button>
+        </div>
+        <input
+          type="search"
+          id="filterText"
+          placeholder="Filter by URL or title"
+          spellcheck="false"
+        />
+        <select id="sortSelect" aria-label="Sort feeds">
+          <option value="default">Declared first</option>
+          <option value="title">Title A–Z</option>
+          <option value="type">Type</option>
+          <option value="newest">Newest first</option>
+        </select>
+      </div>
+
+      <div id="selectionBar" class="selection-bar" hidden>
+        <span id="selectionCount"></span>
+        <button type="button" id="copySelectedBtn">Copy selected</button>
+        <button type="button" id="removeSelectedBtn" class="remove-btn">
+          Remove selected
+        </button>
+        <button type="button" id="clearSelectionBtn">Clear</button>
+      </div>
+
+      <ul id="feedlist"></ul>
+      <p id="noMatch" class="empty-state" hidden>
+        No feeds match the current filter.
+      </p>
+      <p id="emptyState" class="empty-state" hidden>
+        Nothing matched the built-in or custom detectors.
+      </p>
+
+      <section id="removedSection" class="removed-section" hidden>
+        <div class="removed-head">
+          <h2 id="removedTitle">Removed (0)</h2>
+          <button type="button" id="restoreAllBtn" class="restore-btn">
+            Restore all
+          </button>
+        </div>
+        <ul id="removedlist"></ul>
+      </section>
+
+      <details id="checkedDetails" class="checked" hidden>
+        <summary id="checkedSummary">Checked URLs</summary>
+        <ul id="checkedlist"></ul>
+      </details>
+    </div>
+    <script src="find.js"></script>
+  </body>
+</html>

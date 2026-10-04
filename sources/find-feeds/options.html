@@ -1,252 +1,475 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <title>Find Feeds — Detector Rules</title>
-  <style>
-    :root {
-      --bg: #fafaf9;
-      --surface: #ffffff;
-      --border: #e1dfdc;
-      --text: #211f1d;
-      --muted: #6b6863;
-      --accent: #e86a2c;
-      --accent-ink: #ffffff;
-      --danger: #ae3b27;
-      --danger-bg: #fbebe7;
-      --focus: #e86a2c;
-      --font-ui:
-        -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-code:
-        ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-        monospace;
-    }
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Find Feeds — Detector Rules</title>
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --surface: #ffffff;
+        --border: #e1dfdc;
+        --text: #211f1d;
+        --muted: #6b6863;
+        --accent: #e86a2c;
+        --accent-ink: #ffffff;
+        --danger: #ae3b27;
+        --danger-bg: #fbebe7;
+        --ok: #3d7a56;
+        --warn: #8a6100;
+        --focus: #e86a2c;
+        --font-ui:
+          -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-code:
+          ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+      }
 
-    * {
-      box-sizing: border-box;
-    }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1b1a;
+          --surface: #262422;
+          --border: #3a3835;
+          --text: #ecebe9;
+          --muted: #9b9791;
+          --accent: #f0813f;
+          --accent-ink: #1c1b1a;
+          --danger: #e8806c;
+          --danger-bg: #3a1f1a;
+          --ok: #7fc79a;
+          --warn: #e0b34a;
+          --focus: #f0813f;
+        }
+      }
 
-    body {
-      margin: 0;
-      padding: 32px 24px 96px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      line-height: 1.5;
-    }
+      * {
+        box-sizing: border-box;
+      }
 
-    .page {
-      max-width: 860px;
-      margin: 0 auto;
-    }
+      [hidden] {
+        display: none !important;
+      }
 
-    header.topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 28px;
-    }
+      body {
+        margin: 0;
+        padding: 32px 24px 96px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-ui);
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-    header.topbar h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+      }
 
-    header.topbar p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 52ch;
-    }
+      header.topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
 
-    .topbar-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
+      header.topbar h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
 
-    button {
-      font-family: var(--font-ui);
-      font-size: 13px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      padding: 7px 14px;
-      cursor: pointer;
-    }
+      header.topbar p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 52ch;
+      }
 
-    button:hover {
-      border-color: var(--muted);
-    }
+      .topbar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-    button:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 1px;
-    }
+      button {
+        font-family: var(--font-ui);
+        font-size: 13px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        padding: 7px 14px;
+        cursor: pointer;
+      }
 
-    button.btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: var(--accent-ink);
-      font-weight: 600;
-    }
+      button:hover:not(:disabled) {
+        border-color: var(--muted);
+      }
 
-    button.btn-primary:hover {
-      filter: brightness(1.05);
-    }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
 
-    button.btn-danger-text {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 4px 8px;
-    }
+      button:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
 
-    button.btn-danger-text:hover {
-      color: var(--danger);
-      background: var(--danger-bg);
-    }
+      button.btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 600;
+      }
 
-    .rules {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+      button.btn-primary:hover {
+        filter: brightness(1.05);
+      }
 
-    .rule-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 16px;
-    }
+      button.btn-small {
+        padding: 4px 10px;
+        font-size: 12px;
+      }
 
-    .rule-card.is-new {
-      border-style: dashed;
-      background: transparent;
-    }
+      button.btn-danger-text {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        padding: 4px 8px;
+      }
 
-    .rule-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
+      button.btn-danger-text:hover {
+        color: var(--danger);
+        background: var(--danger-bg);
+      }
 
-    .rule-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      flex-shrink: 0;
-    }
+      .settings-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
 
-    .rule-toggle input {
-      accent-color: var(--accent);
-    }
+      .settings-card h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+      }
 
-    .rule-label {
-      font-size: 12px;
-      color: var(--muted);
-      flex-shrink: 0;
-    }
+      .setting small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
 
-    input.url_regex {
-      flex: 1;
-      min-width: 0;
-      font-family: var(--font-code);
-      font-size: 13px;
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: var(--bg);
-      color: var(--text);
-    }
+      .setting-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
 
-    input.url_regex.is-invalid {
-      border-color: var(--danger);
-      background: var(--danger-bg);
-    }
+      .setting-check input {
+        margin-top: 3px;
+        accent-color: var(--accent);
+      }
 
-    textarea.code {
-      width: 100%;
-      font-family: var(--font-code);
-      font-size: 13px;
-      line-height: 1.5;
-      padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: var(--bg);
-      color: var(--text);
-      resize: vertical;
-      min-height: 2.4em;
-      max-height: 2.4em;
-      overflow: hidden;
-      transition: max-height 0.15s ease;
-    }
+      .setting-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
 
-    textarea.code:focus {
-      max-height: 60vh;
-      overflow: auto;
-    }
+      .setting label.setting-label {
+        font-weight: 600;
+      }
 
-    .rule-card.is-new textarea.code,
-    .rule-card.is-new input.url_regex {
-      background: var(--surface);
-    }
+      #subscribeTemplate {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-code);
+        font-size: 13px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--bg);
+        color: var(--text);
+      }
 
-    .formbar {
-      position: sticky;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 20px;
-      padding: 14px 0;
-      background: linear-gradient(to top, var(--bg) 60%, transparent);
-    }
+      #subscribePreset {
+        font-family: var(--font-ui);
+        font-size: 13px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--bg);
+        color: var(--text);
+      }
 
-    .save-status {
-      font-size: 13px;
-      color: var(--muted);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
+      .rules {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-    .save-status.is-visible {
-      opacity: 1;
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <header class="topbar">
-      <div>
-        <h1>Detector rules</h1>
-        <p>
-          Each rule matches a page URL with a regex, then runs the JS code
-          against that page to return candidate feed URLs.
-        </p>
-      </div>
-      <div class="topbar-actions">
-        <button id="expbtn" type="button">Export</button>
-        <button id="impbtn_wrapper" type="button">Import</button>
-        <input id="impbtn" type="file" style="display: none" />
-      </div>
-    </header>
-    <form id="mainForm" accept-charset="utf-8">
-      <div id="mainTableBody" class="rules"></div>
-      <div class="formbar">
-        <button type="submit" class="btn-primary">Save changes</button>
-        <span id="saveStatus" class="save-status" aria-live="polite"
-          >Saved</span
-        >
-      </div>
-    </form>
-  </div>
-  <script src="options.js"></script>
-</body>
+      .rule-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+      }
+
+      .rule-card.is-new {
+        border-style: dashed;
+        background: transparent;
+      }
+
+      .rule-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .rule-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+
+      .rule-toggle input {
+        accent-color: var(--accent);
+      }
+
+      .rule-label {
+        font-size: 12px;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+
+      input.url_regex {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-code);
+        font-size: 13px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      input.url_regex.is-invalid {
+        border-color: var(--danger);
+        background: var(--danger-bg);
+      }
+
+      textarea.code {
+        width: 100%;
+        font-family: var(--font-code);
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--bg);
+        color: var(--text);
+        resize: vertical;
+        min-height: 2.4em;
+        max-height: 2.4em;
+        overflow: hidden;
+        transition: max-height 0.15s ease;
+      }
+
+      textarea.code:focus {
+        max-height: 60vh;
+        overflow: auto;
+      }
+
+      .rule-card.is-new textarea.code,
+      .rule-card.is-new input.url_regex {
+        background: var(--surface);
+      }
+
+      .test-result {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--bg);
+        font-size: 12px;
+      }
+
+      .test-result p {
+        margin: 0 0 6px;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+
+      .test-result p.warn {
+        color: var(--warn);
+      }
+
+      .test-result p.err {
+        color: var(--danger);
+      }
+
+      .test-result ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-family: var(--font-code);
+      }
+
+      .test-result li {
+        display: flex;
+        gap: 8px;
+      }
+
+      .test-result .mark {
+        flex-shrink: 0;
+        width: 1.2em;
+      }
+
+      .test-result .mark.ok {
+        color: var(--ok);
+      }
+
+      .test-result .mark.fail {
+        color: var(--danger);
+      }
+
+      .test-result .url {
+        flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .test-result .detail {
+        flex-shrink: 0;
+        max-width: 40%;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+
+      .formbar {
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        padding: 14px 0;
+        background: linear-gradient(to top, var(--bg) 60%, transparent);
+      }
+
+      .save-status {
+        font-size: 13px;
+        color: var(--muted);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .save-status.is-visible {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div>
+          <h1>Detector rules</h1>
+          <p>
+            Each rule matches a page URL with a regex, then runs the JS code
+            against that page to return candidate feed URLs.
+          </p>
+        </div>
+        <div class="topbar-actions">
+          <button
+            id="restorebtn"
+            type="button"
+            title="Add any default rules that are missing (your own rules are kept)"
+          >
+            Restore defaults
+          </button>
+          <button id="expbtn" type="button">Export</button>
+          <button id="impbtn_wrapper" type="button">Import</button>
+          <input id="impbtn" type="file" style="display: none" />
+        </div>
+      </header>
+
+      <section class="settings-card">
+        <h2>Settings</h2>
+        <div class="setting">
+          <label class="setting-check">
+            <input type="checkbox" id="autoDetect" />
+            <span
+              >Detect feeds automatically when a page finishes loading
+              <small
+                >Shows the number of feeds found as a badge on the toolbar
+                button. Off by default: it runs the detectors and makes network
+                requests for every page you visit.</small
+              ></span
+            >
+          </label>
+        </div>
+        <div class="setting">
+          <label class="setting-label" for="subscribeTemplate"
+            >Subscribe link template</label
+          >
+          <div class="setting-row">
+            <input
+              id="subscribeTemplate"
+              type="text"
+              spellcheck="false"
+              placeholder="https://feedly.com/i/subscription/feed/{url}"
+            />
+            <select id="subscribePreset" aria-label="Presets">
+              <option value="">Presets</option>
+              <option value="https://feedly.com/i/subscription/feed/{url}">
+                Feedly
+              </option>
+              <option value="https://www.inoreader.com/?add_feed={url}">
+                Inoreader
+              </option>
+            </select>
+          </div>
+          <small
+            >Adds a "Subscribe" button to every found feed. {url} is replaced
+            with the URL-encoded feed URL, {rawurl} with the plain one (for
+            example https://your-miniflux.example/bookmarklet?uri={url}). Leave
+            empty to hide the button.</small
+          >
+        </div>
+      </section>
+
+      <form id="mainForm" accept-charset="utf-8">
+        <div id="mainTableBody" class="rules"></div>
+        <div class="formbar">
+          <button type="submit" class="btn-primary">Save changes</button>
+          <span id="saveStatus" class="save-status" aria-live="polite"
+            >Saved</span
+          >
+        </div>
+      </form>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

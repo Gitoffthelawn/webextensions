@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Feed preview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --surface: #ffffff;
+        --border: #e1dfdc;
+        --text: #211f1d;
+        --muted: #6b6863;
+        --accent: #e86a2c;
+        --accent-ink: #ffffff;
+        --danger: #ae3b27;
+        --danger-bg: #fbebe7;
+        --type-xml: #3d7a56;
+        --type-xml-bg: #e8f2ec;
+        --type-json: #33587f;
+        --type-json-bg: #e8eef4;
+        --font-ui:
+          -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-code:
+          ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1b1a;
+          --surface: #262422;
+          --border: #3a3835;
+          --text: #ecebe9;
+          --muted: #9b9791;
+          --accent: #f0813f;
+          --accent-ink: #1c1b1a;
+          --danger: #e8806c;
+          --danger-bg: #3a1f1a;
+          --type-xml: #7fc79a;
+          --type-xml-bg: #1f3327;
+          --type-json: #8db4e0;
+          --type-json-bg: #1d2c3d;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 24px 56px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-ui);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      header.feed-head {
+        margin-bottom: 20px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      h1 a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      h1 a:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      .type-badge {
+        flex-shrink: 0;
+        font-family: var(--font-code);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
+      }
+
+      .type-badge.xml {
+        color: var(--type-xml);
+        background: var(--type-xml-bg);
+      }
+
+      .type-badge.json {
+        color: var(--type-json);
+        background: var(--type-json-bg);
+      }
+
+      .feed-desc {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .feed-source {
+        margin: 8px 0 0;
+        font-family: var(--font-code);
+        font-size: 12px;
+        color: var(--muted);
+        word-break: break-all;
+      }
+
+      .feed-count {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .toolbar input[type="search"] {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-ui);
+        font-size: 13px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .toolbar button {
+        flex-shrink: 0;
+        font-family: var(--font-ui);
+        font-size: 13px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+
+      .toolbar button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      input:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      ol#items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      ol#items li {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+      }
+
+      .item-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px;
+        overflow-wrap: anywhere;
+      }
+
+      .item-title a {
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .item-title a:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      .item-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+
+      .item-summary {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .item-enclosures {
+        margin: 10px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13px;
+      }
+
+      .item-enclosures a {
+        color: var(--accent);
+        overflow-wrap: anywhere;
+      }
+
+      .item-enclosures audio {
+        width: 100%;
+      }
+
+      pre#raw {
+        margin: 0;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: var(--font-code);
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .note,
+      .status {
+        color: var(--muted);
+        padding: 16px 0;
+      }
+
+      .error {
+        background: var(--danger-bg);
+        border: 1px solid var(--danger);
+        color: var(--danger);
+        border-radius: 8px;
+        padding: 14px 16px;
+      }
+
+      .error a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <p id="status" class="status">Loading feed ...</p>
+      <header id="feedHead" class="feed-head" hidden></header>
+      <div id="toolbar" class="toolbar" hidden>
+        <input
+          type="search"
+          id="search"
+          placeholder="Search items"
+          spellcheck="false"
+        />
+        <button type="button" id="rawToggle">Show raw source</button>
+      </div>
+      <ol id="items"></ol>
+      <p id="noMatch" class="note" hidden>No items match your search.</p>
+      <p id="note" class="note" hidden></p>
+      <pre id="raw" hidden></pre>
+    </div>
+    <script src="feed-parser.js"></script>
+    <script src="preview.js"></script>
+  </body>
+</html>
