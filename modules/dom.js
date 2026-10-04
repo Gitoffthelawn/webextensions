@@ -1,5 +1,4 @@
 /* global browser */
 
-
 // interface
-export { };
+export {};
