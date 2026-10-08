@@ -2,64 +2,74 @@
   "author": "igorlogius",
   "homepage_url": "https://github.com/igorlogius/webextensions/tree/main/link-extras",
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "browser_action": {
-    "default_area": "navbar"
+    "default_area": "navbar",
+    "default_title": "Link Extras options",
+    "default_icon": {
+      "48": "icon-48.png",
+      "96": "icon-96.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "strict_min_version": "112.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
   },
   "commands": {
     "open": {
-      "description": "Open Links in Tabs"
+      "description": "Open selected links in tabs"
     },
     "open_unloaded": {
-      "description": "Open Links in unloaded Tabs"
-    },
-    "close": {
-      "description": "Close related Tabs"
-    },
-    "select": {
-      "description": "Select related Tabs"
+      "description": "Open selected links in unloaded tabs"
     },
     "bookmark": {
-      "description": "Bookmark Links"
+      "description": "Bookmark selected links"
     },
     "download": {
-      "description": "Download Links"
+      "description": "Download selected links"
     },
     "action_0": {
-      "description": "1 Custom Action"
+      "description": "Copy selected links with format 1 (first row)"
     },
     "action_1": {
-      "description": "2 Custom Action"
+      "description": "Copy selected links with format 2"
     },
     "action_2": {
-      "description": "3 Custom Action"
+      "description": "Copy selected links with format 3"
     },
     "action_3": {
-      "description": "4 Custom Action"
+      "description": "Copy selected links with format 4"
     },
     "action_4": {
-      "description": "5 Custom Action"
+      "description": "Copy selected links with format 5"
     },
     "action_5": {
-      "description": "6 Custom Action"
+      "description": "Copy selected links with format 6"
     },
     "action_6": {
-      "description": "7 Custom Action"
+      "description": "Copy selected links with format 7"
     },
     "action_7": {
-      "description": "8 Custom Action"
+      "description": "Copy selected links with format 8"
     },
     "action_8": {
-      "description": "9 Custom Action"
+      "description": "Copy selected links with format 9"
     },
     "action_9": {
-      "description": "10 Custom Action"
+      "description": "Copy selected links with format 10"
     }
   },
   "description": "Add extra functions to links, like open in tabs (loaded or unloaded), bookmark, download and copy in custom formats",
   "icons": {
-    "980": "icon.png"
+    "48": "icon-48.png",
+    "96": "icon-96.png",
+    "128": "icon-128.png"
   },
   "manifest_version": 2,
   "name": "Link Extras",
@@ -67,7 +77,7 @@
     "open_in_tab": true,
     "page": "options.html"
   },
-  "permissions": ["activeTab", "clipboardWrite", "menus", "storage", "tabs"],
+  "permissions": ["activeTab", "clipboardWrite", "menus", "storage"],
   "optional_permissions": ["bookmarks", "downloads", "notifications"],
-  "version": "1.4.22"
+  "version": "1.5.0"
 }

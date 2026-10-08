@@ -1,1 +1,2 @@
-[link-extras.webm](https://github.com/user-attachments/assets/3d53219b-5876-4989-86b8-8d5dafef017a)
+Firefox extension that adds extra actions to links and to links inside a text selection.
+Every action is also available as a keyboard shortcut.

@@ -1,53 +1,186 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-</head>
-<body style="background: lightgray; padding: 5px">
-  <form id="mainForm" accept-charset="utf-8">
-    <fieldset>
-      <p><b>Configure context elements:</b></p>
-      <span>Separator:</span>
-      <input
-        id="separator"
-        name="separator"
-        value=""
-        placeholder="%nl (default: newline)"
-      />
-      <span>Table Actions:</span>
-      <input id="impbtn_wrapper" type="button" name="impbtn" value="Import" />
-      <input
-        id="impbtn"
-        type="file"
-        name="impbtn"
-        value=""
-        style="display: none"
-      />
-      <input id="expbtn" type="button" name="impbtn" value="Export" />
-      <input type="submit" value="Save changes" />
-    </fieldset>
-    <fieldset>
-      <table id="mainTable" border="1" style="width: 100%">
-        <thead>
-          <th style="width: 30%">ID</th>
-          <th style="width: 0">
-            <abbr title="Copy as HTML fragment and not as plain text">
-              HTML?
-            </abbr>
-          </th>
-          <th>
-            <abbr
-              title="Placeholders: %url, %url_proto, %url_host, %url_port, %url_path, %url_params, %url_origin, %text"
-              >Format</abbr
-            >
-          </th>
-          <th style="width: 0px"></th>
-        </thead>
-        <tbody id="mainTableBody" />
-      </table>
-    </fieldset>
-    <fieldset>
-      <span>Grant optional permissions to enable more actions</span>
-    </fieldset>
-  </form>
-  <script src="options.js"></script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Link Extras options</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --border: color-mix(in srgb, CanvasText 25%, transparent);
+        --muted: color-mix(in srgb, CanvasText 65%, transparent);
+      }
+      body {
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 1rem 1.25rem 3rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin: 0 0 1rem;
+      }
+      fieldset {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin: 0 0 1rem;
+        padding: 0.75rem 1rem 1rem;
+      }
+      legend {
+        font-weight: 600;
+        padding: 0 0.4rem;
+      }
+      label {
+        display: block;
+        margin-top: 0.5rem;
+      }
+      input[type="text"],
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 0.3rem 0.4rem;
+      }
+      button {
+        font: inherit;
+        padding: 0.3rem 0.8rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0.75rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.25rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      td.center {
+        text-align: center;
+        vertical-align: middle;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      code {
+        font-family: ui-monospace, monospace;
+      }
+      #permList {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      #permList li {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 0.25rem 0;
+      }
+      #permList .why {
+        flex: 1;
+      }
+      .bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      #status.error {
+        color: #c0392b;
+      }
+      .placeholders {
+        columns: 2;
+        margin: 0 0 0.75rem;
+        padding-left: 1.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Link Extras</h1>
+
+    <form id="mainForm" accept-charset="utf-8">
+      <fieldset>
+        <legend>General</legend>
+        <label for="separator">Separator between copied links</label>
+        <input
+          id="separator"
+          type="text"
+          placeholder="%nl (default: newline)"
+        />
+        <label for="bookmarkFolderId">Default bookmark folder</label>
+        <select id="bookmarkFolderId" disabled>
+          <option value="">Grant the bookmarks permission first</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Optional permissions</legend>
+        <ul id="permList"></ul>
+      </fieldset>
+
+      <fieldset>
+        <legend>Copy formats</legend>
+        <p class="muted">
+          Each row adds an entry to <b>Copy Links as…</b>. Tick <b>HTML</b> to
+          also copy the result as an HTML fragment (text and URLs are escaped).
+          Row 1 is used by shortcut “format 1”, row 2 by “format 2”, and so on.
+        </p>
+        <ul class="placeholders">
+          <li><code>%url</code> full URL</li>
+          <li><code>%url_origin</code> scheme + host + port</li>
+          <li><code>%url_proto</code> protocol, e.g. https:</li>
+          <li><code>%url_host</code> host name</li>
+          <li><code>%url_port</code> port</li>
+          <li><code>%url_path</code> path</li>
+          <li><code>%url_params</code> query string</li>
+          <li><code>%text</code> link text</li>
+          <li><code>%nl</code> new line</li>
+        </ul>
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th style="width: 28%">Name</th>
+              <th style="width: 1%">HTML</th>
+              <th>Format</th>
+              <th style="width: 1%"><span class="muted">Delete</span></th>
+            </tr>
+          </thead>
+          <tbody id="mainTableBody"></tbody>
+        </table>
+        <button id="addbtn" type="button">Add format</button>
+        <button id="impbtn" type="button">Import</button>
+        <button id="expbtn" type="button">Export</button>
+        <input
+          id="impfile"
+          type="file"
+          accept=".json,application/json"
+          hidden
+        />
+      </fieldset>
+
+      <div class="bar">
+        <button type="submit">Save changes</button>
+        <span id="status" role="status"></span>
+      </div>
+
+      <fieldset>
+        <legend>Keyboard shortcuts</legend>
+        <p class="muted">
+          Shortcuts act on the links inside the current text selection.
+        </p>
+        <button id="shortcutbtn" type="button" hidden>
+          Open shortcut settings
+        </button>
+        <p id="shortcutHint" class="muted">
+          Assign them in <b>about:addons</b> → gear menu → Manage Extension
+          Shortcuts.
+        </p>
+      </fieldset>
+    </form>
+
+    <script src="options.js"></script>
+  </body>
+</html>
