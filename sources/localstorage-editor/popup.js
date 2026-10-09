@@ -17,6 +17,53 @@ const inputEl = editDialog.querySelector("input"); // key
 const textareaEl = editDialog.querySelector("textarea"); // value
 const wrapCheckboxEl = editDialog.querySelector('input[type="checkbox"]'); // key
 
+// line numbers for the value textarea
+const gutterEl = editDialog.querySelector(".gutter");
+const mirrorEl = document.createElement("div");
+mirrorEl.className = "mirror";
+textareaEl.parentElement.appendChild(mirrorEl);
+
+let gutterRaf = 0;
+function updateGutter() {
+  const lines = textareaEl.value.split("\n");
+  gutterEl.style.width = String(lines.length).length + 1.5 + "ch";
+  // leave room for the textarea's horizontal scrollbar so both scroll to the end
+  gutterEl.style.paddingBottom =
+    8 +
+    Math.max(0, textareaEl.offsetHeight - textareaEl.clientHeight - 2) +
+    "px";
+
+  let out;
+  if (!wrapCheckboxEl.checked) {
+    out = lines.map((_, i) => i + 1).join("\n");
+  } else {
+    // number logical lines; wrapped continuation rows get blank gutter rows
+    mirrorEl.style.width = textareaEl.clientWidth + "px";
+    mirrorEl.textContent = "";
+    const frag = document.createDocumentFragment();
+    for (const l of lines) {
+      const d = document.createElement("div");
+      d.textContent = l || "\u200b";
+      frag.appendChild(d);
+    }
+    mirrorEl.appendChild(frag);
+    const lh = parseFloat(getComputedStyle(textareaEl).lineHeight);
+    out = Array.from(mirrorEl.children)
+      .map(
+        (d, i) =>
+          i + 1 + "\n".repeat(Math.max(0, Math.round(d.offsetHeight / lh) - 1)),
+      )
+      .join("\n");
+    mirrorEl.textContent = "";
+  }
+  gutterEl.textContent = out;
+  gutterEl.scrollTop = textareaEl.scrollTop;
+}
+function scheduleGutter() {
+  cancelAnimationFrame(gutterRaf);
+  gutterRaf = requestAnimationFrame(updateGutter);
+}
+
 let editorTempRow = null;
 
 // button refs
@@ -471,6 +518,7 @@ async function onDOMContentLoaded() {
           inputEl.value = rowData.key;
           textareaEl.focus();
           textareaEl.setSelectionRange(0, 0);
+          updateGutter();
           //}
         },
         cellEdited: function (cell) {
@@ -551,13 +599,16 @@ async function onDOMContentLoaded() {
 
   //table.getColumn("store").setHeaderFilterValue(["Local","Session"]);
 
-  wrapCheckboxEl.addEventListener("click", (evt) => {
-    if (evt.target.checked) {
-      textareaEl.style.whiteSpace = "wrap";
-    } else {
-      textareaEl.style.whiteSpace = "nowrap";
-    }
+  wrapCheckboxEl.addEventListener("click", () => {
+    textareaEl.style.whiteSpace = wrapCheckboxEl.checked ? "pre-wrap" : "pre";
+    updateGutter();
   });
+
+  textareaEl.addEventListener("input", scheduleGutter);
+  textareaEl.addEventListener("scroll", () => {
+    gutterEl.scrollTop = textareaEl.scrollTop;
+  });
+  new ResizeObserver(scheduleGutter).observe(textareaEl);
 } // onDOMContentLoaded
 
 function onChange(evt) {
