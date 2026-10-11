@@ -21,6 +21,7 @@
   "manifest_version": 2,
   "name": "Auto Close Tabs",
   "permissions": [
+    "alarms",
     "contextualIdentities",
     "cookies",
     "bookmarks",

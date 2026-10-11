@@ -2,7 +2,9 @@
 
 let closeThreshold = 7;
 let saveFolder = "unfiled_____";
-let setIntervalIds = [];
+const ALARM_PREFIX = "tabCleanUp_";
+// alarm name -> rule parameters
+let intervalRules = new Map();
 let autostart = false;
 let ignoreRules = [];
 
@@ -63,11 +65,21 @@ async function rebuildIgnoreRules(
   }
 }
 
+async function clearIntervalAlarms() {
+  const alarms = await browser.alarms.getAll();
+  for (const a of alarms) {
+    if (a.name.startsWith(ALARM_PREFIX)) {
+      await browser.alarms.clear(a.name);
+    }
+  }
+  intervalRules.clear();
+}
+
 async function rebuildIntervalHandlers(
   intervalrulesStr_time_ms_and_container_regexs,
   intervalrulesStr_url_regexs,
 ) {
-  // now lets rebuild and start the new interval handlers
+  // now lets rebuild and start the new alarms
 
   const time_ms_and_container_regexs =
     intervalrulesStr_time_ms_and_container_regexs.split("\n");
@@ -94,22 +106,32 @@ async function rebuildIntervalHandlers(
         }
 
         const minIdleTimeMilliSecs = parseInt(left_parts[0].trim());
+        if (
+          !Number.isFinite(minIdleTimeMilliSecs) ||
+          minIdleTimeMilliSecs <= 0
+        ) {
+          continue;
+        }
 
         left = left_parts.slice(1).join(",");
 
         const containerNameMatcher = left === "" ? null : new RegExp(left);
         const urlMatcher = right === "" ? null : new RegExp(right);
 
-        setIntervalIds.push(
-          setInterval(() => {
-            tabCleanUp({
-              minIdleTimeMilliSecs,
-              containerNameMatcher,
-              urlMatcher,
-              //consider_hasText,
-            });
-          }, minIdleTimeMilliSecs),
-        );
+        const name = ALARM_PREFIX + i;
+        intervalRules.set(name, {
+          minIdleTimeMilliSecs,
+          containerNameMatcher,
+          urlMatcher,
+          //consider_hasText,
+        });
+
+        const periodInMinutes = minIdleTimeMilliSecs / 60000;
+        browser.alarms.create(name, {
+          // first run after one period, like setInterval did
+          delayInMinutes: periodInMinutes,
+          periodInMinutes,
+        });
       }
     } catch (e) {
       console.error(e);
@@ -254,20 +276,17 @@ async function onStorageChanged() {
     closeThreshold,
   );
 
+  // stop all running alarms (also when switching to "off")
+  await clearIntervalAlarms();
+
   if (autostart) {
     updateBadge("on", "green");
 
-    // stop all running intervals
-    setIntervalIds.forEach((id) => {
-      clearInterval(id);
-    });
-    setIntervalIds = [];
-
-    rebuildIgnoreRules(
+    await rebuildIgnoreRules(
       await getFromStorage("string", "ignorerules_container_regex", ""),
       await getFromStorage("string", "ignorerules_url_regex", ""),
     );
-    rebuildIntervalHandlers(
+    await rebuildIntervalHandlers(
       await getFromStorage(
         "string",
         "intervalrules_time_ms_and_container_regex",
@@ -279,6 +298,14 @@ async function onStorageChanged() {
     updateBadge("off", "red");
   }
 }
+
+// must be registered synchronously at top level
+browser.alarms.onAlarm.addListener((alarm) => {
+  const rule = intervalRules.get(alarm.name);
+  if (rule) {
+    tabCleanUp(rule);
+  }
+});
 
 (async () => {
   await onStorageChanged();
