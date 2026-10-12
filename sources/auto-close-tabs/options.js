@@ -32,7 +32,15 @@ const TIME_UNITS = [
   { ms: 3600000, label: "hours" },
 ];
 
-// In-memory rule state. Each close rule: {value, unitMs, container, url}
+// Per-rule save folder values: "" = use the default folder (Auto save card),
+// SAVE_FOLDER_NONE = close without bookmarking, anything else = folder id.
+const SAVE_FOLDER_NONE = "__none__";
+
+// Bookmark folders of this profile, filled by initSaveFolderSelect:
+// [{ id, depth, title }]. Used to build the per-rule folder selects.
+let bookmarkFolders = [];
+
+// In-memory rule state. Each close rule: {value, unitMs, container, url, saveFolder}
 // Each ignore rule: {container, url}
 let closeRules = [];
 let ignoreRules = [];
@@ -132,9 +140,20 @@ async function initSaveFolderSelect() {
   for (const node of nodes) {
     out = new Map([...out, ...recGetFolders(node, depth)]);
   }
+  bookmarkFolders = [];
   for (const [k, v] of out) {
     saveFolderEl.add(new Option("-".repeat(v.depth) + " " + v.title, k));
+    bookmarkFolders.push({ id: k, depth: v.depth, title: v.title });
   }
+}
+
+// Returns a valid per-rule save folder value: keeps "", SAVE_FOLDER_NONE and
+// ids of existing folders, anything else (deleted folder, id from another
+// profile) falls back to "" (= use the default folder).
+function normalizeRuleSaveFolder(value) {
+  if (typeof value !== "string") return "";
+  if (value === "" || value === SAVE_FOLDER_NONE) return value;
+  return bookmarkFolders.some((f) => f.id === value) ? value : "";
 }
 
 // --- parsing legacy storage strings into rule rows ---------------------
@@ -149,9 +168,12 @@ function bestFitUnit(timeMs) {
   return TIME_UNITS[0].ms;
 }
 
-function parseCloseRulesStorage(leftStr, rightStr) {
+function parseCloseRulesStorage(leftStr, rightStr, foldersStr) {
   const left = leftStr.split("\n");
   const right = rightStr.split("\n");
+  // aligned by line index with left/right (skipped lines still count);
+  // missing lines (older config) mean "use the default folder"
+  const folders = (foldersStr || "").split("\n");
   const rows = [];
 
   for (let i = 0; i < left.length && i < right.length; i++) {
@@ -173,6 +195,7 @@ function parseCloseRulesStorage(leftStr, rightStr) {
       unitMs,
       container,
       url: r,
+      saveFolder: normalizeRuleSaveFolder((folders[i] || "").trim()),
     });
   }
   return rows;
@@ -200,6 +223,7 @@ function serializeCloseRules(rows) {
       .map((r) => `${Math.round(r.value * r.unitMs)},${r.container}`)
       .join("\n"),
     right: rows.map((r) => r.url).join("\n"),
+    folders: rows.map((r) => r.saveFolder || "").join("\n"),
   };
 }
 
@@ -296,6 +320,27 @@ function buildTimeUnitSelect(selectedMs) {
   return select;
 }
 
+function buildSaveFolderSelect(selected) {
+  const select = document.createElement("select");
+  select.className = "rr-save-folder";
+  select.title = "Bookmark folder for tabs closed by this rule";
+
+  const addOption = (value, label) => {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = label;
+    if (value === selected) opt.selected = true;
+    select.appendChild(opt);
+  };
+
+  addOption("", "Default folder");
+  addOption(SAVE_FOLDER_NONE, "Don't save (just close)");
+  for (const f of bookmarkFolders) {
+    addOption(f.id, "-".repeat(f.depth) + " " + f.title);
+  }
+  return select;
+}
+
 function buildContainerPresetSelect(preset) {
   const select = document.createElement("select");
   select.className = "rr-container-preset";
@@ -311,6 +356,22 @@ function buildContainerPresetSelect(preset) {
     select.appendChild(opt);
   });
   return select;
+}
+
+// Small "i" icon next to the container preset select; the hover tooltip
+// explains how the three options differ.
+function buildContainerInfoIcon() {
+  const icon = document.createElement("span");
+  icon.className = "help";
+  icon.textContent = "i";
+  icon.title = [
+    "No container: only matches tabs that are NOT in a container.",
+    "",
+    "Any container: matches tabs in any container, whatever its name. Tabs outside of containers are not matched.",
+    "",
+    "Custom pattern: matches tabs in a container whose name matches your regular expression. Tabs outside of containers are not matched.",
+  ].join("\n");
+  return icon;
 }
 
 function buildContainerCustomInput(rule, isCustom, placeholder) {
@@ -506,11 +567,21 @@ function renderCloseRuleRow(rule, index) {
   const containerInputsWrap = document.createElement("div");
   containerInputsWrap.className = "container-inputs";
   containerInputsWrap.appendChild(buildContainerPresetSelect(preset));
+  containerInputsWrap.appendChild(buildContainerInfoIcon());
   containerInputsWrap.appendChild(
     buildContainerCustomInput(rule, isCustom, "e.g. ^Tmp.*"),
   );
   containerField.appendChild(containerInputsWrap);
   fields.appendChild(containerField);
+
+  // save folder
+  const folderField = document.createElement("div");
+  folderField.className = "rule-field";
+  const folderLabel = document.createElement("label");
+  folderLabel.textContent = "Save to";
+  folderField.appendChild(folderLabel);
+  folderField.appendChild(buildSaveFolderSelect(rule.saveFolder || ""));
+  fields.appendChild(folderField);
 
   // url
   fields.appendChild(buildUrlField(rule));
@@ -548,6 +619,7 @@ function renderIgnoreRuleRow(rule, index) {
   const containerInputsWrap = document.createElement("div");
   containerInputsWrap.className = "container-inputs";
   containerInputsWrap.appendChild(buildContainerPresetSelect(preset));
+  containerInputsWrap.appendChild(buildContainerInfoIcon());
   containerInputsWrap.appendChild(
     buildContainerCustomInput(rule, isCustom, "e.g. ^Personal$"),
   );
@@ -608,6 +680,9 @@ function attachListHandlers(listEl) {
       rule.unitMs = parseInt(evt.target.value);
       markDirty();
       validateAll();
+    } else if (evt.target.classList.contains("rr-save-folder")) {
+      rule.saveFolder = evt.target.value;
+      markDirty();
     } else if (evt.target.classList.contains("rr-container-preset")) {
       const val = evt.target.value;
       const customInput = row.querySelector(".rr-container-custom");
@@ -717,7 +792,13 @@ function validateAll() {
 // --- add rule buttons -----------------------------------------------------
 
 document.getElementById("addCloseRule").addEventListener("click", () => {
-  closeRules.push({ value: 10, unitMs: 60000, container: "", url: "" });
+  closeRules.push({
+    value: 10,
+    unitMs: 60000,
+    container: "",
+    url: "",
+    saveFolder: "",
+  });
   renderCloseRules();
   markDirty();
   const inputs = closeRulesListEl.querySelectorAll(".rr-url");
@@ -822,6 +903,7 @@ async function saveAll() {
     saveFolder: saveFolderEl.value,
     intervalrules_time_ms_and_container_regex: closeSerialized.left,
     intervalrules_url_regex: closeSerialized.right,
+    intervalrules_save_folder: closeSerialized.folders,
     ignorerules_container_regex: ignoreSerialized.left,
     ignorerules_url_regex: ignoreSerialized.right,
   });
@@ -848,6 +930,7 @@ function buildExportObject() {
       unitMs: r.unitMs,
       container: r.container,
       url: r.url,
+      saveFolder: r.saveFolder || "",
     })),
     ignoreRules: ignoreRules.map((r) => ({
       container: r.container,
@@ -912,6 +995,8 @@ importFileEl.addEventListener("change", async () => {
       unitMs: validUnit(r.unitMs) ? r.unitMs : 60000,
       container: typeof r.container === "string" ? r.container : "",
       url: r.url,
+      // folder ids are profile-specific; unknown ids fall back to the default
+      saveFolder: normalizeRuleSaveFolder(r.saveFolder),
     }));
 
   ignoreRules = data.ignoreRules
@@ -1010,6 +1095,7 @@ async function onLoad() {
       "saveFolder",
       "intervalrules_time_ms_and_container_regex",
       "intervalrules_url_regex",
+      "intervalrules_save_folder",
       "ignorerules_container_regex",
       "ignorerules_url_regex",
     ]);
@@ -1024,6 +1110,7 @@ async function onLoad() {
     closeRules = parseCloseRulesStorage(
       obj.intervalrules_time_ms_and_container_regex || "",
       obj.intervalrules_url_regex || "",
+      obj.intervalrules_save_folder || "",
     );
     ignoreRules = parseIgnoreRulesStorage(
       obj.ignorerules_container_regex || "",

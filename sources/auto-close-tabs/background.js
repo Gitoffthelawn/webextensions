@@ -3,6 +3,8 @@
 let closeThreshold = 7;
 let saveFolder = "unfiled_____";
 const ALARM_PREFIX = "tabCleanUp_";
+// per-rule save folder marker meaning "close without bookmarking"
+const SAVE_FOLDER_NONE = "__none__";
 // alarm name -> rule parameters
 let intervalRules = new Map();
 let autostart = false;
@@ -78,12 +80,17 @@ async function clearIntervalAlarms() {
 async function rebuildIntervalHandlers(
   intervalrulesStr_time_ms_and_container_regexs,
   intervalrulesStr_url_regexs,
+  intervalrulesStr_save_folders,
 ) {
   // now lets rebuild and start the new alarms
 
   const time_ms_and_container_regexs =
     intervalrulesStr_time_ms_and_container_regexs.split("\n");
   const url_regexs = intervalrulesStr_url_regexs.split("\n");
+  // one line per rule (same line index as the other two lists).
+  // "" = use the default folder, SAVE_FOLDER_NONE = don't save, else a folder id.
+  // Missing lines (config saved by an older version) mean "use the default".
+  const save_folders = (intervalrulesStr_save_folders || "").split("\n");
 
   for (
     let i = 0;
@@ -123,6 +130,7 @@ async function rebuildIntervalHandlers(
           minIdleTimeMilliSecs,
           containerNameMatcher,
           urlMatcher,
+          saveFolder: (save_folders[i] || "").trim(),
           //consider_hasText,
         });
 
@@ -147,6 +155,41 @@ async function getContainerNameFromCookieStoreId(csid) {
     // not inside a container
   }
   return null;
+}
+
+// Bookmarks the tab in the folder chosen by the rule. A rule can use the
+// default folder (""), skip saving (SAVE_FOLDER_NONE) or name its own folder.
+// If a rule's own folder no longer exists, fall back to the default folder
+// so the tab is not lost.
+async function saveTabAsBookmark(t, rule) {
+  const ruleFolder = typeof rule.saveFolder === "string" ? rule.saveFolder : "";
+
+  if (ruleFolder === SAVE_FOLDER_NONE) {
+    return;
+  }
+
+  const candidates = [];
+  if (ruleFolder !== "") {
+    candidates.push(ruleFolder);
+  }
+  if (typeof saveFolder === "string" && saveFolder !== "") {
+    if (!candidates.includes(saveFolder)) {
+      candidates.push(saveFolder);
+    }
+  }
+
+  for (const parentId of candidates) {
+    try {
+      await browser.bookmarks.create({
+        title: t.title,
+        url: t.url,
+        parentId,
+      });
+      return;
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }
 
 async function tabCleanUp(input) {
@@ -245,18 +288,7 @@ async function tabCleanUp(input) {
       continue;
     }
 
-    try {
-      if (typeof saveFolder === "string" && saveFolder !== "") {
-        let createdetails = {
-          title: t.title,
-          url: t.url,
-          parentId: saveFolder,
-        };
-        browser.bookmarks.create(createdetails);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    await saveTabAsBookmark(t, input);
     await browser.tabs.remove(t.id);
     max_nb_of_tabs_to_close--;
   }
@@ -293,6 +325,7 @@ async function onStorageChanged() {
         "",
       ),
       await getFromStorage("string", "intervalrules_url_regex", ""),
+      await getFromStorage("string", "intervalrules_save_folder", ""),
     );
   } else {
     updateBadge("off", "red");

@@ -368,6 +368,11 @@
         width: 150px;
       }
 
+      .container-inputs .help {
+        align-self: center;
+        flex-shrink: 0;
+      }
+
       .rule-actions {
         display: flex;
         gap: 4px;
@@ -430,6 +435,10 @@
       button.add-rule:hover {
         background: #eef2ff;
         border-color: var(--accent);
+      }
+
+      .rr-save-folder {
+        max-width: 220px;
       }
 
       /* --- save row --- */
@@ -599,15 +608,16 @@
 
     <section class="card">
       <h2>
-        Auto save
+        Auto save (default folder)
         <span
           class="help"
-          title="When set, tabs closed automatically are first saved as bookmarks in this folder."
+          title="When set, tabs closed automatically are first saved as bookmarks in this folder, unless a close rule picks its own folder."
           >?</span
         >
       </h2>
       <p class="desc">
         Optionally back up auto-closed tabs as bookmarks before they're closed.
+        Individual close rules can override this folder.
       </p>
       <select id="saveFolder">
         <option value="">Don't save (just close)</option>
@@ -639,7 +649,8 @@
       <div class="card-body" id="closeRulesBody">
         <p class="desc">
           Tabs idle longer than the given time, matching both the container and
-          URL pattern, will be closed.
+          URL pattern, will be closed. Each rule can save its closed tabs to its
+          own bookmark folder, to the default folder, or not at all.
         </p>
         <div id="closeRulesList" class="rule-list"></div>
         <button type="button" class="add-rule" id="addCloseRule">
