@@ -40,14 +40,42 @@ async function getFromStorage(type, id, fallback) {
   }
 }
 
+// Does a tab's container (cn, null = not in a container) satisfy a rule?
+// - not in a container: only if the rule has "no container" enabled
+// - in a container: only if the rule has a container name regex and it matches
+// Both can be enabled at the same time for one rule.
+function containerMatches(cn, containerNameMatcher, matchNoContainer) {
+  if (cn === null) {
+    return matchNoContainer;
+  }
+  return containerNameMatcher !== null && containerNameMatcher.test(cn);
+}
+
+// Per-rule "also match tabs outside of containers" flag, one line per rule:
+// "1" = yes, "0" = no. A missing/unknown line comes from a config saved by an
+// older version, where an empty container pattern meant "no container only"
+// and a non-empty one meant "containers only".
+function parseNoContainerFlag(line, containerRegexStr) {
+  const v = (line || "").trim();
+  if (v === "1") {
+    return true;
+  }
+  if (v === "0") {
+    return false;
+  }
+  return containerRegexStr === "";
+}
+
 async function rebuildIgnoreRules(
   ignorerulesStr_container_regexs,
   ignorerulesStr_url_regexs,
+  ignorerulesStr_no_container,
 ) {
   ignoreRules = [];
 
   const container_regexs = ignorerulesStr_container_regexs.split("\n");
   const url_regexs = ignorerulesStr_url_regexs.split("\n");
+  const no_container_flags = (ignorerulesStr_no_container || "").split("\n");
 
   for (let i = 0; i < container_regexs.length && i < url_regexs.length; i++) {
     try {
@@ -57,8 +85,19 @@ async function rebuildIgnoreRules(
       if (!left.startsWith("#") && !right.startsWith("#")) {
         const containerNameMatcher = left === "" ? null : new RegExp(left);
         const urlMatcher = right === "" ? null : new RegExp(right);
-        if (urlMatcher !== null) {
-          ignoreRules.push({ containerNameMatcher, urlMatcher });
+        const matchNoContainer = parseNoContainerFlag(
+          no_container_flags[i],
+          left,
+        );
+        if (
+          urlMatcher !== null &&
+          (containerNameMatcher !== null || matchNoContainer)
+        ) {
+          ignoreRules.push({
+            containerNameMatcher,
+            matchNoContainer,
+            urlMatcher,
+          });
         }
       }
     } catch (e) {
@@ -81,6 +120,7 @@ async function rebuildIntervalHandlers(
   intervalrulesStr_time_ms_and_container_regexs,
   intervalrulesStr_url_regexs,
   intervalrulesStr_save_folders,
+  intervalrulesStr_no_container,
 ) {
   // now lets rebuild and start the new alarms
 
@@ -91,6 +131,8 @@ async function rebuildIntervalHandlers(
   // "" = use the default folder, SAVE_FOLDER_NONE = don't save, else a folder id.
   // Missing lines (config saved by an older version) mean "use the default".
   const save_folders = (intervalrulesStr_save_folders || "").split("\n");
+  // "1"/"0" per rule: also match tabs that are not in a container
+  const no_container_flags = (intervalrulesStr_no_container || "").split("\n");
 
   for (
     let i = 0;
@@ -124,11 +166,22 @@ async function rebuildIntervalHandlers(
 
         const containerNameMatcher = left === "" ? null : new RegExp(left);
         const urlMatcher = right === "" ? null : new RegExp(right);
+        const matchNoContainer = parseNoContainerFlag(
+          no_container_flags[i],
+          left,
+        );
+
+        // a rule that matches neither container tabs nor non-container tabs
+        // can never close anything
+        if (containerNameMatcher === null && !matchNoContainer) {
+          continue;
+        }
 
         const name = ALARM_PREFIX + i;
         intervalRules.set(name, {
           minIdleTimeMilliSecs,
           containerNameMatcher,
+          matchNoContainer,
           urlMatcher,
           saveFolder: (save_folders[i] || "").trim(),
           //consider_hasText,
@@ -217,22 +270,15 @@ async function tabCleanUp(input) {
         // filter ignored tabs
         const cn = await getContainerNameFromCookieStoreId(t.cookieStoreId);
         for (const el of ignoreRules) {
-          if (el.containerNameMatcher === null) {
-            if (cn === null) {
-              if (el.urlMatcher.test(t.url)) {
-                return false;
-              }
-            }
-            continue;
-          }
-          if (cn === null) {
-            continue;
-          }
-          // both are not null, so lets check
-          if (el.containerNameMatcher.test(cn)) {
-            if (el.urlMatcher.test(t.url)) {
-              return false;
-            }
+          if (
+            containerMatches(
+              cn,
+              el.containerNameMatcher,
+              el.matchNoContainer,
+            ) &&
+            el.urlMatcher.test(t.url)
+          ) {
+            return false;
           }
         }
         return true;
@@ -258,21 +304,10 @@ async function tabCleanUp(input) {
 
     const cn = await getContainerNameFromCookieStoreId(t.cookieStoreId);
     // check the container
-    if (input.containerNameMatcher !== null) {
-      if (cn !== null) {
-        if (!input.containerNameMatcher.test(cn)) {
-          continue;
-        }
-      } else {
-        // cn := null
-        continue;
-      }
-    } else {
-      // containerNameMatcher === null
-      if (cn !== null) {
-        continue;
-      }
-      // cn === containerNameMatcher
+    if (
+      !containerMatches(cn, input.containerNameMatcher, input.matchNoContainer)
+    ) {
+      continue;
     }
 
     // check the URL
@@ -317,6 +352,7 @@ async function onStorageChanged() {
     await rebuildIgnoreRules(
       await getFromStorage("string", "ignorerules_container_regex", ""),
       await getFromStorage("string", "ignorerules_url_regex", ""),
+      await getFromStorage("string", "ignorerules_no_container", ""),
     );
     await rebuildIntervalHandlers(
       await getFromStorage(
@@ -326,6 +362,7 @@ async function onStorageChanged() {
       ),
       await getFromStorage("string", "intervalrules_url_regex", ""),
       await getFromStorage("string", "intervalrules_save_folder", ""),
+      await getFromStorage("string", "intervalrules_no_container", ""),
     );
   } else {
     updateBadge("off", "red");

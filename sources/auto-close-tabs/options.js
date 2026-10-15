@@ -20,9 +20,10 @@ const importBtn = document.getElementById("importBtn");
 const importFileEl = document.getElementById("importFile");
 const importExportMsgEl = document.getElementById("importExportMsg");
 
-// Full URLs of currently open tabs, used for the "matches N open tabs"
-// live hint next to each URL regex field. Populated by loadOpenTabSuggestions.
-let openTabUrls = [];
+// Currently open tabs as {url, container}, used for the "matches N open tabs"
+// live hint next to each URL regex field. container = container name, or null
+// for tabs that are not in a container. Populated by loadOpenTabSuggestions.
+let openTabs = [];
 
 // Units offered for the idle-time input. Value = milliseconds per unit.
 // Seconds is the smallest granularity offered — nothing below 1s.
@@ -40,8 +41,12 @@ const SAVE_FOLDER_NONE = "__none__";
 // [{ id, depth, title }]. Used to build the per-rule folder selects.
 let bookmarkFolders = [];
 
-// In-memory rule state. Each close rule: {value, unitMs, container, url, saveFolder}
-// Each ignore rule: {container, url}
+// In-memory rule state. Each close rule:
+//   {value, unitMs, container, noContainer, url, saveFolder}
+// Each ignore rule: {container, noContainer, url}
+// container = container name regex ("" = no regex, ".*" = any container),
+// noContainer = also match tabs that are not in a container.
+// Both can be active at the same time.
 let closeRules = [];
 let ignoreRules = [];
 let isDirty = false;
@@ -168,12 +173,23 @@ function bestFitUnit(timeMs) {
   return TIME_UNITS[0].ms;
 }
 
-function parseCloseRulesStorage(leftStr, rightStr, foldersStr) {
+// Per-rule "no container" flag, aligned by line index. Missing/unknown lines
+// (config saved by an older version) keep the old meaning: an empty container
+// pattern = "no container only", a non-empty one = "containers only".
+function parseNoContainerFlag(line, container) {
+  const v = (line || "").trim();
+  if (v === "1") return true;
+  if (v === "0") return false;
+  return container === "";
+}
+
+function parseCloseRulesStorage(leftStr, rightStr, foldersStr, noContainerStr) {
   const left = leftStr.split("\n");
   const right = rightStr.split("\n");
   // aligned by line index with left/right (skipped lines still count);
   // missing lines (older config) mean "use the default folder"
   const folders = (foldersStr || "").split("\n");
+  const noContainerFlags = (noContainerStr || "").split("\n");
   const rows = [];
 
   for (let i = 0; i < left.length && i < right.length; i++) {
@@ -194,6 +210,7 @@ function parseCloseRulesStorage(leftStr, rightStr, foldersStr) {
       value: Math.max(1, Math.round(timeMs / unitMs)),
       unitMs,
       container,
+      noContainer: parseNoContainerFlag(noContainerFlags[i], container),
       url: r,
       saveFolder: normalizeRuleSaveFolder((folders[i] || "").trim()),
     });
@@ -201,9 +218,10 @@ function parseCloseRulesStorage(leftStr, rightStr, foldersStr) {
   return rows;
 }
 
-function parseIgnoreRulesStorage(leftStr, rightStr) {
+function parseIgnoreRulesStorage(leftStr, rightStr, noContainerStr) {
   const left = leftStr.split("\n");
   const right = rightStr.split("\n");
+  const noContainerFlags = (noContainerStr || "").split("\n");
   const rows = [];
 
   for (let i = 0; i < left.length && i < right.length; i++) {
@@ -212,7 +230,11 @@ function parseIgnoreRulesStorage(leftStr, rightStr) {
     if (l === "" && r === "") continue;
     if (l.startsWith("#") || r.startsWith("#")) continue;
 
-    rows.push({ container: l, url: r });
+    rows.push({
+      container: l,
+      noContainer: parseNoContainerFlag(noContainerFlags[i], l),
+      url: r,
+    });
   }
   return rows;
 }
@@ -224,6 +246,7 @@ function serializeCloseRules(rows) {
       .join("\n"),
     right: rows.map((r) => r.url).join("\n"),
     folders: rows.map((r) => r.saveFolder || "").join("\n"),
+    noContainer: rows.map((r) => (r.noContainer ? "1" : "0")).join("\n"),
   };
 }
 
@@ -231,6 +254,7 @@ function serializeIgnoreRules(rows) {
   return {
     left: rows.map((r) => r.container).join("\n"),
     right: rows.map((r) => r.url).join("\n"),
+    noContainer: rows.map((r) => (r.noContainer ? "1" : "0")).join("\n"),
   };
 }
 
@@ -345,7 +369,7 @@ function buildContainerPresetSelect(preset) {
   const select = document.createElement("select");
   select.className = "rr-container-preset";
   [
-    ["", "No container"],
+    ["", "No container pattern"],
     [".*", "Any container"],
     ["__custom__", "Custom pattern…"],
   ].forEach(([value, label]) => {
@@ -358,18 +382,35 @@ function buildContainerPresetSelect(preset) {
   return select;
 }
 
-// Small "i" icon next to the container preset select; the hover tooltip
-// explains how the three options differ.
+// "No container" checkbox. It is independent of the select next to it, so a
+// rule can match tabs outside of containers AND containers (any / by name).
+function buildNoContainerCheckbox(checked) {
+  const label = document.createElement("label");
+  label.className = "rr-no-container-label";
+  label.title = "Also match tabs that are not in a container";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.className = "rr-no-container";
+  input.checked = !!checked;
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(" No container"));
+  return label;
+}
+
+// Small "i" icon next to the container controls; the hover tooltip explains
+// how the options combine.
 function buildContainerInfoIcon() {
   const icon = document.createElement("span");
   icon.className = "help";
   icon.textContent = "i";
   icon.title = [
-    "No container: only matches tabs that are NOT in a container.",
+    "No container (checkbox): matches tabs that are NOT in a container.",
     "",
-    "Any container: matches tabs in any container, whatever its name. Tabs outside of containers are not matched.",
+    "Any container: matches tabs in any container, whatever its name.",
     "",
-    "Custom pattern: matches tabs in a container whose name matches your regular expression. Tabs outside of containers are not matched.",
+    "Custom pattern: matches tabs in a container whose name matches your regular expression.",
+    "",
+    "The checkbox and the select can be combined, e.g. 'No container' + 'Any container' matches every tab. At least one must be active.",
   ].join("\n");
   return icon;
 }
@@ -382,6 +423,12 @@ function buildContainerCustomInput(rule, isCustom, placeholder) {
   input.value = isCustom ? rule.container : "";
   input.style.display = isCustom ? "inline-block" : "none";
   return input;
+}
+
+function buildContainerMatchHint() {
+  const hint = document.createElement("div");
+  hint.className = "rule-container-match-hint";
+  return hint;
 }
 
 function buildRegexHelpLink(regexStr) {
@@ -419,15 +466,18 @@ function buildUrlField(rule) {
 }
 
 // Updates the "matches N open tabs" hint for a rule row's URL field.
-function updateMatchHint(row, urlStr) {
+// Looks at the URL regex only (container settings are previewed separately
+// by updateContainerHint).
+function updateMatchHint(row, rule) {
   const hintEl = row.querySelector(".rule-url-match-hint");
   if (!hintEl) return;
 
+  const urlStr = rule.url;
   if (!urlStr || !isValidRegexOrEmpty(urlStr)) {
     hintEl.textContent = "";
     return;
   }
-  if (openTabUrls.length === 0) {
+  if (openTabs.length === 0) {
     hintEl.textContent = "";
     return;
   }
@@ -440,11 +490,66 @@ function updateMatchHint(row, urlStr) {
     return;
   }
 
-  const count = openTabUrls.filter((u) => re.test(u)).length;
+  const count = openTabs.filter((t) => re.test(t.url)).length;
   hintEl.textContent =
     count === 0
       ? "Matches none of your open tabs"
-      : `Matches ${count} of your ${openTabUrls.length} open tab${openTabUrls.length === 1 ? "" : "s"}`;
+      : `Matches ${count} of your ${openTabs.length} open tab${openTabs.length === 1 ? "" : "s"}`;
+}
+
+// Updates the preview under the container controls: how many open tabs the
+// container settings alone match ("No container" checkbox + select/pattern).
+function updateContainerHint(row, rule) {
+  const hintEl = row.querySelector(".rule-container-match-hint");
+  if (!hintEl) return;
+
+  const pattern = rule.container || "";
+  const noPattern = pattern === "";
+  hintEl.classList.remove("warn");
+
+  // Warning: no container option is active, so the rule can never match a tab
+  if (!rule.noContainer && noPattern) {
+    hintEl.classList.add("warn");
+    hintEl.textContent =
+      '\u26A0 No container option selected \u2013 this rule will not match any tab. Tick "No container" or choose a container option.';
+    return;
+  }
+  // Warning: "Custom pattern" is selected but still empty
+  const customInput = row.querySelector(".rr-container-custom");
+  if (customInput && customInput.style.display !== "none" && noPattern) {
+    hintEl.classList.add("warn");
+    hintEl.textContent =
+      "\u26A0 Enter a container name pattern, or choose another container option.";
+    return;
+  }
+
+  if (openTabs.length === 0 || !isValidRegexOrEmpty(pattern)) {
+    hintEl.textContent = "";
+    return;
+  }
+
+  let containerRe = null;
+  try {
+    if (!noPattern) containerRe = new RegExp(pattern);
+  } catch (e) {
+    hintEl.textContent = "";
+    return;
+  }
+
+  const count = openTabs.filter((t) =>
+    t.container === null
+      ? !!rule.noContainer
+      : containerRe !== null && containerRe.test(t.container),
+  ).length;
+  hintEl.textContent =
+    count === 0
+      ? "Container settings match none of your open tabs"
+      : `Container settings match ${count} of your ${openTabs.length} open tab${openTabs.length === 1 ? "" : "s"}`;
+}
+
+function updateHints(row, rule) {
+  updateMatchHint(row, rule);
+  updateContainerHint(row, rule);
 }
 
 function refreshAllMatchHints() {
@@ -452,7 +557,7 @@ function refreshAllMatchHints() {
     const kind = row.dataset.kind;
     const rules = kind === "close" ? closeRules : ignoreRules;
     const rule = rules[Number(row.dataset.index)];
-    if (rule) updateMatchHint(row, rule.url);
+    if (rule) updateHints(row, rule);
   });
 }
 
@@ -566,12 +671,14 @@ function renderCloseRuleRow(rule, index) {
 
   const containerInputsWrap = document.createElement("div");
   containerInputsWrap.className = "container-inputs";
+  containerInputsWrap.appendChild(buildNoContainerCheckbox(rule.noContainer));
   containerInputsWrap.appendChild(buildContainerPresetSelect(preset));
   containerInputsWrap.appendChild(buildContainerInfoIcon());
   containerInputsWrap.appendChild(
     buildContainerCustomInput(rule, isCustom, "e.g. ^Tmp.*"),
   );
   containerField.appendChild(containerInputsWrap);
+  containerField.appendChild(buildContainerMatchHint());
   fields.appendChild(containerField);
 
   // save folder
@@ -593,7 +700,7 @@ function renderCloseRuleRow(rule, index) {
   errEl.className = "rule-row-error";
   row.appendChild(errEl);
 
-  updateMatchHint(row, rule.url);
+  updateHints(row, rule);
 
   return row;
 }
@@ -618,12 +725,14 @@ function renderIgnoreRuleRow(rule, index) {
 
   const containerInputsWrap = document.createElement("div");
   containerInputsWrap.className = "container-inputs";
+  containerInputsWrap.appendChild(buildNoContainerCheckbox(rule.noContainer));
   containerInputsWrap.appendChild(buildContainerPresetSelect(preset));
   containerInputsWrap.appendChild(buildContainerInfoIcon());
   containerInputsWrap.appendChild(
     buildContainerCustomInput(rule, isCustom, "e.g. ^Personal$"),
   );
   containerField.appendChild(containerInputsWrap);
+  containerField.appendChild(buildContainerMatchHint());
   fields.appendChild(containerField);
 
   // url
@@ -636,7 +745,7 @@ function renderIgnoreRuleRow(rule, index) {
   errEl.className = "rule-row-error";
   row.appendChild(errEl);
 
-  updateMatchHint(row, rule.url);
+  updateHints(row, rule);
 
   return row;
 }
@@ -663,8 +772,8 @@ function attachListHandlers(listEl) {
       rule.url = evt.target.value;
       const helpLink = row.querySelector(".regex-help");
       if (helpLink) helpLink.href = regex101Url(rule.url);
-      updateMatchHint(row, rule.url);
     }
+    updateHints(row, rule);
     markDirty();
     validateAll();
   });
@@ -683,6 +792,11 @@ function attachListHandlers(listEl) {
     } else if (evt.target.classList.contains("rr-save-folder")) {
       rule.saveFolder = evt.target.value;
       markDirty();
+    } else if (evt.target.classList.contains("rr-no-container")) {
+      rule.noContainer = evt.target.checked;
+      updateContainerHint(row, rule);
+      markDirty();
+      validateAll();
     } else if (evt.target.classList.contains("rr-container-preset")) {
       const val = evt.target.value;
       const customInput = row.querySelector(".rr-container-custom");
@@ -694,6 +808,7 @@ function attachListHandlers(listEl) {
         customInput.style.display = "none";
         rule.container = val;
       }
+      updateContainerHint(row, rule);
       markDirty();
       validateAll();
     }
@@ -757,6 +872,14 @@ function validateAll() {
     ) {
       msg = "Container pattern is not a valid regular expression.";
     } else if (
+      containerCustomInput &&
+      containerCustomInput.style.display !== "none" &&
+      rule.container.trim() === ""
+    ) {
+      msg = "Enter a container name pattern, or pick another container option.";
+    } else if (!rule.noContainer && rule.container === "") {
+      msg = 'Tick "No container" or choose a container option.';
+    } else if (
       kind === "close" &&
       (!Number.isInteger(rule.value) || rule.value < 1)
     ) {
@@ -796,6 +919,7 @@ document.getElementById("addCloseRule").addEventListener("click", () => {
     value: 10,
     unitMs: 60000,
     container: "",
+    noContainer: true,
     url: "",
     saveFolder: "",
   });
@@ -806,7 +930,7 @@ document.getElementById("addCloseRule").addEventListener("click", () => {
 });
 
 document.getElementById("addIgnoreRule").addEventListener("click", () => {
-  ignoreRules.push({ container: "", url: "" });
+  ignoreRules.push({ container: "", noContainer: true, url: "" });
   renderIgnoreRules();
   markDirty();
   const inputs = ignoreRulesListEl.querySelectorAll(".rr-url");
@@ -904,8 +1028,10 @@ async function saveAll() {
     intervalrules_time_ms_and_container_regex: closeSerialized.left,
     intervalrules_url_regex: closeSerialized.right,
     intervalrules_save_folder: closeSerialized.folders,
+    intervalrules_no_container: closeSerialized.noContainer,
     ignorerules_container_regex: ignoreSerialized.left,
     ignorerules_url_regex: ignoreSerialized.right,
+    ignorerules_no_container: ignoreSerialized.noContainer,
   });
 
   browser.runtime.sendMessage({ cmd: "storageChanged" });
@@ -929,11 +1055,13 @@ function buildExportObject() {
       value: r.value,
       unitMs: r.unitMs,
       container: r.container,
+      noContainer: !!r.noContainer,
       url: r.url,
       saveFolder: r.saveFolder || "",
     })),
     ignoreRules: ignoreRules.map((r) => ({
       container: r.container,
+      noContainer: !!r.noContainer,
       url: r.url,
     })),
   };
@@ -987,6 +1115,11 @@ importFileEl.addEventListener("change", async () => {
   }
 
   const validUnit = (ms) => TIME_UNITS.some((u) => u.ms === ms);
+  // configs exported by older versions have no flag: keep the old meaning
+  const importNoContainer = (r) =>
+    typeof r.noContainer === "boolean"
+      ? r.noContainer
+      : !(typeof r.container === "string" && r.container !== "");
 
   closeRules = data.closeRules
     .filter((r) => r && typeof r.url === "string")
@@ -994,6 +1127,7 @@ importFileEl.addEventListener("change", async () => {
       value: Number.isInteger(r.value) && r.value >= 1 ? r.value : 10,
       unitMs: validUnit(r.unitMs) ? r.unitMs : 60000,
       container: typeof r.container === "string" ? r.container : "",
+      noContainer: importNoContainer(r),
       url: r.url,
       // folder ids are profile-specific; unknown ids fall back to the default
       saveFolder: normalizeRuleSaveFolder(r.saveFolder),
@@ -1003,6 +1137,7 @@ importFileEl.addEventListener("change", async () => {
     .filter((r) => r && typeof r.url === "string")
     .map((r) => ({
       container: typeof r.container === "string" ? r.container : "",
+      noContainer: importNoContainer(r),
       url: r.url,
     }));
 
@@ -1046,8 +1181,21 @@ async function loadOpenTabSuggestions() {
     return;
   }
 
+  // cookieStoreId -> container name. Tabs whose cookieStoreId is not a known
+  // container (default store, private windows, containers disabled) count as
+  // "no container", the same way background.js treats them.
+  const containerNames = new Map();
+  try {
+    const identities = await browser.contextualIdentities.query({});
+    for (const ci of identities || []) {
+      containerNames.set(ci.cookieStoreId, ci.name);
+    }
+  } catch (e) {
+    // containers not available
+  }
+
   const hostnames = new Set();
-  const urls = [];
+  const found = [];
   for (const t of tabs) {
     if (!t.url) continue;
     let u;
@@ -1057,13 +1205,18 @@ async function loadOpenTabSuggestions() {
       continue;
     }
     if (u.protocol !== "http:" && u.protocol !== "https:") continue;
-    urls.push(t.url);
+    found.push({
+      url: t.url,
+      container: containerNames.has(t.cookieStoreId)
+        ? containerNames.get(t.cookieStoreId)
+        : null,
+    });
     const host = u.hostname.startsWith("www.")
       ? u.hostname.slice(4)
       : u.hostname;
     hostnames.add(host);
   }
-  openTabUrls = urls;
+  openTabs = found;
 
   [...hostnames].sort().forEach((host) => {
     const escaped = host.replace(/\./g, "\\.");
@@ -1096,8 +1249,10 @@ async function onLoad() {
       "intervalrules_time_ms_and_container_regex",
       "intervalrules_url_regex",
       "intervalrules_save_folder",
+      "intervalrules_no_container",
       "ignorerules_container_regex",
       "ignorerules_url_regex",
+      "ignorerules_no_container",
     ]);
 
     if (typeof obj.closeThreshold !== "undefined") {
@@ -1111,10 +1266,12 @@ async function onLoad() {
       obj.intervalrules_time_ms_and_container_regex || "",
       obj.intervalrules_url_regex || "",
       obj.intervalrules_save_folder || "",
+      obj.intervalrules_no_container || "",
     );
     ignoreRules = parseIgnoreRulesStorage(
       obj.ignorerules_container_regex || "",
       obj.ignorerules_url_regex || "",
+      obj.ignorerules_no_container || "",
     );
   } catch (e) {
     console.error(e);
