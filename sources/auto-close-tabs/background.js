@@ -1,5 +1,7 @@
 /* global browser */
 
+import * as storage from "./storage.js";
+
 let closeThreshold = 7;
 let saveFolder = "unfiled_____";
 const ALARM_PREFIX = "tabCleanUp_";
@@ -22,22 +24,6 @@ function updateBadge(text, color) {
   browser.browserAction.setBadgeBackgroundColor({
     color,
   });
-}
-
-async function setToStorage(id, value) {
-  let obj = {};
-  obj[id] = value;
-  return browser.storage.local.set(obj);
-}
-
-async function getFromStorage(type, id, fallback) {
-  let tmp = await browser.storage.local.get(id);
-  if (typeof tmp[id] === type) {
-    return tmp[id];
-  } else {
-    setToStorage(id, fallback);
-    return fallback;
-  }
 }
 
 // Does a tab's container (cn, null = not in a container) satisfy a rule?
@@ -330,14 +316,13 @@ async function tabCleanUp(input) {
 }
 
 async function onBAClicked(tab) {
-  setToStorage("autostart", !autostart);
-  onStorageChanged();
+  browser.runtime.openOptionsPage();
 }
 
 async function onStorageChanged() {
-  autostart = await getFromStorage("boolean", "autostart", false);
-  saveFolder = await getFromStorage("string", "saveFolder", "unfiled_____");
-  closeThreshold = await getFromStorage(
+  autostart = await storage.get("boolean", "autostart", false);
+  saveFolder = await storage.get("string", "saveFolder", "unfiled_____");
+  closeThreshold = await storage.get(
     "number",
     "closeThreshold",
     closeThreshold,
@@ -350,19 +335,19 @@ async function onStorageChanged() {
     updateBadge("on", "green");
 
     await rebuildIgnoreRules(
-      await getFromStorage("string", "ignorerules_container_regex", ""),
-      await getFromStorage("string", "ignorerules_url_regex", ""),
-      await getFromStorage("string", "ignorerules_no_container", ""),
+      await storage.get("string", "ignorerules_container_regex", ""),
+      await storage.get("string", "ignorerules_url_regex", ""),
+      await storage.get("string", "ignorerules_no_container", ""),
     );
     await rebuildIntervalHandlers(
-      await getFromStorage(
+      await storage.get(
         "string",
         "intervalrules_time_ms_and_container_regex",
         "",
       ),
-      await getFromStorage("string", "intervalrules_url_regex", ""),
-      await getFromStorage("string", "intervalrules_save_folder", ""),
-      await getFromStorage("string", "intervalrules_no_container", ""),
+      await storage.get("string", "intervalrules_url_regex", ""),
+      await storage.get("string", "intervalrules_save_folder", ""),
+      await storage.get("string", "intervalrules_no_container", ""),
     );
   } else {
     updateBadge("off", "red");

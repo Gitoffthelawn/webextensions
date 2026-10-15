@@ -1,5 +1,7 @@
 /* global browser */
 
+import * as storage from "./storage.js";
+
 const saveFolderEl = document.getElementById("saveFolder");
 const closeThresholdEl = document.getElementById("closeThreshold");
 const savebtn = document.getElementById("savebtn");
@@ -72,12 +74,15 @@ function markClean() {
   resetbtn.disabled = true;
 }
 
+// option pages dont care
+/*
 window.addEventListener("beforeunload", (evt) => {
   if (!isDirty) return;
   evt.preventDefault();
   evt.returnValue = "";
   return "";
 });
+*/
 
 function regex101Url(regexStr) {
   const params = new URLSearchParams();
@@ -87,15 +92,13 @@ function regex101Url(regexStr) {
 }
 
 // --- autostart status pill / toggle --------------------------------------
-// Mirrors clicking the toolbar button — reads/writes storage directly and
-// notifies background.js, without going through the Save button (this is
-// an instant action, same as the toolbar icon, not a pending edit).
+// reads/writes storage directly and notifies background.js
+//  without going through the Save button  (this is an instant action not a pending edit).
 
 async function refreshAutostartStatus() {
   let autostart = false;
   try {
-    const obj = await browser.storage.local.get("autostart");
-    autostart = obj.autostart === true;
+    autostart = await storage.get("boolean", "autostart", false);
   } catch (e) {
     console.error(e);
   }
@@ -111,7 +114,7 @@ toggleAutostartBtn.addEventListener("click", async () => {
   toggleAutostartBtn.disabled = true;
   try {
     const current = await refreshAutostartStatus();
-    await browser.storage.local.set({ autostart: !current });
+    await storage.set("autostart", !current);
     browser.runtime.sendMessage({ cmd: "storageChanged" });
     await refreshAutostartStatus();
   } catch (e) {
@@ -1022,17 +1025,20 @@ async function saveAll() {
   const closeSerialized = serializeCloseRules(closeRules);
   const ignoreSerialized = serializeIgnoreRules(ignoreRules);
 
-  await browser.storage.local.set({
-    closeThreshold: normalizeNumberField(closeThresholdEl),
-    saveFolder: saveFolderEl.value,
-    intervalrules_time_ms_and_container_regex: closeSerialized.left,
-    intervalrules_url_regex: closeSerialized.right,
-    intervalrules_save_folder: closeSerialized.folders,
-    intervalrules_no_container: closeSerialized.noContainer,
-    ignorerules_container_regex: ignoreSerialized.left,
-    ignorerules_url_regex: ignoreSerialized.right,
-    ignorerules_no_container: ignoreSerialized.noContainer,
-  });
+  await Promise.all([
+    storage.set("closeThreshold", normalizeNumberField(closeThresholdEl)),
+    storage.set("saveFolder", saveFolderEl.value),
+    storage.set(
+      "intervalrules_time_ms_and_container_regex",
+      closeSerialized.left,
+    ),
+    storage.set("intervalrules_url_regex", closeSerialized.right),
+    storage.set("intervalrules_save_folder", closeSerialized.folders),
+    storage.set("intervalrules_no_container", closeSerialized.noContainer),
+    storage.set("ignorerules_container_regex", ignoreSerialized.left),
+    storage.set("ignorerules_url_regex", ignoreSerialized.right),
+    storage.set("ignorerules_no_container", ignoreSerialized.noContainer),
+  ]);
 
   browser.runtime.sendMessage({ cmd: "storageChanged" });
   markClean();
@@ -1243,35 +1249,34 @@ async function onLoad() {
   loadOpenTabSuggestions();
 
   try {
-    const obj = await browser.storage.local.get([
+    const closeThreshold = await storage.get(
+      "number",
       "closeThreshold",
-      "saveFolder",
-      "intervalrules_time_ms_and_container_regex",
-      "intervalrules_url_regex",
-      "intervalrules_save_folder",
-      "intervalrules_no_container",
-      "ignorerules_container_regex",
-      "ignorerules_url_regex",
-      "ignorerules_no_container",
-    ]);
+      undefined,
+    );
+    const saveFolder = await storage.get("string", "saveFolder", undefined);
 
-    if (typeof obj.closeThreshold !== "undefined") {
-      closeThresholdEl.value = obj.closeThreshold;
+    if (typeof closeThreshold !== "undefined") {
+      closeThresholdEl.value = closeThreshold;
     }
-    if (typeof obj.saveFolder !== "undefined") {
-      saveFolderEl.value = obj.saveFolder;
+    if (typeof saveFolder !== "undefined") {
+      saveFolderEl.value = saveFolder;
     }
 
     closeRules = parseCloseRulesStorage(
-      obj.intervalrules_time_ms_and_container_regex || "",
-      obj.intervalrules_url_regex || "",
-      obj.intervalrules_save_folder || "",
-      obj.intervalrules_no_container || "",
+      await storage.get(
+        "string",
+        "intervalrules_time_ms_and_container_regex",
+        "",
+      ),
+      await storage.get("string", "intervalrules_url_regex", ""),
+      await storage.get("string", "intervalrules_save_folder", ""),
+      await storage.get("string", "intervalrules_no_container", ""),
     );
     ignoreRules = parseIgnoreRulesStorage(
-      obj.ignorerules_container_regex || "",
-      obj.ignorerules_url_regex || "",
-      obj.ignorerules_no_container || "",
+      await storage.get("string", "ignorerules_container_regex", ""),
+      await storage.get("string", "ignorerules_url_regex", ""),
+      await storage.get("string", "ignorerules_no_container", ""),
     );
   } catch (e) {
     console.error(e);
