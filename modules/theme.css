@@ -1,0 +1,379 @@
+/*
+ * Shared look & feel for all extension pages (options, popups, dialogs).
+ * linked into every addon folder as theme.css
+ *
+ * Layers:
+ *   1. Design tokens            (light, dark via system, optional [data-theme])
+ *   2. Legacy token aliases     (so older per-addon CSS keeps working)
+ *   3. Element defaults         (wrapped in :where() -> zero specificity,
+ *                                any addon rule wins over them)
+ *   4. Small shared components  (.card, .hint, .row, .badge, .toolbar, ...)
+ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f9f9fb;
+  --surface: #ffffff;
+  --surface-2: #f0f0f4;
+  --surface-3: #e4e4ea;
+  --text: #15141a;
+  --muted: #5b5b66;
+  --border: #cfcfd8;
+  --border-strong: #9e9ea8;
+
+  --accent: #0060df;
+  --accent-hover: #0250bb;
+  --accent-text: #ffffff;
+  --accent-soft: #e0ebfb;
+
+  --danger: #c50042;
+  --danger-soft: #fde6ee;
+  --ok: #058b00;
+  --ok-soft: #e1f4df;
+  --warn: #a85800;
+  --warn-soft: #fbeed9;
+
+  --focus: #0a84ff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 2px 8px rgb(0 0 0 / 0.06);
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --gap: 8px;
+
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1b22;
+    --surface: #2b2a33;
+    --surface-2: #35343e;
+    --surface-3: #42414d;
+    --text: #fbfbfe;
+    --muted: #bfbfc9;
+    --border: #52525e;
+    --border-strong: #7c7c88;
+
+    --accent: #80b5ff;
+    --accent-hover: #a6c9ff;
+    --accent-text: #15141a;
+    --accent-soft: #243a5e;
+
+    --danger: #ff7fa8;
+    --danger-soft: #4a2230;
+    --ok: #6fd36a;
+    --ok-soft: #1f3a1e;
+    --warn: #ffb454;
+    --warn-soft: #40301a;
+
+    --focus: #54a0ff;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* explicit choice (used by addons that offer a theme toggle) */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1c1b22;
+  --surface: #2b2a33;
+  --surface-2: #35343e;
+  --surface-3: #42414d;
+  --text: #fbfbfe;
+  --muted: #bfbfc9;
+  --border: #52525e;
+  --border-strong: #7c7c88;
+  --accent: #80b5ff;
+  --accent-hover: #a6c9ff;
+  --accent-text: #15141a;
+  --accent-soft: #243a5e;
+  --danger: #ff7fa8;
+  --danger-soft: #4a2230;
+  --ok: #6fd36a;
+  --ok-soft: #1f3a1e;
+  --warn: #ffb454;
+  --warn-soft: #40301a;
+  --focus: #54a0ff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px rgb(0 0 0 / 0.3);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* ---------- 2. Legacy aliases (old per-addon names -> shared tokens) ---------- */
+:root {
+  --text-muted: var(--muted);
+  --text-dim: var(--muted);
+  --text-faint: var(--muted);
+  --text-secondary: var(--muted);
+  --ink: var(--text);
+  --ink-soft: var(--muted);
+  --fg: var(--text);
+  --panel: var(--surface);
+  --panel-bg: var(--surface);
+  --card: var(--surface);
+  --card-bg: var(--surface);
+  --paper: var(--surface);
+  --bg-page: var(--bg);
+  --bg-panel: var(--surface);
+  --bg-soft: var(--surface-2);
+  --bg-titlebar: var(--surface-2);
+  --control-bg: var(--surface);
+  --field-bg: var(--surface);
+  --line: var(--border);
+  --accent-ink: var(--accent-text);
+  --accent-contrast: var(--accent-text);
+  --accent-dim: var(--accent-soft);
+  --accent-dark: var(--accent-hover);
+  --accent-2: var(--accent);
+  --blue: var(--accent);
+  --key: var(--accent);
+  --focus-ring: var(--focus);
+  --surface-hover: var(--surface-2);
+  --row-hover: var(--surface-2);
+  --row-selected: var(--accent-soft);
+  --row-selected-hover: var(--accent-soft);
+  --highlight-bg: var(--warn-soft);
+  --highlight-text: var(--text);
+  --success: var(--ok);
+  --success-soft: var(--ok-soft);
+  --success-text: var(--ok);
+  --ok-tint: var(--ok-soft);
+  --error: var(--danger);
+  --err: var(--danger);
+  --error-bg: var(--danger-soft);
+  --err-tint: var(--danger-soft);
+  --danger-bg: var(--danger-soft);
+  --danger-dim: var(--danger-soft);
+  --danger-hover: var(--danger);
+  --amber: var(--warn);
+  --amber-soft: var(--warn-soft);
+  --code-bg: var(--surface-2);
+  --font: var(--font-ui);
+  --font-sans: var(--font-ui);
+  --sans: var(--font-ui);
+  --serif: var(--font-ui);
+  --mono: var(--font-mono);
+  --font-code: var(--font-mono);
+  --font-data: var(--font-mono);
+  --radius-md: var(--radius);
+  --backdrop: rgb(0 0 0 / 0.45);
+}
+
+/* ---------- 3. Element defaults (zero specificity) ---------- */
+:where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+:where(body) {
+  margin: 0;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--fs) / 1.45 var(--font-ui);
+}
+
+/* page types - add as <body class="popup|options|dialog"> */
+:where(body.options) {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+:where(body.popup) {
+  min-width: 320px;
+  padding: 10px;
+}
+:where(body.dialog) {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+:where(h1, h2, h3, h4) {
+  margin: 0 0 0.4em;
+  line-height: 1.25;
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+:where(h1) { font-size: 20px; }
+:where(h2) { font-size: 15px; }
+:where(h3) { font-size: 13px; }
+:where(p) { margin: 0 0 0.6em; }
+
+:where(a) { color: var(--accent); }
+:where(a:hover) { color: var(--accent-hover); }
+
+:where(small, .hint, .muted) { color: var(--muted); }
+
+:where(code, kbd, samp, pre) {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+:where(code, kbd) {
+  padding: 0.1em 0.35em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+:where(pre) {
+  margin: 0 0 0.6em;
+  padding: 8px 10px;
+  overflow: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+:where(pre code) {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+:where(hr) {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+:where(fieldset) {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+:where(legend) {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+:where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(button, input[type="button"], input[type="submit"], input[type="reset"], select) {
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+:where(button:hover, input[type="button"]:hover, select:hover) {
+  background: var(--surface-3);
+}
+:where(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+:where(button.primary, button[type="submit"], .btn-primary) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+:where(button.primary:hover, button[type="submit"]:hover, .btn-primary:hover) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+:where(button.danger, .btn-danger) {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+:where(input:not([type]), input[type="text"], input[type="search"], input[type="url"],
+       input[type="number"], input[type="password"], input[type="email"], textarea) {
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+:where(textarea) {
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+:where(input::placeholder, textarea::placeholder) {
+  color: var(--muted);
+  opacity: 0.8;
+}
+:where(input[type="checkbox"], input[type="radio"], input[type="range"], progress) {
+  accent-color: var(--accent);
+}
+
+:where(button, input, select, textarea, a, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+:where(table) {
+  border-collapse: collapse;
+  width: 100%;
+}
+:where(th, td) {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+:where(th) {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+:where(tbody tr:hover) {
+  background: var(--surface-2);
+}
+
+:where(::selection) {
+  background: var(--accent-soft);
+}
+
+:where(*) {
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ---------- 4. Shared components ---------- */
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.masthead img { width: 40px; height: 40px; flex: none; }
+.masthead h1 { margin: 0; }
+.masthead p { margin: 0; color: var(--muted); }
+
+.card {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.card > h2:first-child { margin-top: 0; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+.spacer { flex: 1; }
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.danger { background: var(--danger-soft); color: var(--danger); }
+
+.status-ok { color: var(--ok); }
+.status-warn { color: var(--warn); }
+.status-error { color: var(--danger); }
