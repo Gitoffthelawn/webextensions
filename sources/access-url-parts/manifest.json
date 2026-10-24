@@ -2,6 +2,7 @@
   "author": "igorlogius",
   "browser_specific_settings": {
     "gecko": {
+      "strict_min_version": "153.0",
       "id": "{2d032faa-68c7-47b7-9d33-aa9eb1ef5da4}",
       "data_collection_permissions": {
         "required": ["none"]
@@ -18,11 +19,15 @@
     "default_icon": "icon.png",
     "show_matches": ["<all_urls>"]
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "icons": {
     "160": "icon.png"
   },
   "manifest_version": 3,
   "name": "Access URL Parts",
-  "permissions": ["activeTab"],
-  "version": "1.1.11"
+  "permissions": ["activeTab", "storage", "publicSuffix"],
+  "version": "1.2.0"
 }
