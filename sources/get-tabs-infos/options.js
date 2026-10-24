@@ -1,73 +1,90 @@
-/* global browser */
+/* global browser, getFromStorage, setToStorage, getDocElById */
 
-async function saveConfig() {
-  shortcutconfig = [];
+const ROW_COUNT = 12; // must match the number of "commands" in manifest.json
 
-  Array.from(document.querySelectorAll("tr")).forEach((tr) => {
-    let tmp = Array.from(tr.querySelectorAll("select")).map((e) => e.value);
+const SCOPES = [
+  ["AllTabs", "All tabs, this window"],
+  ["SelectedTabs", "Selected tabs, this window"],
+  ["AllTabsAllWindows", "All tabs, all windows"],
+  ["SelectedTabsAllWindows", "Selected tabs, all windows"],
+];
 
-    shortcutconfig.push({ format: tmp[0], scope: tmp[1], action: tmp[2] });
-  });
+const ACTIONS = [
+  ["ct", "Copy as text"],
+  ["ch", "Copy as HTML"],
+  ["s", "Save to file"],
+];
 
-  setToStorage("shortcutconfig", shortcutconfig);
+let statusTimer;
+function flash(msg) {
+  const el = getDocElById("status");
+  el.textContent = msg;
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => (el.textContent = ""), 1500);
 }
 
-async function restoreConfig() {
-  const shortcutconfig = await getFromStorage("object", "shortcutconfig", []);
-
-  if (shortcutconfig.length > 0) {
-    Array.from(document.querySelectorAll("tr")).forEach((tr) => {
-      const selects = tr.querySelectorAll("select");
-
-      selects[0].value = shortcutconfig[0].format;
-      selects[1].value = shortcutconfig[0].scope;
-      selects[2].value = shortcutconfig[0].action;
-
-      shortcutconfig.shift();
-    });
+function makeSelect(label, placeholder, entries, value) {
+  const sel = document.createElement("select");
+  sel.setAttribute("aria-label", label);
+  sel.add(new Option(placeholder, ""));
+  entries.forEach(([v, text]) => sel.add(new Option(text, v)));
+  sel.value = value;
+  if (sel.value !== value) {
+    sel.value = ""; // stored value no longer exists (e.g. deleted format)
   }
+  sel.addEventListener("change", saveConfig);
+  return sel;
+}
+
+async function saveConfig() {
+  const shortcutconfig = Array.from(
+    document.querySelectorAll("#rows tr"),
+  ).map((tr) => {
+    const [format, scope, action] = Array.from(
+      tr.querySelectorAll("select"),
+    ).map((s) => s.value);
+    return { format, scope, action };
+  });
+  await setToStorage("shortcutconfig", shortcutconfig);
+  flash("Saved");
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  let formatStrings = await getFromStorage("object", "formatStrings", []);
+  const formatStrings = await getFromStorage("object", "formatStrings", []);
+  const formatEntries = formatStrings
+    .filter((f) => typeof f.name === "string")
+    .map((f) => [f.name, f.name]);
+  const saved = await getFromStorage("object", "shortcutconfig", []);
 
-  let formatlists = document.querySelectorAll('select[name="formatlist"]');
+  const tbody = getDocElById("rows");
+  for (let i = 0; i < ROW_COUNT; i++) {
+    const cfg = saved[i] || {};
+    const tr = document.createElement("tr");
 
-  formatlists.forEach((fl) => {
-    fl.add(new Option("-- Format --", ""));
-    formatStrings.forEach((feed) => {
-      Object.keys(feed).forEach((key) => {
-        if (key === "name") {
-          fl.add(new Option(feed[key], feed[key]));
-        }
-      });
+    const num = document.createElement("td");
+    num.className = "num";
+    num.textContent = `Custom Action ${i + 1}`;
+    tr.append(num);
+
+    [
+      makeSelect("Format", "Choose a format", formatEntries, cfg.format || ""),
+      makeSelect("Scope", "Choose tabs", SCOPES, cfg.scope || ""),
+      makeSelect("Action", "Choose an action", ACTIONS, cfg.action || ""),
+    ].forEach((sel) => {
+      const td = document.createElement("td");
+      td.append(sel);
+      tr.append(td);
     });
+
+    tbody.append(tr);
+  }
+
+  // opens Firefox's "Manage Extension Shortcuts" (Firefox 137+)
+  getDocElById("btnShortcuts").addEventListener("click", async () => {
+    try {
+      await browser.commands.openShortcutSettings();
+    } catch (e) {
+      flash('Use the gear icon in about:addons, then "Manage Extension Shortcuts"');
+    }
   });
-
-  let scopelists = document.querySelectorAll('select[name="scopelist"]');
-
-  scopelists.forEach((sl) => {
-    sl.add(new Option("-- Scope --", ""));
-    sl.add(new Option("Current Window", "AllTabs"));
-    sl.add(new Option("Selected Current Window ", "SelectedTabs"));
-    sl.add(new Option("All Windows", "AllTabsAllWindows"));
-    sl.add(new Option("Selected All Windows", "SelectedTabsAllWindows"));
-  });
-
-  let actionlists = document.querySelectorAll('select[name="actionlist"]');
-
-  actionlists.forEach((al) => {
-    al.add(new Option("-- Action --", ""));
-    al.add(new Option("Copy as Text", "ct"));
-    al.add(new Option("Copy as HTML", "ch"));
-    al.add(new Option("Save to File", "s"));
-  });
-
-  // monitor all dropdown for changes and save the entire tabe into a config on change
-
-  Array.from(document.querySelectorAll("select")).forEach((select) => {
-    select.addEventListener("change", saveConfig);
-  });
-
-  restoreConfig();
 });

@@ -1,139 +1,106 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <title>Get Tabs Infos - Toolbar Action Popup</title>
-  <style>
-    body {
-      width: 680px;
-      background: lightgray;
-      padding: 3px;
-      /*font-size: 0.6em;*/
-    }
-    legend {
-      font-size: 2em;
-      font-weight: bold;
-    }
-    #btnSaveToFile {
-      width: 100%;
-      text-align: center;
-    }
-    #btnCopyAsText,
-    #btnCopyAsHTML {
-      width: 50%;
-      float: right;
-      text-align: center;
-    }
-    #saveFilename {
-      width: 100%;
-      text-align: center;
-    }
-    #selectTable {
-      width: 100%;
-      text-align: left;
-    }
-    #output {
-      width: 100%;
-      height: 16em;
-      resize: vertical;
-    }
-    #btnDeleteFormat,
-    #btnAddFormat {
-      width: 10%;
-      text-align: center;
-    }
-
-    #newEntry,
-    #formatOptions,
-    #scopeOptions {
-      width: 90%;
-      text-align: center;
-    }
-    #scopeOptions {
-      width: 100%;
-      text-align: center;
-    }
-
-    #formatOptions {
-      float: right;
-    }
-    #newEntry {
-      float: left;
-    }
-  </style>
-</head>
-<body>
-  <table id="selectTable" border="0">
-    <tr>
-      <td>
-        <abbr
-          title="Placeholders: %linebreak, %url, %protocol, %search, %port, %pathname, %hostname, %origin, %title"
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Get Tabs Infos</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="popup">
+    <section>
+      <label for="formatOptions">Format</label>
+      <div class="row">
+        <select id="formatOptions">
+          <option value="">Select a format</option>
+        </select>
+        <button
+          id="btnDeleteFormat"
+          class="icon danger"
+          title="Delete selected format"
+          aria-label="Delete selected format"
         >
+          🗑
+        </button>
+      </div>
+      <details id="addFormat">
+        <summary>Add a format</summary>
+        <div class="row">
           <input
             id="newEntry"
             type="text"
-            value=""
-            placeholder="Add new Format String here, Hover to show placeholders."
+            placeholder="e.g. [%title](%url)"
+            aria-label="New format"
           />
-        </abbr>
-        <input
-          type="button"
-          value="➕"
-          title="Add new Format String"
-          id="btnAddFormat"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <input
-          type="button"
-          value="🗑"
-          title="Delete Selected Format String"
-          id="btnDeleteFormat"
-        />
-        <select id="formatOptions">
-          <option value="">-- Select Format --</option>
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <select id="scopeOptions">
-          <option value="">-- Select Scope --</option>
-          <option value="AllTabs">All Tabs (Current Window)</option>
-          <option value="SelectedTabs">Selected Tabs (Current Window)</option>
-          <option value="AllTabsAllWindows">All Tabs (All Windows)</option>
-          <option value="SelectedTabsAllWindows">
-            Selected Tabs (All Windows)
-          </option>
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <textarea
-          wrap="off"
-          id="output"
-          placeholder="Select Format and Scope and Output will appear here"
-        ></textarea>
-        <input type="button" value="Copy as Text" id="btnCopyAsText" />
-        <input type="button" value="Copy as HTML" id="btnCopyAsHTML" />
-      </td>
-    </tr>
-    <tr>
-      <td>
+          <button id="btnAddFormat">Add</button>
+        </div>
+        <div
+          class="chips"
+          id="placeholders"
+          aria-label="Insert placeholder"
+        ></div>
+      </details>
+    </section>
+
+    <section class="scope">
+      <fieldset>
+        <legend>Tabs</legend>
+        <div class="segmented">
+          <label
+            ><input type="radio" name="which" value="All" checked /><span
+              >All</span
+            ></label
+          >
+          <label
+            ><input type="radio" name="which" value="Selected" /><span
+              >Selected</span
+            ></label
+          >
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Windows</legend>
+        <div class="segmented">
+          <label
+            ><input type="radio" name="win" value="current" checked /><span
+              >Current</span
+            ></label
+          >
+          <label
+            ><input type="radio" name="win" value="all" /><span
+              >All</span
+            ></label
+          >
+        </div>
+      </fieldset>
+    </section>
+
+    <section>
+      <div class="output-head">
+        <label for="output">Result</label>
+        <span class="meta" id="count"></span>
+      </div>
+      <textarea
+        id="output"
+        wrap="off"
+        placeholder="Choose a format and the result appears here."
+      ></textarea>
+      <div class="actions">
+        <button id="btnCopyAsText" class="primary">Copy as text</button>
+        <button id="btnCopyAsHTML">Copy as HTML</button>
+      </div>
+      <div class="row save-row">
         <input
           id="saveFilename"
           type="text"
-          value=""
-          placeholder="Save Filename: YYYY-MM-DD_hh-mm-ss Get Tabs Infos "
+          placeholder="File name (default: date and time)"
+          aria-label="File name"
         />
-        <input type="button" value="Save as File" id="btnSaveToFile" />
-      </td>
-    </tr>
-    <tr></tr>
-  </table>
+        <button id="btnSaveToFile">Save as file</button>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
 
-  <script src="utils.js"></script>
-  <script src="popup.js"></script>
-</body>
+    <script src="utils.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

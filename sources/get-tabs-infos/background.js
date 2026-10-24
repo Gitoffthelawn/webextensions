@@ -5,22 +5,22 @@
 async function onCommand(cmd) {
   const shortcutconfig = await getFromStorage("object", "shortcutconfig", null);
 
-  if (shortcutconfig === null) {
+  const cfg = shortcutconfig === null ? undefined : shortcutconfig[cmd];
+
+  // ignore shortcuts that were never (fully) configured
+  if (!cfg || !cfg.format || !cfg.scope || !cfg.action) {
     return;
   }
 
-  const out = await getTabsInfos(
-    shortcutconfig[cmd].scope,
-    shortcutconfig[cmd].format,
-  );
+  const out = await getTabsInfos(cfg.scope, cfg.format);
 
   try {
-    switch (shortcutconfig[cmd].action) {
+    switch (cfg.action) {
       case "ct":
         await navigator.clipboard.writeText(out);
         break;
       case "ch":
-        copyToClipboardAsHTML(out);
+        await copyToClipboardAsHTML(out);
         break;
       case "s":
         saveToFile(out, "");

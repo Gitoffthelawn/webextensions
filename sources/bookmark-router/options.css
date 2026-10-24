@@ -1,15 +1,3 @@
-:root {
-  --bg: #f5f6f8;
-  --panel: #ffffff;
-  --border: #d8dbe0;
-  --accent: #2f6fed;
-  --accent-dark: #1f4fbf;
-  --danger: #e05252;
-  --success: #2fa84f;
-  --text: #23262b;
-  --muted: #6b7280;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -19,9 +7,7 @@ body {
   padding: 24px;
   background: var(--bg);
   color: var(--text);
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
 }
 
@@ -76,14 +62,14 @@ input[type="submit"] {
 button:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
-  background: #eef1f6;
+  background: var(--accent-soft);
 }
 
 button.primary,
 input[type="submit"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--accent-text);
 }
 
 button.primary:hover,
@@ -94,11 +80,11 @@ input[type="submit"]:hover {
 button.danger {
   color: var(--danger);
   border-color: var(--danger);
-  background: white;
+  background: var(--surface);
 }
 
 button.danger:hover {
-  background: #fdecec;
+  background: var(--danger-soft);
 }
 
 button.icon {
@@ -151,7 +137,7 @@ table {
 
 thead th {
   text-align: left;
-  background: #eef1f6;
+  background: var(--accent-soft);
   padding: 8px 10px;
   font-size: 12px;
   text-transform: uppercase;
@@ -169,7 +155,7 @@ tbody tr:last-child {
 }
 
 tbody tr:nth-child(even) {
-  background: #fafbfc;
+  background: var(--surface-2);
 }
 
 tbody tr.match {
@@ -178,7 +164,7 @@ tbody tr.match {
 }
 
 tbody tr.match-first {
-  background: #eafbef;
+  background: var(--ok-soft);
 }
 
 td {
@@ -197,7 +183,7 @@ select.bookmarkId {
 
 input.url_regex.invalid {
   border-color: var(--danger);
-  background: #fff5f5;
+  background: var(--surface-2);
 }
 
 .row-actions {
@@ -291,7 +277,7 @@ input.url_regex.invalid {
 .wizard-step select.invalid,
 .wizard-step input.invalid {
   border-color: var(--danger);
-  background: #fff5f5;
+  background: var(--surface-2);
 }
 
 .wizard-step label {

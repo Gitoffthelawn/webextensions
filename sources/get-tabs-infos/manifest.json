@@ -6,7 +6,7 @@
   },
 
   "browser_action": {
-    "browser_style": true,
+    "browser_style": false,
     "default_area": "navbar",
     "default_popup": "popup.html"
   },

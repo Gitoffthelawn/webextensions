@@ -1,175 +1,35 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8" />
-  <title>Get Tabs Infos - Preferences</title>
-  <style>
-    body {
-      background: lightgray;
-    }
-    td {
-      padding: 5px;
-    }
-    #shortcutconfigs {
-      width: 100%;
-    }
-    select {
-      width: 99%;
-    }
-  </style>
-</head>
-<body>
-  <h3>Shortcut Actions</h3>
-  <b
-    >Use "Manage Extension Shortcuts" under the "gear icon" to set trigger
-    key(s)</b
-  >
-  <table id="shortcutconfigs" border="1">
-    <tr>
-      <td>1</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>5</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>6</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>7</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>8</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>9</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>10</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>11</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-    <tr>
-      <td>12</td>
-      <td>
-        <select name="formatlist"></select>
-      </td>
-      <td>
-        <select name="scopelist"></select>
-      </td>
-      <td>
-        <select name="actionlist"></select>
-      </td>
-    </tr>
-  </table>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Get Tabs Infos - Preferences</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="options">
+    <header>
+      <h1>Shortcut actions</h1>
+      <p>
+        Each shortcut applies one format to one set of tabs, then copies or
+        saves the result. Changes are saved automatically.
+      </p>
+      <button id="btnShortcuts">Set shortcut keys</button>
+      <span class="meta" id="status" role="status" aria-live="polite"></span>
+    </header>
 
-  <script src="utils.js"></script>
-  <script src="options.js"></script>
-</body>
+    <table id="shortcutconfigs">
+      <thead>
+        <tr>
+          <th scope="col">Shortcut</th>
+          <th scope="col">Format</th>
+          <th scope="col">Tabs and windows</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <script src="utils.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

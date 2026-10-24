@@ -1,0 +1,84 @@
+:root {
+  --fs: 14px;
+  --pad: 6px;
+}
+body {
+  min-width: 220px;
+  max-width: 480px;
+  margin: 0;
+  padding: 4px;
+  font-size: var(--fs);
+  background-color: var(--bg);
+  color: var(--text);
+}
+body.compact {
+  --pad: 2px;
+}
+
+#parts-container {
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  margin: 3px;
+  gap: 3px;
+}
+
+a.part {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background-color: var(--surface);
+  padding: var(--pad) 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+a.part:hover,
+a.part:focus-visible {
+  background-color: var(--surface-2);
+  outline: none;
+}
+.row.current a.part {
+  font-weight: bold;
+  border-color: var(--accent);
+}
+.row.param a.part,
+.row.extra a.part {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+button.copy,
+#settings {
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background-color: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  font-size: inherit;
+}
+button.copy {
+  padding: 0 8px;
+}
+button.copy:hover,
+#settings:hover {
+  background-color: var(--surface-2);
+}
+
+#footer {
+  margin: 3px;
+  text-align: right;
+}
+#settings {
+  padding: 2px 8px;
+  font-size: 0.8em;
+  opacity: 0.8;
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      body {
+        font: 14px var(--font-ui);
+        min-width: 380px;
+        margin: 12px;
+      }
+      fieldset {
+        margin: 0 0 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+      }
+      legend {
+        font-weight: bold;
+        padding: 0 6px;
+      }
+      label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 6px 0;
+      }
+      label.check {
+        justify-content: flex-start;
+      }
+      small {
+        opacity: 0.7;
+        display: block;
+      }
+      #status {
+        margin-left: 8px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>Behavior</legend>
+      <label
+        >Clicking a part opens it in
+        <select id="openMode">
+          <option value="newtab">a new tab</option>
+          <option value="bgtab">a background tab</option>
+          <option value="current">the current tab</option>
+        </select>
+      </label>
+      <small>Middle-click always opens a background tab.</small>
+      <label class="check"
+        ><input type="checkbox" id="showCopyButton" /> Show a copy button next
+        to each part</label
+      >
+    </fieldset>
+
+    <fieldset>
+      <legend>Which parts to show</legend>
+      <label class="check"
+        ><input type="checkbox" id="showOrigin" /> Show protocol in first row
+        (https://host)</label
+      >
+      <label class="check"
+        ><input type="checkbox" id="showSubdomains" /> Show each domain level
+        (example.com, www.example.com, …)</label
+      >
+      <label class="check"
+        ><input type="checkbox" id="showQuery" /> Show the query string as one
+        row</label
+      >
+      <label class="check"
+        ><input type="checkbox" id="showParams" /> Show each query parameter as
+        its own row</label
+      >
+      <label class="check"
+        ><input type="checkbox" id="showHash" /> Show the #fragment</label
+      >
+      <label class="check"
+        ><input type="checkbox" id="decode" /> Decode %-escapes in labels (%20 →
+        space)</label
+      >
+    </fieldset>
+
+    <fieldset>
+      <legend>Appearance</legend>
+      <label
+        >Theme
+        <select id="theme">
+          <option value="auto">Follow browser</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+      <label
+        >Font size (px) <input type="number" id="fontSize" min="9" max="28"
+      /></label>
+      <label
+        >Max label length (0 = unlimited)
+        <input type="number" id="maxLength" min="0" max="500"
+      /></label>
+      <label class="check"
+        ><input type="checkbox" id="compact" /> Compact rows</label
+      >
+    </fieldset>
+
+    <button id="reset">Reset to defaults</button><span id="status"></span>
+    <script src="common.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

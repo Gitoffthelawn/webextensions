@@ -15,13 +15,6 @@ async function setToStorage(id, value) {
   return browser.storage.local.set(obj);
 }
 
-function iconBlink() {
-  browser.browserAction.disable();
-  setTimeout(() => {
-    browser.browserAction.enable();
-  }, 300);
-}
-
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   return typeof tmp[id] === type ? tmp[id] : fallback;
@@ -143,7 +136,7 @@ function getTimeStampStr() {
   [
     d.getFullYear(),
     d.getMonth() + 1,
-    d.getDate() + 1,
+    d.getDate(),
     d.getHours(),
     d.getMinutes(),
     d.getSeconds(),
