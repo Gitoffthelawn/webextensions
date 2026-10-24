@@ -2,18 +2,19 @@
 <html>
   <head>
     <title>Icon Settings</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f4f7f9;
-        color: #333;
+        font-family: var(--font-ui);
+        background-color: var(--bg);
+        color: var(--text);
         display: flex;
         justify-content: center;
         padding: 40px 20px;
         margin: 0;
       }
       .card {
-        background: white;
+        background: var(--surface);
         max-width: 500px;
         width: 100%;
         padding: 30px;
@@ -24,27 +25,27 @@
       h1 {
         margin-top: 0;
         font-size: 1.5rem;
-        color: #1a73e8;
+        color: var(--accent);
       }
       .instructions {
         text-align: left;
-        background: #e8f0fe;
+        background: var(--accent-soft);
         padding: 15px;
         border-radius: 8px;
         font-size: 0.9rem;
         line-height: 1.5;
         margin-bottom: 25px;
-        border-left: 4px solid #1a73e8;
+        border-left: 4px solid var(--accent);
       }
       .upload-section {
-        border: 2px dashed #ccc;
+        border: 2px dashed var(--border);
         padding: 30px;
         border-radius: 8px;
         transition: border-color 0.3s;
         position: relative;
       }
       .upload-section:hover {
-        border-color: #1a73e8;
+        border-color: var(--accent);
       }
       input[type="file"] {
         cursor: pointer;
@@ -57,9 +58,9 @@
         gap: 10px;
       }
       #previewCanvas {
-        border: 2px solid #ddd;
+        border: 2px solid var(--border);
         border-radius: 4px;
-        background: #eee;
+        background: var(--surface-2);
         display: none;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
@@ -71,7 +72,7 @@
       }
       .hint {
         font-size: 0.8rem;
-        color: #666;
+        color: var(--text);
         margin-top: 10px;
       }
 
@@ -79,8 +80,8 @@
         display: inline-block;
         padding: 10px 20px;
         cursor: pointer;
-        background-color: #1a73e8;
-        color: white;
+        background-color: var(--accent);
+        color: var(--accent-text);
         border-radius: 6px;
         font-weight: 500;
         transition: background-color 0.2s;
@@ -88,12 +89,12 @@
       }
 
       .custom-file-upload:hover {
-        background-color: #1557b0;
+        background-color: var(--accent);
       }
 
       .file-name {
         font-size: 0.85rem;
-        color: #666;
+        color: var(--text);
         margin-bottom: 10px;
 
         /* These three lines prevent the layout overflow */
