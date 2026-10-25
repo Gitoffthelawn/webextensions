@@ -1,32 +1,8 @@
 <!doctype html>
 <head>
   <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    :root {
-      --bg: #ececef;
-      --panel-bg: #ffffff;
-      --text: #1b1b1f;
-      --muted: #68686f;
-      --accent: #3a6df0;
-      --accent-contrast: #ffffff;
-      --border: #d3d3da;
-      --error: #c62828;
-      --error-bg: #fdecea;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1c1c1f;
-        --panel-bg: #28282c;
-        --text: #f1f1f4;
-        --muted: #a6a6ad;
-        --accent: #6a92ff;
-        --accent-contrast: #0c0c10;
-        --border: #3d3d43;
-        --error: #ff8a80;
-        --error-bg: #3a1f1f;
-      }
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -37,11 +13,7 @@
       overflow-x: hidden;
       background: var(--bg);
       color: var(--text);
-      font:
-        13px/1.4 system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif;
+      font: 13px/1.4 var(--font-ui);
     }
     fieldset {
       border: none;
@@ -132,7 +104,7 @@
       flex: 0 0 74px;
       width: 74px;
       min-width: 74px;
-      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-family: var(--font-mono);
       text-transform: uppercase;
     }
     .settings-row input.hex-input.invalid {
