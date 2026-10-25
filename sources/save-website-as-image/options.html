@@ -4,29 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Save Website as Image - Options</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        --bg: #f6f7f9;
-        --card: #ffffff;
-        --text: #1c1e21;
-        --muted: #6b7280;
-        --border: #dfe3e8;
-        --accent: #0060df;
-        --accent-soft: #e8f0fe;
-        --ok: #1a7f37;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #1c1b22;
-          --card: #2b2a33;
-          --text: #fbfbfe;
-          --muted: #a1a1aa;
-          --border: #3f3e48;
-          --accent: #6ea8ff;
-          --accent-soft: #2a3550;
-          --ok: #5fd084;
-        }
-      }
       * {
         box-sizing: border-box;
       }
@@ -35,11 +14,7 @@
         padding: 32px 16px 64px;
         background: var(--bg);
         color: var(--text);
-        font:
-          15px/1.5 system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        font: 15px/1.5 var(--font-ui);
       }
       main {
         max-width: 620px;
@@ -91,7 +66,7 @@
         border-radius: 8px;
         padding: 7px 16px;
         background: var(--accent);
-        color: #fff;
+        color: var(--accent-text);
         cursor: pointer;
       }
       button:hover {
@@ -228,14 +203,10 @@
         margin: -4px 0 16px;
       }
       #status.error {
-        color: #d70022;
+        color: var(--danger);
       }
       input[type="text"] {
-        font:
-          14px/1.4 ui-monospace,
-          "SF Mono",
-          Consolas,
-          monospace;
+        font: 14px/1.4 var(--font-mono);
         color: var(--text);
         background: var(--bg);
         border: 1px solid var(--border);
@@ -259,11 +230,7 @@
         margin-bottom: 10px;
       }
       .chip {
-        font:
-          13px ui-monospace,
-          "SF Mono",
-          Consolas,
-          monospace;
+        font: 13px var(--font-mono);
         padding: 4px 10px;
         border-radius: 999px;
         background: var(--accent-soft);
@@ -281,7 +248,7 @@
         color: var(--text);
       }
       #pattern-warning {
-        color: #d70022;
+        color: var(--danger);
       }
       .preview {
         display: block;
@@ -290,11 +257,7 @@
         border-radius: 8px;
         background: var(--bg);
         border: 1px dashed var(--border);
-        font:
-          13px ui-monospace,
-          "SF Mono",
-          Consolas,
-          monospace;
+        font: 13px var(--font-mono);
         word-break: break-all;
       }
       [hidden] {
