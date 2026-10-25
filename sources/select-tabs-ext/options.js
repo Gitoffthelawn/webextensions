@@ -1,6 +1,6 @@
 /* global browser, Tabulator */
 
-const extId = "PER";
+const extId = "select-tabs-ext";
 const temporary = browser.runtime.id.endsWith("@temporary-addon");
 
 const log = (level, msg) => {
@@ -26,14 +26,48 @@ const delbtn = document.getElementById("delbtn");
 const ablebtn = document.getElementById("ablebtn");
 const addbtn = document.getElementById("addbtn");
 const tgladv = document.getElementById("tgladv");
+const dirtyNote = document.getElementById("dirtyNote");
 
+let dirty = false;
+let noteTimer = null;
+
+function showNote(text, kind) {
+  clearTimeout(noteTimer);
+  dirtyNote.textContent = text;
+  dirtyNote.className = kind;
+  dirtyNote.hidden = false;
+}
+
+// unsaved changes: halo on the Save button + a note next to it
 function hightlightChange() {
-  savbtn.style.borderColor = "red";
+  dirty = true;
+  savbtn.classList.add("dirty");
+  showNote("\u25CF Unsaved changes", "warn");
 }
 
-function unhightlightChange() {
-  savbtn.style.borderColor = "";
+function unhightlightChange(saved = false) {
+  dirty = false;
+  savbtn.classList.remove("dirty");
+  if (saved) {
+    showNote("\u2713 Saved", "ok");
+    noteTimer = setTimeout(() => {
+      if (!dirty) {
+        dirtyNote.hidden = true;
+      }
+    }, 2500);
+  } else {
+    clearTimeout(noteTimer);
+    dirtyNote.hidden = true;
+  }
 }
+
+// warn before closing the page with unsaved changes
+window.addEventListener("beforeunload", (e) => {
+  if (dirty) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
 
 tgladv.addEventListener("click", async function () {
   table.toggleColumn("tags");
@@ -80,47 +114,42 @@ delbtn.addEventListener("click", () => {
 });
 
 discbtn.addEventListener("click", () => {
+  dirty = false;
   window.location.reload();
 });
 
-savbtn.addEventListener("click", () => {
-  let data = table.getData();
-  let i = 0;
-  for (i = 0; i < data.length; i++) {
-    // numbers need parsing ... for whatever reason
+savbtn.addEventListener("click", async () => {
+  const data = table.getData();
+  for (let i = 0; i < data.length; i++) {
     data[i].idx = i;
   }
-  browser.storage.local.set({ selectors: data });
-  unhightlightChange();
+  try {
+    await browser.storage.local.set({ selectors: data });
+    unhightlightChange(true);
+  } catch (e) {
+    log("ERROR", "saving failed " + e);
+  }
 });
 
 expbtn.addEventListener("click", () => {
-  let selectedRows = table.getSelectedRows();
+  let rows = table.getSelectedRows();
+  if (rows.length === 0) {
+    rows = table.getRows(); // nothing selected => export everything
+  }
 
-  // order the selected by position
-
-  selectedRows.sort((a, b) => {
-    return b.getPosition() - a.getPosition();
-  });
-
-  let idx_count = 0;
+  // order by position
+  rows.sort((a, b) => a.getPosition() - b.getPosition());
 
   // fixup the export data
-  const expData = [];
-  selectedRows.forEach((row) => {
-    const rowData = row.getData();
-    rowData.idx = idx_count;
-    expData.push(rowData);
-  });
+  const expData = rows.map((row, idx) => ({ ...row.getData(), idx }));
   const content = JSON.stringify(expData, null, 4);
-  console.log(content);
-  let dl = document.createElement("a");
-  const href =
-    "data:application/json;charset=utf-8," + encodeURIComponent(content);
-  dl.setAttribute("href", href);
+  const dl = document.createElement("a");
+  dl.setAttribute(
+    "href",
+    "data:application/json;charset=utf-8," + encodeURIComponent(content),
+  );
   dl.setAttribute("download", extId + "-rules.json");
-  dl.setAttribute("visibility", "hidden");
-  dl.setAttribute("display", "none");
+  dl.style.display = "none";
   document.body.appendChild(dl);
   dl.click();
   document.body.removeChild(dl);
@@ -133,11 +162,17 @@ impbtnWrp.addEventListener("click", function () {
 
 // read data from file into current table
 impbtn.addEventListener("input", function () {
-  var file = this.files[0];
-  var reader = new FileReader();
+  const file = this.files[0];
+  if (!file) {
+    return;
+  }
+  const reader = new FileReader();
   reader.onload = async function () {
     try {
-      var config = JSON.parse(reader.result);
+      let config = JSON.parse(reader.result);
+      if (!Array.isArray(config)) {
+        config = [config];
+      }
       let imported_something = false;
       config.forEach((selector) => {
         table.addRow(
@@ -160,6 +195,7 @@ impbtn.addEventListener("input", function () {
     }
   };
   reader.readAsText(file);
+  this.value = ""; // so selecting the same file again fires another event
 });
 
 function tagValuesLookup() {
@@ -184,6 +220,7 @@ async function onDOMContentLoaded() {
     layout: "fitDataStretch", //fit columns to width of table
     responsiveLayout: "hide", //hide columns that dont fit on the table
     pagination: false, //paginate the data
+    placeholder: "No scripts yet. Press New, or import examples.json.",
     movableRows: true,
     groupBy: ["group"],
     groupUpdateOnCellEdit: true,
@@ -272,7 +309,7 @@ async function onDOMContentLoaded() {
   // Load data
   const data = await getTblData();
   data.forEach((e) => {
-    table.addRow(e, true);
+    table.addRow(e, false); // append, keeping the saved order
   });
 
   /**
@@ -310,28 +347,11 @@ async function getTblData() {
   var res = await browser.storage.local.get("selectors");
 
   if (Array.isArray(res.selectors)) {
-    res.selectors.sort(function (b, a) {
-      // > 0 => b before a
-      // < 0 => a before b
-      // === 0 => keep original order of a and b
-
-      if (typeof a.idx === "undefined" && typeof b.idx === "number") {
-        return 1; // b before a
-      }
-      if (typeof a.idx === "number" && typeof b.idx === "undefined") {
-        return -1; // a before b
-      }
-
-      if (typeof a.idx === "number" && typeof b.idx === "number") {
-        if (a.idx > b.idx) {
-          return 1;
-        }
-        if (a.idx < b.idx) {
-          return -1;
-        }
-      }
-      // if in doubt, do nothing :) , also covers  double undefined and a === b
-      return 0;
+    const idxOf = (x) => (Number.isFinite(x.idx) ? x.idx : Infinity);
+    res.selectors.sort((x, y) => {
+      const dx = idxOf(x);
+      const dy = idxOf(y);
+      return dx === dy ? 0 : dx < dy ? -1 : 1;
     });
     res.selectors.forEach((selector) => {
       data.push({

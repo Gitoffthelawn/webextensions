@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Select Tabs</title>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.35 var(--font-ui);
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      summary:focus-visible,
+      #splitter:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      /* ---------------------------------------------------------- header */
+      header {
+        flex: none;
+        padding: 8px 10px 6px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .ref {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .refText {
+        flex: 1;
+        min-width: 0;
+      }
+      #refTitle,
+      #refUrl {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #refTitle {
+        font-weight: 600;
+      }
+      #refUrl {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+      .caption {
+        font-size: 0.75em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .searchRow {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      #filterSearch {
+        box-sizing: border-box;
+        flex: 1;
+        min-width: 0;
+        padding: 5px 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface-2);
+      }
+      #status {
+        margin-top: 6px;
+        min-height: 1.35em;
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+      }
+      #status::before {
+        flex: none;
+        font-weight: 700;
+      }
+      #status.info {
+        color: var(--muted);
+      }
+      #status.info::before {
+        content: "\2139";
+      }
+      #status.ok {
+        color: var(--ok);
+      }
+      #status.ok::before {
+        content: "\2713";
+      }
+      #status.warn {
+        color: var(--warn);
+      }
+      #status.warn::before {
+        content: "\26A0";
+      }
+
+      /* --------------------------------------------------------- buttons */
+      .btn {
+        padding: 3px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        cursor: pointer;
+      }
+      .btn:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-text);
+        font-weight: 600;
+      }
+      .btn.primary:disabled {
+        background: var(--muted);
+        border-color: var(--muted);
+      }
+
+      /* -------------------------------------------------------- sections */
+      /* filters on the left, preview on the right */
+      .workspace {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: row;
+      }
+      main {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        overflow: auto;
+        padding: 6px 10px 10px;
+      }
+      details {
+        margin: 6px 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      summary {
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.8em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        user-select: none;
+      }
+      details[open] > summary {
+        border-bottom: 1px solid var(--border);
+      }
+      /* accordion: chevron on every header, the open section stands out */
+      summary {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        list-style: none;
+      }
+      summary::marker {
+        content: "";
+      }
+      summary::before {
+        content: "\25B8";
+        display: inline-block;
+        width: 1em;
+        transition: transform 0.15s;
+      }
+      details[open] > summary::before {
+        transform: rotate(90deg);
+      }
+      details[open] {
+        border-color: var(--accent);
+      }
+      details[open] > summary {
+        color: var(--text);
+      }
+      .chips,
+      .body {
+        padding: 8px 10px 10px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .chips button {
+        padding: 2px 11px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface-2);
+        cursor: pointer;
+      }
+      .chips button:hover {
+        border-color: var(--accent);
+      }
+      .chips button[aria-pressed="true"] {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-text);
+      }
+      .rulesFoot {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px 10px;
+      }
+      .hint {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+      body.searching .hint {
+        display: none;
+      }
+      #noMatch {
+        text-align: center;
+        color: var(--muted);
+        margin: 18px 0;
+      }
+
+      /* ------------------------------------------- last access time slider */
+      .summaryLine {
+        margin: 0 0 6px;
+      }
+      .slider {
+        position: relative;
+        height: 28px;
+      }
+      /* the thumb centres travel 8px in from each side, everything
+         positioned in % lives inside this inset rail */
+      .rail {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 0;
+        bottom: 0;
+      }
+      .track,
+      .fill {
+        position: absolute;
+        top: 12px;
+        height: 4px;
+        border-radius: 2px;
+      }
+      .track {
+        left: 0;
+        right: 0;
+        background: var(--border);
+      }
+      .fill {
+        background: var(--accent);
+      }
+      .slider input[type="range"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 28px;
+        margin: 0;
+        background: none;
+        pointer-events: none; /* only the thumbs can be grabbed */
+        -moz-appearance: none;
+        appearance: none;
+      }
+      .slider input[type="range"]::-moz-range-track {
+        background: transparent;
+      }
+      .slider input[type="range"]::-moz-range-thumb {
+        pointer-events: auto;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid var(--surface);
+        box-shadow: 0 0 0 1px var(--accent);
+        cursor: pointer;
+      }
+      .ticks {
+        position: relative;
+        height: 8px;
+        margin: 0 8px;
+      }
+      .tick {
+        position: absolute;
+        top: 0;
+        width: 1px;
+        height: 8px;
+        background: var(--muted);
+        opacity: 0.7;
+      }
+      .ends {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+        font-size: 0.8em;
+        color: var(--muted);
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 8px;
+        padding: 0;
+      }
+      .rangeActions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      #rangeCount {
+        color: var(--muted);
+      }
+
+      /* -------------------------------------------------------- splitter */
+      #splitter {
+        flex: none;
+        width: 7px;
+        cursor: col-resize;
+        background: var(--border);
+        border-left: 1px solid var(--border);
+        position: relative;
+      }
+      #splitter::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 2px;
+        width: 3px;
+        height: 36px;
+        margin-top: -18px;
+        border-radius: 2px;
+        background: var(--muted);
+        opacity: 0.6;
+      }
+
+      /* --------------------------------------------------------- preview */
+      #previewPanel {
+        flex: 0 0 400px;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+      }
+
+      /* a narrow window: the preview goes below the filters again */
+      @media (max-width: 640px) {
+        .workspace {
+          flex-direction: column;
+        }
+        main {
+          min-height: 160px;
+        }
+        #splitter {
+          display: none;
+        }
+        #previewPanel {
+          flex: 0 0 40% !important;
+          border-top: 2px solid var(--border);
+        }
+      }
+      .previewHead {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      #previewTitle {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+      #previewList {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #previewList li {
+        display: grid;
+        grid-template-columns: 2.6em 16px 1fr;
+        gap: 8px;
+        align-items: center;
+        padding: 4px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      #previewList li:nth-child(even) {
+        background: var(--surface-2);
+      }
+      #previewList .idx {
+        justify-self: end;
+        padding: 0 5px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        font-size: 0.85em;
+        font-variant-numeric: tabular-nums;
+      }
+      .fav {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+      }
+      .fav.ph {
+        box-sizing: border-box;
+        border: 1px dashed var(--muted);
+        opacity: 0.6;
+      }
+      #previewList .txt {
+        min-width: 0;
+      }
+      #previewList .trow {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+      }
+      #previewList .t,
+      #previewList .u {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #previewList .t {
+        flex: 0 1 auto;
+        font-weight: 500;
+      }
+      #previewList .u {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+      .tag {
+        flex: none;
+        padding: 0 5px;
+        border-radius: 4px;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-size: 0.7em;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      #previewList li.empty,
+      #previewList li.more {
+        display: block;
+        padding: 14px 10px;
+        text-align: center;
+        color: var(--muted);
+        background: none;
+      }
+      #previewList li.more {
+        padding: 6px 10px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="ref">
+        <span id="refIcon"></span>
+        <div class="refText">
+          <div class="caption">Reference tab</div>
+          <div id="refTitle"></div>
+          <div id="refUrl"></div>
+        </div>
+        <button
+          id="useActive"
+          class="btn"
+          title="use the tab that is active right now as reference"
+        >
+          Use active
+        </button>
+      </div>
+      <div class="searchRow">
+        <input
+          id="filterSearch"
+          type="search"
+          placeholder="Search filters  (Enter: preview the first match)"
+          aria-label="search filters"
+          autocomplete="off"
+        />
+      </div>
+      <div id="status" role="status" class="info">
+        Pick a filter to preview the tabs it would select
+      </div>
+    </header>
+
+    <div class="workspace">
+      <main id="sections">
+        <details id="timeSection" data-title="Last access time" open>
+          <summary>Last access time</summary>
+          <div class="body">
+            <p class="summaryLine">
+              Accessed between <b id="labelOld"></b> and <b id="labelNew"></b>
+            </p>
+            <div class="slider">
+              <div class="rail">
+                <div class="track"></div>
+                <div class="fill" id="fill"></div>
+              </div>
+              <input
+                type="range"
+                id="rangeOld"
+                min="0"
+                max="1"
+                step="1"
+                value="0"
+                aria-label="oldest last access time"
+              />
+              <input
+                type="range"
+                id="rangeNew"
+                min="0"
+                max="1"
+                step="1"
+                value="1"
+                aria-label="newest last access time"
+              />
+            </div>
+            <div class="ticks" id="ticks" title="one mark per tab"></div>
+            <div class="ends">
+              <span id="endOld"></span>
+              <span id="endNew"></span>
+            </div>
+            <div class="presets" id="presets"></div>
+            <div class="rangeActions">
+              <span id="rangeCount"></span>
+              <label title="only keep tabs that are selected right now">
+                <input type="checkbox" id="rangeNarrow" /> narrow current
+                selection
+              </label>
+              <button
+                id="rangeRefresh"
+                class="btn"
+                title="re-read the access times of all tabs"
+              >
+                Refresh range
+              </button>
+            </div>
+          </div>
+        </details>
+        <p id="noMatch" hidden>No filter matches your search.</p>
+      </main>
+
+      <div
+        id="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="resize the preview"
+        tabindex="0"
+        title="drag to resize the preview"
+      ></div>
+
+      <section id="previewPanel" aria-label="preview">
+        <div class="previewHead">
+          <span id="previewTitle"></span>
+          <button
+            id="refreshBtn"
+            class="btn"
+            title="evaluate the filter again (tabs may have changed)"
+          >
+            Refresh
+          </button>
+          <button
+            id="applyBtn"
+            class="btn primary"
+            title="select the tabs listed below (Ctrl+Enter)"
+          >
+            Apply
+          </button>
+        </div>
+        <ol id="previewList" aria-label="tabs that would be selected"></ol>
+      </section>
+    </div>
+    <script src="selector.js"></script>
+  </body>
+</html>

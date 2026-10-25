@@ -1,597 +1,594 @@
 /* global browser */
 
-let allTabs = [];
-let consideredTabsIds = new Set();
+const extname = browser.runtime.getManifest().name;
+const SELECTOR_URL = browser.runtime.getURL("selector.html");
+const GROUP_PREFIX = "group:";
 
-const manifest = browser.runtime.getManifest();
-const extname = manifest.name;
+// ---------------------------------------------------------------------------
+// helpers
+//
+// Every action is called as action(ctx, tab):
+//   ctx.notify(msg)  where messages go (system notification or selector window)
+//   ctx.narrow       true: "Same Container" narrows an existing multi selection
+//   ctx.collect      optional dry run: called with the tabs that would be
+//                    selected, nothing is highlighted
+//   tab              the reference tab (the tab the selector window was
+//                    opened for); its window is the window that gets changed
+// and returns the number of selected tabs.
+// ---------------------------------------------------------------------------
 
-function notify(title, message = "", iconUrl = "icon.png") {
-  return browser.notifications.create("" + Date.now(), {
+// fixed id => a new notification replaces the old one instead of stacking
+function notify(message, title = extname) {
+  return browser.notifications.create("select-tabs-ext", {
     type: "basic",
-    iconUrl,
+    iconUrl: "icon.png",
     title,
     message,
   });
 }
 
-function highlightTabsByWindowId(winId2tabIdxMap) {
-  winId2tabIdxMap.forEach((value, key /*,map*/) => {
-    browser.tabs.highlight({
-      windowId: key,
-      tabs: [...value], // convert from Set to array
-      populate: false,
-    });
+// always query the window of the reference tab: when the selector window has
+// the focus, "currentWindow" would be the selector window itself
+function queryTabs(tab, extra = {}) {
+  return browser.tabs.query({
+    windowId: tab.windowId,
+    hidden: false,
+    ...extra,
   });
 }
 
-function highlight(tabs) {
+// tabs.highlight() makes the first tab of the list the active one,
+// so put the clicked tab first to keep it active
+function clickedFirst(tabs, tab) {
+  return [...tabs].sort((a, b) =>
+    a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0,
+  );
+}
+
+async function highlight(ctx, tabs) {
+  if (ctx.collect) {
+    ctx.collect(tabs);
+    return tabs.length;
+  }
   if (tabs.length < 1) {
-    notify(extname, "no tabs matched, selection was not changed");
-    return;
+    ctx.notify("no tabs matched, selection was not changed");
+    return 0;
   }
-  let winId2tabIdxMap = new Map();
-  tabs.forEach((t) => {
-    if (!winId2tabIdxMap.has(t.windowId)) {
-      winId2tabIdxMap.set(t.windowId, []);
+  const byWindow = new Map();
+  for (const t of tabs) {
+    if (!byWindow.has(t.windowId)) {
+      byWindow.set(t.windowId, []);
     }
-    winId2tabIdxMap.get(t.windowId).push(t.index);
-  });
-  highlightTabsByWindowId(winId2tabIdxMap);
+    byWindow.get(t.windowId).push(t.index);
+  }
+  for (const [windowId, idxs] of byWindow) {
+    await browser.tabs.highlight({ windowId, tabs: idxs, populate: false });
+  }
+  return tabs.length;
 }
 
-function getDescendentTabs(ancestorTabId, max_relation_depth = -1) {
-  let out = [];
-  for (const t of allTabs) {
-    // ref. openerTabId is only present if the opener tab
-    // still exists and is in the same window.
-    if (t.openerTabId === ancestorTabId) {
-      if (consideredTabsIds.has(t.id)) {
-        out.push(t);
-      }
-      if (max_relation_depth !== 1) {
-        const tmp = getDescendentTabs(t.id, max_relation_depth - 1);
-        out = [...out, ...tmp];
-      }
-    }
-  }
-  return out;
-}
-
-async function getAncestorTabs(ancestorTabId, max_relation_depth = -1) {
-  let out = [];
-  const tabId2tabMap = new Map();
-  allTabs.forEach((t) => {
-    tabId2tabMap.set(t.id, t);
-  });
-
-  let ancestorTab = await browser.tabs.get(ancestorTabId);
-  if (consideredTabsIds.has(ancestorTab.id)) {
-    out.push(ancestorTab);
-  }
-
-  let tmp;
-  while (
-    typeof ancestorTab.openerTabId === "number" &&
-    max_relation_depth !== 1 &&
-    tabId2tabMap.has(ancestorTab.openerTabId)
-  ) {
-    tmp = tabId2tabMap.get(ancestorTab.openerTabId);
-    if (consideredTabsIds.has(tmp.id)) {
-      out.push(tmp);
-    }
-    ancestorTab = tmp;
-  }
-  return out;
-}
-
-// -------------
-
-browser.menus.create({
-  id: "All",
-  title: "All",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Invert Selection",
-  title: "Invert Selection",
-  contexts: ["tab"],
-});
-
-// -------------
-
-browser.menus.create({
-  id: "Directional",
-  title: "Directional",
-  type: "separator",
-  contexts: ["tab"],
-});
-browser.menus.create({
-  id: "Relationship",
-  title: "Relationship",
-  type: "separator",
-  contexts: ["tab"],
-});
-browser.menus.create({
-  id: "URL Property",
-  title: "URL Property",
-  type: "separator",
-  contexts: ["tab"],
-});
-browser.menus.create({
-  id: "State",
-  title: "State",
-  type: "separator",
-  contexts: ["tab"],
-});
-
-// -------------
-
-browser.menus.create({
-  id: "Same Container",
-  title: "Same Container",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Same Group",
-  title: "Same Group",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Bookmarked",
-  title: "Bookmarked",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "UserScripts",
-  title: "UserScripts",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  type: "separator",
-  contexts: ["tab"],
-});
-
-// Relationship
-
-browser.menus.create({
-  id: "Descendents",
-  title: "Descendents",
-  parentId: "Relationship",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Siblings",
-  title: "Siblings",
-  parentId: "Relationship",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Children",
-  title: "Children",
-  parentId: "Relationship",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Parent",
-  title: "Parent",
-  parentId: "Relationship",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Ancestors",
-  title: "Ancestors",
-  parentId: "Relationship",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Same URL",
-  title: "Same URL",
-  parentId: "URL Property",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Same Domain",
-  title: "Same Domain",
-  parentId: "URL Property",
-  contexts: ["tab"],
-});
-
-// Positional
-
-browser.menus.create({
-  id: "To the Left",
-  title: "To the Left",
-  parentId: "Directional",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "To the Right",
-  title: "To the Right",
-  parentId: "Directional",
-  contexts: ["tab"],
-});
-
-// URL Property
-browser.menus.create({
-  id: "Pinned",
-  title: "Pinned",
-  parentId: "State",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Muted",
-  title: "Muted",
-  parentId: "State",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Loading",
-  title: "Loading",
-  parentId: "State",
-  contexts: ["tab"],
-});
-
-browser.menus.create({
-  id: "Audible",
-  title: "Audible",
-  parentId: "State",
-  contexts: ["tab"],
-});
-
-const run = {
-  All: async (/*info, tab*/) => {
-    const tabs = await browser.tabs.query({
-      currentWindow: true,
-      hidden: false,
-    });
-    highlight(tabs);
-  },
-  "Invert Selection": async (info, tab) => {
-    // Previously highlighted tabs not included in tabs will stop being highlighted.
-    // The first tab in tabs will become active.
-    // ref. https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/highlight
-    const tabs = await browser.tabs.query({
-      highlighted: false,
-      currentWindow: true,
-      hidden: false,
-    });
-    highlight(tabs);
-  },
-
-  "Same Container": async (info, tab) => {
-    if (tab.cookieStoreId) {
-      let query = {
-        currentWindow: true,
-        hidden: false,
-        cookieStoreId: tab.cookieStoreId,
-      };
-      if (multipleHighlighted) {
-        // more than one TabIsHighlighted
-        // only run the scripts on the highlighted tabs
-        // and the ones still highlighted match the script
-        query["highlighted"] = true;
-      }
-      const tabs = (await browser.tabs.query(query))
-        // order clicked tabs to the front
-        .sort((a, b) => (a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0));
-      highlight(tabs);
-    }
-  },
-  "Same Group": async (info, tab) => {
-    if (tab.groupId) {
-      let query = {
-        currentWindow: true,
-        hidden: false,
-        groupId: tab.groupId,
-      };
-      const tabs = (await browser.tabs.query(query))
-        // order clicked tabs to the front
-        .sort((a, b) => (a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0));
-      highlight(tabs);
-    }
-  },
-  Descendents: async (info, tab) => {
-    allTabs = await browser.tabs.query({
-      currentWindow: true,
-      hidden: false,
-    });
-
-    consideredTabsIds = new Set(allTabs.map((t) => t.id));
-    highlight(getDescendentTabs(tab.id).filter((t) => t.id !== tab.id));
-  },
-  Siblings: async (info, tab) => {
-    allTabs = await browser.tabs.query({
-      hidden: false,
-      currentWindow: true,
-    });
-    consideredTabsIds = new Set(allTabs.map((t) => t.id));
-    highlight(
-      getDescendentTabs(tab.openerTabId, 1).filter((t) => t.id !== tab.id),
-    );
-  },
-  Children: async (info, tab) => {
-    allTabs = await browser.tabs.query({
-      hidden: false,
-      currentWindow: true,
-    });
-    consideredTabsIds = new Set(allTabs.map((t) => t.id));
-    highlight(getDescendentTabs(tab.id, 1));
-  },
-  Parent: async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-    };
-    const tabs = (await browser.tabs.query(query)).filter(
-      (t) => t.id === tab.openerTabId,
-    );
-    highlight(tabs);
-  },
-  Ancestors: async (info, tab) => {
-    allTabs = await browser.tabs.query({
-      hidden: false,
-      currentWindow: true,
-    });
-    consideredTabsIds = new Set(allTabs.map((t) => t.id));
-    highlight(await getAncestorTabs(tab.id, -1));
-  },
-  "Same URL": async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-        url: tab.url,
-      };
-    const tabs = await browser.tabs.query(query);
-    highlight(tabs);
-  },
-  "Same Domain": async (info, tab) => {
-    const hostname = new URL(tab.url).hostname;
-    let query = {
-        hidden: false,
-        currentWindow: true,
-        url: "*://" + hostname + "/*",
-      };
-    const tabs = (await browser.tabs.query(query)).sort((a, b) =>
-      a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0,
-    );
-    highlight(tabs);
-  },
-  "To the Left": async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-      };
-    const tabs = (await browser.tabs.query(query))
-      .filter((t) => {
-        return t.index < tab.index;
-      })
-      .sort((a, b) => b.index - a.index);
-    highlight(tabs);
-  },
-  "To the Right": async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-      };
-    const tabs = (await browser.tabs.query(query))
-      .filter((t) => {
-        return t.index > tab.index;
-      })
-      .sort((a, b) => a.index - b.index);
-    highlight(tabs);
-  },
-  Pinned: async (/*info, tab*/) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-        pinned: true,
-      };
-    const tabs = await browser.tabs.query(query);
-    highlight(tabs);
-  },
-  Muted: async (/*info, tab*/) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-        muted: true,
-      };
-    const tabs = await browser.tabs.query(query);
-    highlight(tabs);
-  },
-  Loading: async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-      };
-    const tabs = (await browser.tabs.query(query))
-      .filter((t) => t.status === "loading")
-      .sort((a, b) => (a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0));
-    highlight(tabs);
-  },
-  Audible: async (info, tab) => {
-    let query = {
-        hidden: false,
-        currentWindow: true,
-        audible: true,
-      };
-    const tabs = (await browser.tabs.query(query)).sort((a, b) =>
-      a.id === tab.id ? -1 : b.id === tab.id ? 1 : 0,
-    );
-    highlight(tabs);
-  },
-  Bookmarked: async (info, tab) => {
-    const bookmarkedURLs = new Set(
-      (await browser.bookmarks.search({}))
-        .filter((m) => typeof m.url === "string")
-        .map((m) => m.url.trim()),
-    );
-    const tabs = [];
-    for (const t of await browser.tabs.query({ currentWindow: true })) {
-      console.debug(t.url, bookmarkedURLs.has(t.url));
-      if (bookmarkedURLs.has(t.url)) {
-        tabs.push(t);
-      }
-    }
-    highlight(tabs);
-  },
-  UserScripts: async (info, tab) => {
-    let store;
-    try {
-      store = await browser.storage.local.get("selectors");
-    } catch (e) {
-      console.error("access to script storage failed");
-      return;
-    }
-
-    if (typeof store === "undefined") {
-      console.error("script store is undefined");
-    }
-
-    if (typeof store.selectors === "undefined") {
-      console.error("selectors are undefined");
-    }
-
-    if (typeof store.selectors.forEach !== "function") {
-      console.error("selectors not iterable");
-      return;
-    }
-
-    let query = {
-      hidden: false,
-      currentWindow: true,
-      url: "<all_urls>",
-    };
-
-    const tabs = await browser.tabs.query(query);
-
-    const tabsToHL = [];
-    let hltab = false;
-    for (const t of tabs) {
-      hltab = false;
-
-      for (const selector of store.selectors) {
-        // check if enabled
-        if (typeof selector.enabled === "boolean") {
-          if (selector.enabled === true) {
-            // check code
-            if (typeof selector.code === "string") {
-              if (selector.code !== "") {
-                try {
-                  //new Function(selector.code);
-                  let res = await browser.tabs.executeScript(t.id, {
-                    code:
-                      `(function() {
-                                const clkTab = {
-                                    "id": ${tab.id},
-                                    "url": "${tab.url}",
-                                    "active": ${tab.active},
-                                    "attention": ${tab.attention},
-                                    "audible": ${tab.audible},
-                                    "autoDiscardable": ${tab.autoDiscardable},
-                                    "cookieStoreId": "${tab.cookieStoreId}",
-                                    "discarded": ${tab.discarded},
-                                    "favIconUrl": "${tab.favIconUrl}",
-                                    "height": ${tab.height},
-                                    "hidden": ${tab.hidden},
-                                    "highlighted": ${tab.highlight},
-                                    "incognito": ${tab.incognito},
-                                    "index": ${tab.index},
-                                    "isArticle": ${tab.isArticle},
-                                    "isInReaderMode": ${tab.isInReaderMode},
-                                    "lastAccessed": ${tab.lastAccessed},
-                                    "openerTabId": ${tab.openerTabId},
-                                    "pinned": ${tab.pinned},
-                                    "sessionId": "${tab.sessionId}",
-                                    "status": "${tab.status}",
-                                    "successorTabId": ${tab.successorTabId},
-                                    "title": "${tab.title}",
-                                    "width": ${tab.width},
-                                    "windowId": ${tab.windowId}
-                                };
-                                const cmpTab= {
-                                    "id": ${t.id},
-                                    "url": "${t.url}",
-                                    "active": ${t.active},
-                                    "attention": ${t.attention},
-                                    "audible": ${t.audible},
-                                    "autoDiscardable": ${t.autoDiscardable},
-                                    "cookieStoreId": "${t.cookieStoreId}",
-                                    "discarded": ${t.discarded},
-                                    "favIconUrl": "${t.favIconUrl}",
-                                    "height": ${t.height},
-                                    "hidden": ${t.hidden},
-                                    "highlighted": ${t.highlight},
-                                    "incognito": ${t.incognito},
-                                    "index": ${t.index},
-                                    "isArticle": ${t.isArticle},
-                                    "isInReaderMode": ${t.isInReaderMode},
-                                    "lastAccessed": ${t.lastAccessed},
-                                    "openerTabId": ${t.openerTabId},
-                                    "pinned": ${t.pinned},
-                                    "sessionId": "${t.sessionId}",
-                                    "status": "${t.status}",
-                                    "successorTabId": ${t.successorTabId},
-                                    "title": "${t.title}",
-                                    "width": ${t.width},
-                                    "windowId": ${t.windowId}
-                                };
-                                ` +
-                      selector.code +
-                      "}());",
-                  });
-                  if (res.length > 0) {
-                    res = res[0];
-                  }
-                  if (typeof res === "boolean" && res === true) {
-                    hltab = true;
-                  } else {
-                    hltab = false;
-                    break;
-                  }
-                } catch (e) {
-                  console.error(e);
-                }
-              }
-            }
-          }
-        }
-      } // for selector
-      if (hltab) {
-        tabsToHL.push(t);
-      }
-    } // for tab
-
-    highlight(tabsToHL);
-  }, // onclick
+// factory for all simple "tabs where predicate(t, referenceTab) is true" actions
+const selectWhere = (predicate) => async (ctx, tab) => {
+  const tabs = (await queryTabs(tab)).filter((t) => predicate(t, tab));
+  return highlight(ctx, clickedFirst(tabs, tab));
 };
 
-browser.menus.onClicked.addListener(async (info /*, tab*/) => {
-  const tab = (
-    await browser.tabs.query({ currentWindow: true, active: true })
-  )[0];
-  run[info.menuItemId](null, tab);
+// ---------------------------------------------------------------------------
+// URL helpers
+// ---------------------------------------------------------------------------
+
+const DEFAULT_PORTS = {
+  "http:": "80",
+  "https:": "443",
+  "ftp:": "21",
+  "ws:": "80",
+  "wss:": "443",
+};
+
+function parseUrl(t) {
+  try {
+    return new URL(t.url);
+  } catch (e) {
+    return null;
+  }
+}
+
+// opaque origins (about:, moz-extension:, ...) all report "null"
+function originOf(u) {
+  return u.origin !== "null" ? u.origin : u.protocol + "//" + u.host;
+}
+
+const urlProps = {
+  origin: originOf,
+  hostname: (u) => u.hostname,
+  protocol: (u) => u.protocol,
+  port: (u) => u.port || DEFAULT_PORTS[u.protocol] || "",
+};
+
+const sameUrlProp = (prop) => async (ctx, tab) => {
+  const ref = parseUrl(tab);
+  if (!ref) {
+    ctx.notify("the reference tab has no usable URL");
+    return 0;
+  }
+  const get = urlProps[prop];
+  const refVal = get(ref);
+  return selectWhere((t) => {
+    const u = parseUrl(t);
+    return u !== null && get(u) === refVal;
+  })(ctx, tab);
+};
+
+// ---------------------------------------------------------------------------
+// relationship helpers (pure functions, no shared global state)
+// ---------------------------------------------------------------------------
+
+// openerTabId is only present if the opener tab still exists
+// and is in the same window.
+function childrenOf(tabs, id) {
+  return tabs.filter((t) => t.openerTabId === id);
+}
+
+function descendantsOf(tabs, id) {
+  const out = [];
+  const seen = new Set([id]);
+  const stack = [id];
+  while (stack.length > 0) {
+    const cur = stack.pop();
+    for (const t of tabs) {
+      if (t.openerTabId === cur && !seen.has(t.id)) {
+        seen.add(t.id);
+        out.push(t);
+        stack.push(t.id);
+      }
+    }
+  }
+  return out.sort((a, b) => a.index - b.index);
+}
+
+// the reference tab itself comes first, followed by parent, grandparent, ...
+function ancestorsOf(tabs, tab) {
+  const byId = new Map(tabs.map((t) => [t.id, t]));
+  const out = [tab];
+  const seen = new Set([tab.id]);
+  let cur = tab;
+  while (typeof cur.openerTabId === "number" && byId.has(cur.openerTabId)) {
+    cur = byId.get(cur.openerTabId);
+    if (seen.has(cur.id)) {
+      break;
+    }
+    seen.add(cur.id);
+    out.push(cur);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// user defined rules
+// ---------------------------------------------------------------------------
+
+const TAB_FIELDS = [
+  "id",
+  "url",
+  "active",
+  "attention",
+  "audible",
+  "autoDiscardable",
+  "cookieStoreId",
+  "discarded",
+  "favIconUrl",
+  "height",
+  "hidden",
+  "highlighted",
+  "incognito",
+  "index",
+  "isArticle",
+  "isInReaderMode",
+  "lastAccessed",
+  "openerTabId",
+  "pinned",
+  "sessionId",
+  "status",
+  "successorTabId",
+  "title",
+  "width",
+  "windowId",
+];
+
+function snapshot(t) {
+  const o = {};
+  for (const k of TAB_FIELDS) {
+    o[k] = t[k];
+  }
+  return o;
+}
+
+// rules that actually have code
+function allRules(store) {
+  return (Array.isArray(store.selectors) ? store.selectors : []).filter(
+    (r) => typeof r.code === "string" && r.code.trim() !== "",
+  );
+}
+
+function groupOf(rule) {
+  return typeof rule.group === "string" ? rule.group.trim() : "";
+}
+
+// Tab data is passed as JSON, so titles/URLs containing quotes or newlines
+// can neither break the script nor inject code.
+// The closing "}());" is on its own line so that a trailing "// comment"
+// in the user's code can't swallow it.
+function buildScript(code, clkTab, cmpTab) {
+  return `(function() {
+const clkTab = ${JSON.stringify(snapshot(clkTab))};
+const cmpTab = ${JSON.stringify(snapshot(cmpTab))};
+${code}
+}());`;
+}
+
+async function matchesAllRules(rules, clkTab, cmpTab, stats) {
+  for (const rule of rules) {
+    let res;
+    try {
+      res = await browser.tabs.executeScript(cmpTab.id, {
+        code: buildScript(rule.code, clkTab, cmpTab),
+      });
+    } catch (e) {
+      // restricted page, tab closed meanwhile, or error in the user's code
+      stats.errors++;
+      console.error(`rule failed on tab ${cmpTab.id} (${cmpTab.url}):`, e);
+      return false;
+    }
+    if (!Array.isArray(res) || res[0] !== true) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Only enabled rules are ever executed:
+// opts.group === undefined: AND of all enabled rules
+// opts.group is a string:    AND of the enabled rules of that group
+async function selectByUserRules(ctx, tab, opts = {}) {
+  let store;
+  try {
+    store = await browser.storage.local.get("selectors");
+  } catch (e) {
+    console.error("access to rule storage failed", e);
+    ctx.notify("could not read the rules from storage");
+    return 0;
+  }
+
+  const forGroup = typeof opts.group === "string";
+  const rules = allRules(store).filter(
+    (r) => r.enabled === true && (!forGroup || groupOf(r) === opts.group),
+  );
+  if (rules.length === 0) {
+    ctx.notify(
+      forGroup
+        ? "this group has no enabled rules, enable some on the options page"
+        : "no enabled rules found, add some on the options page",
+    );
+    return 0;
+  }
+
+  const tabs = await queryTabs(tab, { url: "<all_urls>" });
+  const stats = { errors: 0 };
+  const results = await Promise.all(
+    tabs.map(async (t) =>
+      (await matchesAllRules(rules, tab, t, stats)) ? t : null,
+    ),
+  );
+  const matched = results.filter((t) => t !== null);
+
+  if (stats.errors > 0 && matched.length === 0) {
+    ctx.notify(
+      `no tabs matched, ${stats.errors} tab(s) could not be evaluated (see the console)`,
+    );
+    return 0;
+  }
+  return highlight(ctx, clickedFirst(matched, tab));
+}
+
+// ---------------------------------------------------------------------------
+// actions (keys must match the command names in manifest.json and the ids
+// used by selector.js)
+// ---------------------------------------------------------------------------
+
+const run = {
+  All: async (ctx, tab) => highlight(ctx, await queryTabs(tab)),
+
+  // Previously highlighted tabs not included in tabs stop being highlighted.
+  Invert: async (ctx, tab) =>
+    highlight(ctx, await queryTabs(tab, { highlighted: false })),
+
+  "Same Container": async (ctx, tab) => {
+    if (!tab.cookieStoreId) {
+      ctx.notify("no container information available");
+      return 0;
+    }
+    // from the menu / a shortcut: with a multi selection, narrow it down
+    // instead of widening it
+    const multi =
+      ctx.narrow && (await queryTabs(tab, { highlighted: true })).length > 1;
+    const tabs = await queryTabs(tab, {
+      cookieStoreId: tab.cookieStoreId,
+      ...(multi ? { highlighted: true } : {}),
+    });
+    return highlight(ctx, clickedFirst(tabs, tab));
+  },
+
+  "Same Group": async (ctx, tab) => {
+    if (typeof tab.groupId !== "number") {
+      ctx.notify("tab groups are not supported by this browser version");
+      return 0;
+    }
+    const tabs = await queryTabs(tab, { groupId: tab.groupId });
+    return highlight(ctx, clickedFirst(tabs, tab));
+  },
+
+  Bookmarked: async (ctx, tab) => {
+    const urls = new Set();
+    for (const b of await browser.bookmarks.search({})) {
+      if (typeof b.url === "string") {
+        urls.add(b.url.trim());
+      }
+    }
+    return selectWhere((t) => urls.has(t.url))(ctx, tab);
+  },
+
+  // --- relationship ---
+  Descendents: async (ctx, tab) =>
+    highlight(ctx, descendantsOf(await queryTabs(tab), tab.id)),
+
+  Siblings: async (ctx, tab) => {
+    if (typeof tab.openerTabId !== "number") {
+      ctx.notify("the reference tab has no opener, so it has no siblings");
+      return 0;
+    }
+    const tabs = childrenOf(await queryTabs(tab), tab.openerTabId).filter(
+      (t) => t.id !== tab.id,
+    );
+    return highlight(ctx, tabs);
+  },
+
+  Children: async (ctx, tab) =>
+    highlight(ctx, childrenOf(await queryTabs(tab), tab.id)),
+
+  Parent: async (ctx, tab) =>
+    highlight(
+      ctx,
+      (await queryTabs(tab)).filter((t) => t.id === tab.openerTabId),
+    ),
+
+  Ancestors: async (ctx, tab) =>
+    highlight(ctx, ancestorsOf(await queryTabs(tab), tab)),
+
+  // --- URL property ---
+  "Same URL": selectWhere((t, tab) => t.url === tab.url),
+  "Same Origin": sameUrlProp("origin"),
+  "Same Domain": sameUrlProp("hostname"),
+  "Same Port": sameUrlProp("port"),
+  "Same Protocol": sameUrlProp("protocol"),
+
+  // --- directional (nearest tab first) ---
+  "To the Left": async (ctx, tab) => {
+    const tabs = (await queryTabs(tab))
+      .filter((t) => t.index < tab.index)
+      .sort((a, b) => b.index - a.index);
+    return highlight(ctx, tabs);
+  },
+
+  "To the Right": async (ctx, tab) => {
+    const tabs = (await queryTabs(tab))
+      .filter((t) => t.index > tab.index)
+      .sort((a, b) => a.index - b.index);
+    return highlight(ctx, tabs);
+  },
+
+  // --- state ---
+  Pinned: selectWhere((t) => t.pinned),
+  Muted: selectWhere((t) => t.mutedInfo && t.mutedInfo.muted),
+  Loading: selectWhere((t) => t.status === "loading"),
+  Complete: selectWhere((t) => t.status === "complete"),
+  Audible: selectWhere((t) => t.audible),
+  "Auto Discardable": selectWhere((t) => t.autoDiscardable),
+
+  UserScripts: (ctx, tab) => selectByUserRules(ctx, tab),
+};
+
+// "group:<name>" runs the rules of one rule group, everything else is in `run`
+function runAction(name, ctx, tab) {
+  if (name.startsWith(GROUP_PREFIX)) {
+    return selectByUserRules(ctx, tab, {
+      group: name.slice(GROUP_PREFIX.length),
+    });
+  }
+  const action = Object.prototype.hasOwnProperty.call(run, name)
+    ? run[name]
+    : null;
+  if (typeof action !== "function") {
+    throw new Error("unknown action: " + name);
+  }
+  return action(ctx, tab);
+}
+
+// ---------------------------------------------------------------------------
+// selector window: stays open while filters are applied
+// ---------------------------------------------------------------------------
+
+let selectorWindowId = null;
+
+async function openSelector(tab) {
+  // one window at a time, it is re-created for the window it was opened from
+  if (selectorWindowId !== null) {
+    try {
+      await browser.windows.remove(selectorWindowId);
+    } catch (e) {
+      // already closed
+    }
+    selectorWindowId = null;
+  }
+
+  const width = 940;
+  const height = 640;
+  const opts = {
+    url: `${SELECTOR_URL}?windowId=${tab.windowId}&tabId=${tab.id}`,
+    type: "popup",
+    width,
+    height,
+  };
+  try {
+    // place it at the right edge of the window it controls
+    const parent = await browser.windows.get(tab.windowId);
+    if (Number.isFinite(parent.left) && Number.isFinite(parent.width)) {
+      opts.left = Math.max(0, parent.left + parent.width - width - 24);
+      opts.top = Math.max(0, (parent.top || 0) + 48);
+    }
+  } catch (e) {
+    // let the browser pick a position
+  }
+  const created = await browser.windows.create(opts);
+  selectorWindowId = created.id;
+}
+
+browser.windows.onRemoved.addListener((id) => {
+  if (id === selectorWindowId) {
+    selectorWindowId = null;
+  }
 });
 
-browser.commands.onCommand.addListener(async (command) => {
-  const tab = (
-    await browser.tabs.query({ currentWindow: true, active: true })
-  )[0];
-  run[command](null, tab);
+// requests from the selector window: evaluate a filter without selecting
+// anything and return the tabs it would select, in the order they would be
+// handed to tabs.highlight() (the first one becomes the active tab)
+async function previewFromSelector(msg) {
+  let tab = null;
+  try {
+    tab = await browser.tabs.get(msg.tabId);
+  } catch (e) {
+    // the reference tab is gone
+  }
+  if (!tab || tab.windowId !== msg.windowId) {
+    tab = (
+      await browser.tabs.query({ windowId: msg.windowId, active: true })
+    )[0];
+  }
+  if (!tab) {
+    return { tabs: [], message: "the target window has no tabs" };
+  }
+
+  const messages = [];
+  let collected = [];
+  const ctx = {
+    notify: (m) => messages.push(m),
+    narrow: false,
+    collect: (tabs) => {
+      collected = tabs;
+    },
+  };
+  try {
+    await runAction(msg.id, ctx, tab);
+  } catch (e) {
+    console.error(msg.id, e);
+    return { tabs: [], message: `failed: ${e.message || e}`, tabId: tab.id };
+  }
+  return {
+    tabs: collected.map((t) => ({
+      id: t.id,
+      index: t.index,
+      title: t.title,
+      url: t.url,
+      favIconUrl: t.favIconUrl,
+    })),
+    message: messages.join(" "),
+    tabId: tab.id,
+  };
+}
+
+// exact page match (ignoring ?query and #hash), a plain startsWith() would
+// also accept e.g. ".../selector.html.other"
+function isSelectorPage(url) {
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host}${u.pathname}` === SELECTOR_URL;
+  } catch (e) {
+    return false;
+  }
+}
+
+browser.runtime.onMessage.addListener((msg, sender) => {
+  // only our own selector page may ask for a selection (the code of user
+  // rules runs as a content script inside web pages and must not be able to)
+  if (
+    !sender.url ||
+    !isSelectorPage(sender.url) ||
+    !msg ||
+    msg.cmd !== "preview" ||
+    typeof msg.id !== "string" ||
+    !Number.isInteger(msg.windowId) ||
+    !Number.isInteger(msg.tabId)
+  ) {
+    return undefined;
+  }
+  return previewFromSelector(msg);
+});
+
+// ---------------------------------------------------------------------------
+// toolbar button: opens the selector window, all filters live in there
+// ---------------------------------------------------------------------------
+
+// `tab` is the active tab of the window the button was clicked in
+browser.browserAction.onClicked.addListener((tab) => {
+  dispatch("Open Selector", tab);
+});
+
+// ---------------------------------------------------------------------------
+// dispatch for the toolbar button and the keyboard shortcuts
+// ---------------------------------------------------------------------------
+
+async function dispatch(name, tab) {
+  try {
+    if (!tab) {
+      tab = (
+        await browser.tabs.query({ currentWindow: true, active: true })
+      )[0];
+    }
+    if (!tab) {
+      return;
+    }
+    if (name === "Open Selector") {
+      await openSelector(tab);
+      return;
+    }
+    await runAction(name, { notify, narrow: true }, tab);
+  } catch (e) {
+    console.error(name, e);
+    notify(`"${name}" failed: ${e.message || e}`);
+  }
+}
+
+browser.commands.onCommand.addListener((command, tab) => {
+  dispatch(command, tab);
+});
+
+// On a fresh install without any rules, add the (disabled) example rules
+browser.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason !== "install") {
+    return;
+  }
+  try {
+    const { selectors } = await browser.storage.local.get("selectors");
+    if (Array.isArray(selectors) && selectors.length > 0) {
+      return;
+    }
+    const res = await fetch(browser.runtime.getURL("examples.json"));
+    const examples = await res.json();
+    await browser.storage.local.set({
+      selectors: examples.map((e, idx) => ({ ...e, idx })),
+    });
+  } catch (e) {
+    console.error("adding the example rules failed", e);
+  }
 });
 
 // EOF

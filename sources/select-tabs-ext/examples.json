@@ -1,0 +1,86 @@
+[
+  {
+    "enabled": false,
+    "group": "Examples: URL",
+    "annotation": "same host as the clicked tab, ignoring a leading www.",
+    "tags": "url host",
+    "code": "const host = (u) => new URL(u).hostname.replace(/^www\\./, \"\");\nreturn host(cmpTab.url) === host(clkTab.url);"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: URL",
+    "annotation": "same base domain (last two host labels; crude for co.uk style domains)",
+    "tags": "url domain",
+    "code": "const base = (u) => new URL(u).hostname.split(\".\").slice(-2).join(\".\");\nreturn base(cmpTab.url) === base(clkTab.url);"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: URL",
+    "annotation": "same page as the clicked tab, ignoring query string and #fragment (finds duplicates)",
+    "tags": "url duplicates",
+    "code": "const strip = (u) => {\n  const x = new URL(u);\n  return x.origin + x.pathname;\n};\nreturn strip(cmpTab.url) === strip(clkTab.url);"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: URL",
+    "annotation": "URL matches a regular expression (edit the pattern)",
+    "tags": "url regex",
+    "code": "return /\\/(issues|pull)\\/\\d+/.test(cmpTab.url);"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Tab",
+    "annotation": "title contains a word, case-insensitive (edit the word)",
+    "tags": "title",
+    "code": "return (cmpTab.title || \"\").toLowerCase().includes(\"github\");"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Tab",
+    "annotation": "same title as the clicked tab",
+    "tags": "title duplicates",
+    "code": "return cmpTab.title === clkTab.title;"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Tab",
+    "annotation": "not used for 7 days (lastAccessed is in milliseconds)",
+    "tags": "time stale",
+    "code": "const days = 7;\nreturn Date.now() - cmpTab.lastAccessed > days * 24 * 60 * 60 * 1000;"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Tab",
+    "annotation": "same container as the clicked tab AND not pinned (conditions can be combined in one rule)",
+    "tags": "container pinned",
+    "code": "return cmpTab.cookieStoreId === clkTab.cookieStoreId && !cmpTab.pinned;"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Tab",
+    "annotation": "neither pinned nor playing audio (safe-to-close candidates)",
+    "tags": "state",
+    "code": "return !cmpTab.pinned && !cmpTab.audible;"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Page content",
+    "annotation": "page contains a video element (the code runs inside the page being tested)",
+    "tags": "dom video",
+    "code": "return document.querySelector(\"video\") !== null;"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Page content",
+    "annotation": "page has text typed into a form field (tabs you may not want to close)",
+    "tags": "dom forms",
+    "code": "const fields = document.querySelectorAll(\n  \"textarea, input[type=text], input[type=email], input[type=search]\",\n);\nreturn Array.from(fields).some((el) => el.value.trim() !== \"\");"
+  },
+  {
+    "enabled": false,
+    "group": "Examples: Page content",
+    "annotation": "page text contains a phrase (edit the phrase)",
+    "tags": "dom text",
+    "code": "return !!document.body && document.body.innerText.includes(\"out of stock\");"
+  }
+]

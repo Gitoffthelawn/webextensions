@@ -1,40 +1,124 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>PER Rules</title>
+    <title>Select Tabs Ext: User Scripts</title>
+    <link rel="stylesheet" href="theme.css" />
     <link href="tabulator.css" rel="stylesheet" />
     <link href="options.css" rel="stylesheet" />
   </head>
   <body>
-    <p></p>
-    <fieldset>
-      <button id="addbtn" title="create a new empty rule">&#10039; New</button>
-      <button id="delbtn" title="delete selected rules">&#10005; Delete</button>
-      <button id="impbtn_wrapper" title="import rules from a file to add">
-        &darr;Import
-      </button>
-      <input id="impbtn" type="file" value="" style="display: none" />
-      <button id="expbtn" title="export selected">&uarr;Export</button>
-      <button
-        id="ablebtn"
-        title="invert the enabled state of the selected rules"
-        style="display: none"
-      >
-        Toggle Enabled (Selected)
-      </button>
-      <button id="savbtn" title="save changes">&#10003; Save</button>
-      <button id="discbtn" title="discard changes">&#9888; Discard</button>
-      <div style="float: right">
-        <button id="tgladv" title="toggle options">&#9881; Options</button>
-        <a target="_blank" href="https://github.com/igorlogius/select-tabs-ext">
-          <button>&#8505; Help</button></a
-        >
+    <header class="bar">
+      <div class="titles">
+        <h1>User Scripts</h1>
+        <div class="sub">Select Tabs Ext</div>
       </div>
-    </fieldset>
-    <p></p>
-    <table id="mainTable" border="1" style="width: 100%; height: 80vh"></table>
-    <span>Columns marked with (*) are required</span>
+      <span id="dirtyNote" role="status" hidden></span>
+      <div class="actions">
+        <button id="discbtn" class="btn" title="discard all unsaved changes">
+          &#9888; Discard
+        </button>
+        <button id="savbtn" class="btn primary" title="save changes">
+          &#10003; Save
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="group">
+        <button id="addbtn" class="btn" title="create a new empty script">
+          &#10039; New
+        </button>
+        <button id="delbtn" class="btn" title="delete the selected scripts">
+          &#10005; Delete
+        </button>
+      </div>
+      <span class="sep"></span>
+      <div class="group">
+        <button
+          id="impbtn_wrapper"
+          class="btn"
+          title="import scripts from a file, they are added to the table"
+        >
+          &darr; Import
+        </button>
+        <input id="impbtn" type="file" value="" hidden />
+        <button
+          id="expbtn"
+          class="btn"
+          title="export the selected scripts (all scripts if none are selected)"
+        >
+          &uarr; Export
+        </button>
+        <button
+          id="ablebtn"
+          class="btn"
+          title="invert the enabled state of the selected scripts"
+          hidden
+        >
+          Toggle Enabled (Selected)
+        </button>
+      </div>
+      <span class="spacer"></span>
+      <button
+        id="tgladv"
+        class="btn"
+        title="show or hide the Tags and Annotation columns"
+      >
+        &#9881; Options
+      </button>
+      <a
+        id="helpbtn"
+        class="btn"
+        target="_blank"
+        rel="noopener"
+        href="https://github.com/igorlogius/webextensions/tree/main/select-tabs-ext"
+        >&#8505; Help</a
+      >
+    </div>
+
+    <details class="help">
+      <summary>How scripts work</summary>
+      <ul>
+        <li>
+          The code is the <b>body of a function</b> and must
+          <code>return true</code> for every tab that should be selected.
+        </li>
+        <li>
+          <code>cmpTab</code> is the tab being tested, <code>clkTab</code> is
+          the reference tab shown in the selector window (the tab that was
+          active when you opened it). Both have the usual tab properties
+          (<code>url</code>, <code>title</code>, <code>pinned</code>,
+          <code>lastAccessed</code>, <code>cookieStoreId</code>, ...).
+        </li>
+        <li>
+          The code runs inside the page of <code>cmpTab</code>, so
+          <code>document</code> and <code>window</code> are available. Tabs
+          where scripts are not allowed (about: pages, addons.mozilla.org) never
+          match.
+        </li>
+        <li>
+          Click the toolbar button to open the selector window. A filter first
+          shows a <b>preview</b> of the tabs it would select; <b>Apply</b> then
+          selects them. Every group is a button there; it previews the tabs that
+          match <b>all enabled</b> scripts of that group. The
+          <b>Scripts&hellip;</b> button in that window opens this page.
+        </li>
+        <li>
+          <b>Only enabled scripts are ever executed.</b> The
+          <code>UserScripts</code> keyboard shortcut (set it on the add-on
+          shortcuts page of Firefox) selects the tabs that match the enabled
+          scripts of every group at once, which must all match (AND). Import
+          <code>examples.json</code> for ready-made samples.
+        </li>
+      </ul>
+    </details>
+
+    <div class="tableWrap">
+      <div id="mainTable"></div>
+    </div>
+    <footer>Columns marked with (*) are required</footer>
+
     <script src="tabulator.js"></script>
     <script src="options.js"></script>
   </body>
