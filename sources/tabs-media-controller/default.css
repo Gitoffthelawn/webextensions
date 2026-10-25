@@ -1,37 +1,7 @@
+/* Palette, radii and fonts come from theme.css (loaded by popup.html and
+   detached.html); this file only contains Tabs Media Controller layout. */
 :root {
-  /* palette drawn from the extension's own icon: deep teal disc,
-     coral play button, warm gold notes */
-  --bg: #0e2b34;
-  --surface: #133846;
-  --surface-2: #1a4657;
-  --border: #2a5c6d;
-  --text: #eaf4f2;
-  --text-muted: #93b6bb;
-  --accent: #e2583f;
-  --accent-2: #f0a83c;
-
-  --radius-lg: 14px;
-  --radius-md: 10px;
-  --radius-sm: 7px;
   --gap: 10px;
-  --font: -apple-system, "Segoe UI", Roboto, sans-serif;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f4f7f6;
-    --surface: #ffffff;
-    --surface-2: #eef3f2;
-    --border: #d7e3e1;
-    --text: #123138;
-    --text-muted: #5c7c82;
-    --accent: #d94f36;
-    --accent-2: #c07f1f;
-  }
-  .elementPlayPauseBtn,
-  button:hover {
-    color: #fff;
-  }
 }
 
 * {
@@ -75,7 +45,7 @@ button[hidden] {
 button:hover {
   background-color: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
 }
 
 button:focus-visible,
@@ -360,7 +330,7 @@ button svg {
 .elementPlayPauseBtn {
   background-color: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
 }
 
 .elementPlayPauseBtn:hover {
