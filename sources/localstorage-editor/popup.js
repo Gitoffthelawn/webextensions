@@ -1,10 +1,5 @@
 /* global browser Tabulator */
 
-async function getFromStorage(type, id, fallback) {
-  let tmp = await browser.storage.local.get(id);
-  return typeof tmp[id] === type ? tmp[id] : fallback;
-}
-
 let table = null;
 let tableData = null;
 
@@ -548,7 +543,8 @@ async function onDOMContentLoaded() {
   /**
    * Register Table Events
    */
-  const checkState = await getFromStorage("boolean", "checkState", false);
+  const storage = await import("./storage.js");
+  const checkState = await storage.get("boolean", "checkState", false);
 
   // after adding a row highlight/select it
   table.on("rowAdded", function (row) {
