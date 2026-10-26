@@ -3,38 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <title>Load Background Tabs on Select — Options</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #ffffff;
-        --fg: #1a1a1a;
-        --muted: #666666;
-        --border: #d0d0d0;
-        --accent: #0060df;
-        --ok: #2b7a2b;
-        --err: #c4302b;
-        --field-bg: #fafafa;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #23222b;
-          --fg: #f2f2f2;
-          --muted: #a8a8b3;
-          --border: #45444f;
-          --accent: #7fb3ff;
-          --ok: #6fcf6f;
-          --err: #ff6b6b;
-          --field-bg: #2c2b35;
-        }
-      }
-
       * {
         box-sizing: border-box;
       }
 
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: var(--font-ui);
         background: var(--bg);
         color: var(--fg);
         margin: 0;
@@ -145,7 +121,7 @@
         width: 3em;
         padding: 0.7em 0.4em 0.7em 0;
         text-align: right;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: var(--font-mono);
         font-size: 0.9em;
         line-height: 1.4;
         color: var(--muted);
@@ -179,7 +155,7 @@
         color: var(--fg);
         border: none;
         padding: 0.7em;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: var(--font-mono);
         font-size: 0.9em;
         line-height: 1.4;
         white-space: pre;
@@ -232,7 +208,7 @@
         border: 1px solid var(--border);
         border-radius: 6px;
         padding: 0.5em 0.7em;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: var(--font-mono);
         font-size: 0.9em;
       }
 
