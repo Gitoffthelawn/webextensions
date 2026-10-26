@@ -3,16 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <title>Link Extras options</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-        --border: color-mix(in srgb, CanvasText 25%, transparent);
-        --muted: color-mix(in srgb, CanvasText 65%, transparent);
-      }
       body {
-        font:
-          15px/1.5 system-ui,
-          sans-serif;
+        font: 15px/1.5 var(--font-ui);
         max-width: 60rem;
         margin: 0 auto;
         padding: 1rem 1.25rem 3rem;
@@ -66,7 +60,7 @@
         color: var(--muted);
       }
       code {
-        font-family: ui-monospace, monospace;
+        font-family: var(--font-mono);
       }
       #permList {
         list-style: none;
@@ -89,7 +83,7 @@
         margin-bottom: 1rem;
       }
       #status.error {
-        color: #c0392b;
+        color: var(--danger);
       }
       .placeholders {
         columns: 2;
