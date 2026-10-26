@@ -4,21 +4,8 @@
   <link rel="icon" type="image/png" href="icon.png" />
   <script src="codemirror.js"></script>
   <title>Gather From Tabs</title>
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    :root {
-      --paper: #f7f6f2;
-      --panel: #ffffff;
-      --ink: #1c1e1f;
-      --muted: #6b6f76;
-      --border: #ddd9d0;
-      --accent: #3d6b66;
-      --accent-ink: #ffffff;
-      --danger: #b04a3f;
-      --radius: 6px;
-      --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
-      --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -75,8 +62,8 @@
 
     button:hover,
     input[type="button"]:hover {
-      background: #efece4;
-      border-color: #cfc9ba;
+      background: var(--warn-soft);
+      border-color: var(--border);
     }
 
     button:focus,
@@ -100,7 +87,7 @@
 
     button.danger-text {
       color: var(--danger);
-      border-color: #e3c9c4;
+      border-color: var(--danger);
     }
 
     /* ---------- tabs ---------- */
@@ -126,7 +113,7 @@
     }
 
     .tab-btn:hover {
-      background: #efece4;
+      background: var(--warn-soft);
       color: var(--ink);
     }
 
@@ -323,7 +310,7 @@
     }
 
     #scriptsList li.selected {
-      background: #eaf1ef;
+      background: var(--surface-2);
     }
 
     .script-check {
@@ -388,7 +375,7 @@
     }
 
     .script-select-btn:hover {
-      background: #efece4;
+      background: var(--warn-soft);
     }
 
     .dirty-dot {
@@ -397,26 +384,26 @@
       height: 6px;
       min-width: 6px;
       border-radius: 50%;
-      background: #c9822f;
+      background: var(--warn);
       margin-right: 6px;
     }
 
     #savetable.has-changes {
-      background: #c9822f;
-      border-color: #c9822f;
+      background: var(--warn);
+      border-color: var(--warn);
       color: var(--accent-ink);
     }
 
     .unsaved-note {
       font-size: 12px;
-      color: #a8641c;
+      color: var(--warn);
       align-self: center;
     }
 
     .reload-link {
       background: none;
       border: none;
-      color: #a8641c;
+      color: var(--warn);
       text-decoration: underline;
       font-size: 12px;
       padding: 0;
@@ -440,12 +427,12 @@
 
     .script-delete-btn:hover {
       color: var(--danger);
-      background: #f4e6e3;
+      background: var(--danger-soft);
     }
 
     .script-export-btn:hover {
       color: var(--accent);
-      background: #eaf1ef;
+      background: var(--surface-2);
     }
 
     .scripts-main,
@@ -606,7 +593,7 @@
     }
 
     #shortcutconfigs tr:nth-child(even) {
-      background: #fbfaf7;
+      background: var(--surface-2);
     }
 
     #shortcutconfigs td:first-child {

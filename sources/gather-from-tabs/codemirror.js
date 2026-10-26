@@ -6337,7 +6337,6 @@ THE SOFTWARE.
           for (
             let j = end, jI = iI, fromJ = jI ? isolates[jI - 1].to : rFrom;
             j > i;
-
           ) {
             if (j == fromJ) {
               j = isolates[--jI].from;
@@ -7940,7 +7939,6 @@ THE SOFTWARE.
       let halfLine = view.viewState.heightOracle.textHeight / 2,
         bounced = false;
       ;
-
     ) {
       block = view.elementAtHeight(yOffset);
       if (block.type == BlockType.Text) break;
@@ -11011,13 +11009,8 @@ THE SOFTWARE.
             topPos = block.top;
           else topPos = block.bottom - viewHeight;
           viewport = new Viewport(
-            map.lineAt(
-              topPos - 1000 / 2,
-              QueryType$1.ByHeight,
-              oracle,
-              0,
-              0,
-            ).from,
+            map.lineAt(topPos - 1000 / 2, QueryType$1.ByHeight, oracle, 0, 0)
+              .from,
             map.lineAt(
               topPos + viewHeight + 1000 / 2,
               QueryType$1.ByHeight,
@@ -11034,20 +11027,10 @@ THE SOFTWARE.
       let from = changes.mapPos(viewport.from, -1),
         to = changes.mapPos(viewport.to, 1);
       return new Viewport(
-        this.heightMap.lineAt(
-          from,
-          QueryType$1.ByPos,
-          this.heightOracle,
-          0,
-          0,
-        ).from,
-        this.heightMap.lineAt(
-          to,
-          QueryType$1.ByPos,
-          this.heightOracle,
-          0,
-          0,
-        ).to,
+        this.heightMap.lineAt(from, QueryType$1.ByPos, this.heightOracle, 0, 0)
+          .from,
+        this.heightMap.lineAt(to, QueryType$1.ByPos, this.heightOracle, 0, 0)
+          .to,
       );
     }
     viewportIsAppropriate({ from, to }, bias = 0) {
@@ -13919,7 +13902,6 @@ THE SOFTWARE.
           for (
             let pos = Math.max(r.from, start), endPos = Math.min(r.to, end);
             ;
-
           ) {
             let docLine = view.state.doc.lineAt(pos);
             for (
@@ -24949,7 +24931,6 @@ THE SOFTWARE.
           ranges[ranges.length - 1].to,
         );
       ;
-
     ) {
       cursor.next();
       if (cursor.done) {
@@ -25403,7 +25384,6 @@ THE SOFTWARE.
     for (
       let cur = new SearchCursor(state.doc, state.sliceDoc(from, to));
       !cur.next().done;
-
     ) {
       if (ranges.length > 1000) return false;
       if (cur.value.from == from) main = ranges.length;
@@ -26035,7 +26015,6 @@ THE SOFTWARE.
         for (
           let i = 0, e = Math.min(word.length, 200);
           i < e && anyTo < len;
-
         ) {
           let next = codePointAt(word, i);
           if (next == chars[anyTo] || next == folded[anyTo]) any[anyTo++] = i;
@@ -26054,7 +26033,6 @@ THE SOFTWARE.
       for (
         let i = 0, e = Math.min(word.length, 200), prevType = 0;
         i < e && byWordTo < len;
-
       ) {
         let next = codePointAt(word, i);
         if (direct < 0) {
@@ -30579,7 +30557,6 @@ THE SOFTWARE.
       for (
         let iter = doc.iterRange(from, to - 1), pos = from;
         !iter.next().done;
-
       ) {
         if (iter.lineBreak) {
           pos++;
@@ -32771,7 +32748,6 @@ ${c}`
         for (
           c.lastIndex = 0, t = t.slice(-1 * e.length + s);
           (r = c.exec(t)) != null;
-
         ) {
           if (((o = r[1] || r[2] || r[3] || r[4] || r[5] || r[6]), !o))
             continue;
@@ -32932,7 +32908,6 @@ ${c}`
         this.options.pedantic &&
         (e = e.replace(m.tabCharGlobal, "    ").replace(m.spaceLine, ""));
         e;
-
       ) {
         let r;
         if (
@@ -33077,7 +33052,6 @@ ${c}`
           for (
             ;
             (r = this.tokenizer.rules.inline.reflinkSearch.exec(n)) != null;
-
           )
             o.includes(r[0].slice(r[0].lastIndexOf("[") + 1, -1)) &&
               (n =
@@ -37174,7 +37148,6 @@ Please report this to https://github.com/markedjs/marked.`),
           for (
             let j = this.dialects[values[i]], id;
             (id = this.data[j++]) != 65535;
-
           )
             (disabled || (disabled = new Uint8Array(this.maxTerm + 1)))[id] = 1;
         }
@@ -41912,7 +41885,6 @@ Please report this to https://github.com/markedjs/marked.`),
     for (
       let scan = pos, before;
       around == tree && (before = tree.childBefore(scan));
-
     ) {
       let last = before.lastChild;
       if (!last || !last.type.isError || last.from < last.to) break;
@@ -43623,7 +43595,6 @@ Please report this to https://github.com/markedjs/marked.`),
       outer: for (
         let cur = node.node.firstChild, depth = 0, parent = null;
         ;
-
       ) {
         while (!cur) {
           if (!depth) break outer;
