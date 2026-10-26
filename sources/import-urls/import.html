@@ -3,27 +3,8 @@
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <title>Import URLs</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        --bg: #f6f6f4;
-        --surface: #ffffff;
-        --border: #e2e1dd;
-        --border-strong: #cac8c2;
-        --text: #1c1c1a;
-        --text-muted: #6b6a65;
-        --accent: #3557d6;
-        --accent-hover: #2a45b0;
-        --accent-soft: #e9edfb;
-        --danger: #c0392b;
-        --danger-soft: #fbeceb;
-        --success-text: #1f7a3d;
-        --success-soft: #eaf6ec;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        --sans:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
-      }
-
       * {
         box-sizing: border-box;
       }
@@ -158,7 +139,7 @@
       button.primary {
         background: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--accent-text);
       }
       button.primary:hover {
         background: var(--accent-hover);
@@ -167,7 +148,7 @@
       button.primary:disabled {
         background: var(--border-strong);
         border-color: var(--border-strong);
-        color: #fff;
+        color: var(--accent-text);
       }
 
       button.subtle {
