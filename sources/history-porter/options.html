@@ -3,66 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <title>History Porter</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        --bg: #f5f4f0;
-        --panel-bg: #ffffff;
-        --ink: #22252b;
-        --ink-soft: #5b5f66;
-        --line: #dedad0;
-        --blue: #2f5d8a;
-        --blue-soft: #e7eef4;
-        --amber: #96591a;
-        --amber-soft: #f3e6d4;
-        --danger: #9c3b3b;
-        --control-bg: #ffffff;
-      }
-
       /* Follow the system/browser theme by default (no explicit choice made) */
-      @media (prefers-color-scheme: dark) {
-        :root:not([data-theme="light"]) {
-          --bg: #1b1c1f;
-          --panel-bg: #232427;
-          --ink: #e9e8e4;
-          --ink-soft: #9a9a96;
-          --line: #35363a;
-          --blue: #7fa8d6;
-          --blue-soft: #263646;
-          --amber: #d9a25c;
-          --amber-soft: #3a2f1e;
-          --danger: #d98686;
-          --control-bg: #2b2c30;
-        }
-      }
 
       /* Explicit overrides win regardless of system setting */
-      :root[data-theme="dark"] {
-        --bg: #1b1c1f;
-        --panel-bg: #232427;
-        --ink: #e9e8e4;
-        --ink-soft: #9a9a96;
-        --line: #35363a;
-        --blue: #7fa8d6;
-        --blue-soft: #263646;
-        --amber: #d9a25c;
-        --amber-soft: #3a2f1e;
-        --danger: #d98686;
-        --control-bg: #2b2c30;
-      }
-
-      :root[data-theme="light"] {
-        --bg: #f5f4f0;
-        --panel-bg: #ffffff;
-        --ink: #22252b;
-        --ink-soft: #5b5f66;
-        --line: #dedad0;
-        --blue: #2f5d8a;
-        --blue-soft: #e7eef4;
-        --amber: #96591a;
-        --amber-soft: #f3e6d4;
-        --danger: #9c3b3b;
-        --control-bg: #ffffff;
-      }
 
       * {
         box-sizing: border-box;
@@ -72,8 +17,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font-family:
-          -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: var(--font-ui);
         font-size: 14px;
         line-height: 1.5;
         transition:
@@ -107,7 +51,7 @@
 
       .masthead h1 {
         margin: 0;
-        font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+        font-family: var(--font-ui);
         font-size: 26px;
         font-weight: 600;
         letter-spacing: 0.2px;
@@ -171,7 +115,7 @@
 
       .panel h2 {
         margin: 0 0 8px;
-        font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+        font-family: var(--font-ui);
         font-size: 18px;
         font-weight: 600;
       }
@@ -181,7 +125,7 @@
       }
 
       .panel-import h2 {
-        color: var(--amber);
+        color: var(--accent);
       }
 
       .panel p {
@@ -197,7 +141,7 @@
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        color: #fff;
+        color: var(--accent-text);
       }
 
       .btn:focus-visible {
@@ -237,7 +181,7 @@
       }
 
       input[type="file"]:focus-visible {
-        outline: 2px solid var(--amber);
+        outline: 2px solid var(--accent);
         outline-offset: 1px;
       }
 
@@ -250,8 +194,8 @@
         appearance: none;
         border: none;
         border-radius: 3px;
-        background: var(--amber);
-        color: #fff;
+        background: var(--accent);
+        color: var(--accent-text);
         font-size: 12px;
         font-weight: 600;
         padding: 6px 10px;
@@ -263,14 +207,14 @@
         margin-top: 16px;
         height: 6px;
         border-radius: 3px;
-        background: var(--amber-soft);
+        background: var(--accent-soft);
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
         width: 0%;
-        background: var(--amber);
+        background: var(--accent);
         transition: width 160ms ease;
       }
 
@@ -299,8 +243,8 @@
       }
 
       .status[data-tone="warning"] {
-        border-color: var(--amber);
-        color: var(--amber);
+        border-color: var(--accent);
+        color: var(--accent);
       }
 
       .status[data-tone="success"] {
