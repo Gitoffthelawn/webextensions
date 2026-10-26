@@ -2,38 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="color-scheme" content="light dark" />
     <title>Open Temp Container — Options</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
       :root {
-        --bg-page: #f6f7f9;
-        --bg-panel: #ffffff;
-        --bg-titlebar: #eef0f3;
-        --border: #dde2e7;
-        --border-strong: #c4cbd2;
-        --ink: #1b1f24;
-        --muted: #8a93a0;
-        --key: #2b6cb0;
-        --accent: #0f9b8e;
-        --accent-ink: #ffffff;
-        --focus-ring: #0f9b8e;
         font-size: 15px;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg-page: #16191d;
-          --bg-panel: #1d2126;
-          --bg-titlebar: #22262c;
-          --border: #2c3138;
-          --border-strong: #3a4048;
-          --ink: #e7e9ec;
-          --muted: #838c98;
-          --key: #6ca9e0;
-          --accent: #29c4b3;
-          --accent-ink: #0b1211;
-          --focus-ring: #29c4b3;
-        }
       }
 
       * {
@@ -45,10 +18,14 @@
         min-height: 480px;
         background: var(--bg-page);
         color: var(--ink);
-        font-family:
-          ui-monospace, "JetBrains Mono", "Fira Code", SFMono-Regular, Menlo,
-          Consolas, "Liberation Mono", monospace;
+        font-family: var(--font-ui);
         line-height: 1.5;
+      }
+
+      .titlebar-path,
+      .key,
+      .brace {
+        font-family: var(--font-mono);
       }
 
       .app {
