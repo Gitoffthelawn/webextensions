@@ -35,7 +35,7 @@ function onDOMContentLoaded() {
       const ret = await browser.runtime.sendMessage({
         cmd: cmd,
       });
-      document.getElementById("info").innerText = `${ret} URLs done`;
+      document.getElementById("info").innerText = `Copied ${ret} URLs`;
       setTimeout(() => {
         document.getElementById("info").innerText = "";
       }, 5000);

@@ -3,36 +3,19 @@
   <meta charset="utf-8" />
   <link rel="icon" type="image/png" href="icon.png" />
   <title>Copy Tabs - Options</title>
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    :root {
-      color-scheme: light dark;
-    }
-    body {
-      padding: 0;
-      margin: 0;
-      color: light-dark(black, white);
-      background-color: light-dark(white, black);
-    }
     #allowedParams {
-      color: light-dark(black, white);
-      background-color: light-dark(white, black);
       height: 40em;
-      resize: vertical;
       white-space: pre-wrap;
-      width: 99%;
+      width: 100%;
     }
     button {
-      color: light-dark(black, black);
-      background-color: light-dark(white, gainsboro);
-      padding: 3px;
       margin: 5px;
-    }
-    button:hover {
-      background-color: light-dark(gainsboro, white);
     }
   </style>
 </head>
-<body>
+<body class="options">
   <fieldset>
     <b>Toolbar button</b>: Swap
     <abbr title="Left Mouse Button"><b>LMB</b></abbr> and
