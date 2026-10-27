@@ -4,10 +4,8 @@
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="icon.png" />
     <title>Copy Video Frame</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-      }
       html,
       body {
         margin: 0;
@@ -21,11 +19,7 @@
         align-items: center;
         justify-content: center;
         background: #111;
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        font-family: var(--font-ui);
       }
       img {
         display: block;
@@ -43,7 +37,7 @@
         border-radius: 8px;
         background: rgba(192, 57, 43, 0.12);
         border: 1px solid rgba(192, 57, 43, 0.4);
-        color: #e57368;
+        color: var(--danger);
         font-size: 0.95em;
         line-height: 1.4;
         white-space: pre-wrap;

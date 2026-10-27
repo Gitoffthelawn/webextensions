@@ -4,20 +4,14 @@
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="icon.png" />
     <title>Copy Video Frame - Options</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-      }
       body {
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        font-family: var(--font-ui);
         max-width: 480px;
         margin: 1.5em auto;
         padding: 0 1em;
-        color: #222;
+        color: var(--text);
         line-height: 1.45;
       }
       header {
@@ -64,11 +58,11 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #999;
+        background: var(--border-strong);
         flex-shrink: 0;
       }
       .sound-info.custom .dot {
-        background: #2a7d2a;
+        background: var(--ok);
       }
       #currentSound {
         font-weight: 600;
@@ -97,7 +91,7 @@
       }
       .hint {
         font-size: 0.82em;
-        color: #777;
+        color: var(--muted);
         margin: 0;
       }
       #status {
@@ -106,10 +100,10 @@
         margin-top: 0.4em;
       }
       #status.ok {
-        color: #2a7d2a;
+        color: var(--ok);
       }
       #status.error {
-        color: #c0392b;
+        color: var(--danger);
       }
       kbd {
         font: inherit;
@@ -182,10 +176,10 @@
       }
       @media (prefers-color-scheme: dark) {
         body {
-          color: #eee;
+          color: var(--muted);
         }
         .hint {
-          color: #aaa;
+          color: var(--muted);
         }
       }
     </style>
