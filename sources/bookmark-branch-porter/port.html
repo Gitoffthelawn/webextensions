@@ -4,55 +4,38 @@
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="icon.png" />
     <title>Bookmark Branch Porter</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
       :root {
-        --ink: #16302b;
-        --ink-soft: #4a625d;
-        --paper: #f6f8f7;
-        --surface: #ffffff;
-        --border: #dee6e3;
         --spine: #1a7a6d;
         --spine-dark: #12564d;
         --spine-tint: #e6f2f0;
+        --spine-ink: #ffffff;
         --export: #c8492f;
         --export-tint: #fbeae5;
         --import: #2f6fbf;
         --import-tint: #e8f0fb;
-        --ok: #1a7a6d;
-        --ok-tint: #e6f2f0;
-        --err: #c8492f;
-        --err-tint: #fbeae5;
-        --radius: 10px;
-        --mono:
-          ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-          monospace;
-        --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
-          --ink: #e8efed;
-          --ink-soft: #a9bdb8;
-          --paper: #10201d;
-          --surface: #16302b;
-          --border: #234943;
           --spine: #3ea393;
           --spine-dark: #6cc4b6;
           --spine-tint: #1a3934;
+          --spine-ink: #0e1f1c;
           --export: #e2735b;
           --export-tint: #3a201b;
           --import: #6ea3e0;
           --import-tint: #1a2a3a;
-          --ok: #3ea393;
-          --ok-tint: #1a3934;
-          --err: #e2735b;
-          --err-tint: #3a201b;
         }
       }
 
       * {
         box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       html,
@@ -113,6 +96,8 @@
         overflow: hidden;
         box-shadow: 0 1px 2px rgba(16, 32, 29, 0.04);
         position: relative;
+        padding: 0;
+        margin: 0;
       }
 
       .card::before {
@@ -125,49 +110,162 @@
         background: linear-gradient(var(--spine), var(--spine-dark));
       }
 
-      .steps {
-        padding: 8px 28px 26px 32px;
+      /* ---------- Progress ---------- */
+      .progress {
+        list-style: none;
+        margin: 0;
+        padding: 20px 28px 0 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
-      .step {
-        display: grid;
-        grid-template-columns: 34px 1fr;
-        gap: 14px;
-        padding: 20px 0;
-        border-bottom: 1px dashed var(--border);
+      .progress li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        color: var(--ink-soft);
       }
 
-      .step:last-child {
-        border-bottom: none;
+      .progress li + li::before {
+        content: "";
+        width: 22px;
+        height: 1px;
+        background: var(--border);
+        margin-right: 2px;
       }
 
-      .step-num {
-        font-family: var(--mono);
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--spine);
-        background: var(--spine-tint);
-        width: 30px;
-        height: 30px;
+      .progress .dot {
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
+        border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 2px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        flex: none;
       }
 
-      .step-body label.step-title {
+      .progress li.done .dot {
+        background: var(--spine-tint);
+        color: var(--spine-dark);
+        border-color: transparent;
+      }
+
+      .progress li[aria-current="step"] {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .progress li[aria-current="step"] .dot {
+        background: var(--spine);
+        color: var(--spine-ink);
+        border-color: var(--spine);
+      }
+
+      @media (max-width: 620px) {
+        .progress li:not([aria-current="step"]) .label {
+          display: none;
+        }
+      }
+
+      /* ---------- Panels ---------- */
+      .panel {
+        padding: 22px 28px 8px 32px;
+      }
+
+      .panel-title {
+        font-family: var(--serif);
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 6px;
+        outline: none;
+      }
+
+      .panel-lead {
+        margin: 0 0 18px;
+        color: var(--ink-soft);
+        font-size: 13.5px;
+      }
+
+      .field-label {
         display: block;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13.5px;
         margin-bottom: 8px;
-        color: var(--ink);
       }
 
       .step-hint {
         font-size: 12.5px;
         color: var(--ink-soft);
-        margin: 6px 0 0;
+        margin: 8px 0 0;
+      }
+
+      /* ---------- Mode choice ---------- */
+      .choices {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        padding-bottom: 22px;
+      }
+
+      @media (max-width: 560px) {
+        .choices {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .choice {
+        font: inherit;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .choice svg {
+        width: 28px;
+        height: 28px;
+        margin-bottom: 4px;
+      }
+
+      .choice strong {
+        font-size: 16px;
+      }
+
+      .choice span {
+        font-size: 13px;
+        color: var(--ink-soft);
+      }
+
+      .choice-export svg {
+        color: var(--export);
+      }
+      .choice-export:hover {
+        border-color: var(--export);
+        background: var(--export-tint);
+      }
+
+      .choice-import svg {
+        color: var(--import);
+      }
+      .choice-import:hover {
+        border-color: var(--import);
+        background: var(--import-tint);
       }
 
       /* ---------- Form controls ---------- */
@@ -190,7 +288,8 @@
       select:focus-visible,
       button:focus-visible,
       input:focus-visible,
-      textarea:focus-visible {
+      textarea:focus-visible,
+      .panel-title:focus-visible {
         outline: 2px solid var(--spine);
         outline-offset: 2px;
       }
@@ -210,6 +309,7 @@
         letter-spacing: 0.02em;
         padding: 8px 20px;
         border: none;
+        border-radius: 0;
         background: var(--surface);
         color: var(--ink-soft);
         cursor: pointer;
@@ -228,6 +328,7 @@
         display: flex;
         align-items: flex-start;
         gap: 10px;
+        margin-top: 18px;
       }
 
       .checkline input[type="checkbox"] {
@@ -241,12 +342,6 @@
       .checkline label {
         cursor: pointer;
         font-size: 13.5px;
-      }
-
-      .runbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
       }
 
       .btn {
@@ -274,10 +369,13 @@
         transform: none;
       }
 
-      .btn svg {
-        width: 14px;
-        height: 14px;
-        flex: none;
+      .btn-next {
+        background: var(--spine);
+        color: var(--spine-ink);
+        border-color: var(--spine);
+      }
+      .btn-next:hover:not(:disabled) {
+        filter: brightness(1.08);
       }
 
       .btn-export {
@@ -304,41 +402,61 @@
         border-color: var(--border);
       }
       .btn-ghost:hover:not(:disabled) {
-        background: var(--paper);
+        background: var(--spine-tint);
+      }
+
+      /* ---------- Navigation ---------- */
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+        padding: 16px 28px 22px 32px;
+        border-top: 1px dashed var(--border);
+      }
+
+      .recap {
+        flex: 1;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
 
       /* ---------- Message banner ---------- */
-      #message {
-        margin: 18px 0 0;
+      .message {
+        margin: 0 0 16px;
         font-size: 13px;
         font-weight: 600;
-        padding: 0;
-        min-height: 0;
         border-radius: 8px;
-        transition: all 0.15s ease;
       }
 
-      #message:not(:empty) {
+      .message:not(:empty) {
         padding: 10px 14px;
       }
 
-      #message[data-status="ok"] {
+      .message[data-status="ok"] {
         background: var(--ok-tint);
         color: var(--ok);
       }
 
-      #message[data-status="error"] {
+      .message[data-status="error"] {
         background: var(--err-tint);
         color: var(--err);
       }
 
-      /* ---------- Data panel ---------- */
+      .message[data-status="busy"] {
+        background: var(--spine-tint);
+        color: var(--spine-dark);
+      }
+
+      /* ---------- Data panels ---------- */
       .data-panel {
-        margin-top: 22px;
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--surface);
         overflow: hidden;
+        margin-bottom: 16px;
       }
 
       .data-panel-head {
@@ -375,15 +493,16 @@
         cursor: pointer;
       }
       .data-panel-actions button:hover {
-        background: var(--paper);
+        background: var(--spine-tint);
       }
 
-      #output {
+      .data-panel textarea {
         display: block;
         width: 100%;
-        height: 52vh;
-        min-height: 260px;
+        height: 38vh;
+        min-height: 220px;
         border: none;
+        border-radius: 0;
         resize: vertical;
         padding: 16px;
         font-family: var(--mono);
@@ -395,15 +514,45 @@
         overflow: auto;
       }
 
+      .filename-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+      }
+
+      .filename-row label {
+        font-weight: 600;
+        flex: none;
+      }
+
+      .filename-row input {
+        flex: 1;
+        min-width: 0;
+        font: inherit;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 8px;
+      }
+
+      .filename-row span {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        flex: none;
+      }
+
       footer {
         text-align: center;
         color: var(--ink-soft);
         font-size: 12px;
         margin-top: 22px;
-      }
-
-      footer a {
-        color: var(--ink-soft);
       }
     </style>
   </head>
@@ -418,125 +567,195 @@
       </div>
 
       <div class="card">
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">01</div>
-            <div class="step-body">
-              <label class="step-title" for="folder">Choose a branch</label>
-              <select id="folder">
-                <option value="">Entire Bookmark Tree</option>
-              </select>
-              <p class="step-hint">
-                Exports read from this branch. Imports add into it — the root of
-                the tree can't be an import target.
-              </p>
-            </div>
-          </div>
+        <ol class="progress" id="progress" aria-label="Progress" hidden></ol>
 
-          <div class="step">
-            <div class="step-num">02</div>
-            <div class="step-body">
-              <span class="step-title" id="format-label">Choose a format</span>
-              <div
-                class="format-toggle"
-                role="group"
-                aria-labelledby="format-label"
+        <!-- Step: choose action -->
+        <section class="panel" data-step="mode">
+          <h2 class="panel-title" tabindex="-1">What would you like to do?</h2>
+          <p class="panel-lead">
+            Export copies a branch of your bookmarks out as text or a file.
+            Import adds bookmarks from a file or from pasted text.
+          </p>
+          <div class="choices">
+            <button
+              type="button"
+              class="choice choice-export"
+              data-mode="export"
+            >
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M2 8h11M9 4l4 4-4 4"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <strong>Export</strong>
+              <span
+                >Copy or save a folder (or all bookmarks) as JSON or HTML</span
               >
-                <button type="button" data-format="json" aria-pressed="true">
-                  { JSON }
-                </button>
-                <button type="button" data-format="html" aria-pressed="false">
-                  &lt;HTML&gt;
-                </button>
-              </div>
-              <!-- kept for port.js compatibility -->
-              <select id="format" style="display: none" aria-hidden="true">
-                <option value="json">JSON</option>
-                <option value="html">HTML</option>
-              </select>
-            </div>
+            </button>
+            <button
+              type="button"
+              class="choice choice-import"
+              data-mode="import"
+            >
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M14 8H3M7 4L3 8l4 4"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <strong>Import</strong>
+              <span
+                >Add bookmarks from a JSON or HTML file, or from pasted
+                text</span
+              >
+            </button>
           </div>
+        </section>
 
-          <div class="step">
-            <div class="step-num">03</div>
-            <div class="step-body">
-              <span class="step-title">Import options</span>
-              <div class="checkline">
-                <input type="checkbox" id="noroot" />
-                <label for="noroot"
-                  >Strip the root node on import (recommended when merging into
-                  an existing folder)</label
-                >
-              </div>
-            </div>
-          </div>
+        <!-- Export: branch -->
+        <section class="panel" data-step="branch" hidden>
+          <h2 class="panel-title" tabindex="-1">
+            Which part of your bookmarks?
+          </h2>
+          <p class="panel-lead">
+            Choose a folder to export with all its subfolders, or export the
+            entire tree.
+          </p>
+          <label class="field-label" for="exportfolder">Branch</label>
+          <select id="exportfolder">
+            <option value="">Entire Bookmark Tree</option>
+          </select>
+        </section>
 
-          <div class="step">
-            <div class="step-num">04</div>
-            <div class="step-body">
-              <span class="step-title">Run</span>
-              <div class="runbar">
-                <button id="doexport" class="btn btn-export" type="button">
-                  <svg viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M2 8h11M9 4l4 4-4 4"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  Export
-                </button>
-                <button id="doimport" class="btn btn-import" type="button">
-                  <svg viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M14 8H3M7 4L3 8l4 4"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  Import
-                </button>
+        <!-- Export: format -->
+        <section class="panel" data-step="format" hidden>
+          <h2 class="panel-title" tabindex="-1">Which format?</h2>
+          <p class="panel-lead">
+            JSON keeps the folder structure as data. HTML is the standard
+            bookmarks file that most browsers can import.
+          </p>
+          <div class="format-toggle" role="group" aria-label="Export format">
+            <button type="button" data-format="json" aria-pressed="true">
+              { JSON }
+            </button>
+            <button type="button" data-format="html" aria-pressed="false">
+              &lt;HTML&gt;
+            </button>
+          </div>
+        </section>
+
+        <!-- Import: data -->
+        <section class="panel" data-step="data" hidden>
+          <h2 class="panel-title" tabindex="-1">Provide your data</h2>
+          <p class="panel-lead">
+            Open a JSON or HTML file, or paste the data into the box below.
+          </p>
+          <div class="data-panel">
+            <div class="data-panel-head">
+              <span>Data to import</span>
+              <div class="data-panel-actions">
+                <button id="doopen" type="button">Open file</button>
+                <button id="doclear" type="button">Clear</button>
               </div>
             </div>
+            <textarea
+              id="input"
+              spellcheck="false"
+              wrap="off"
+              aria-label="Data to import"
+              placeholder="Paste JSON or HTML bookmarks data here…"
+            ></textarea>
+            <input
+              id="fileinput"
+              type="file"
+              accept=".json,.html,.htm,application/json,text/html"
+              hidden
+            />
           </div>
+          <span class="field-label" id="importformat-label">
+            Format (detected automatically, change it if it is wrong)
+          </span>
+          <div
+            class="format-toggle"
+            role="group"
+            aria-labelledby="importformat-label"
+          >
+            <button type="button" data-format="json" aria-pressed="true">
+              { JSON }
+            </button>
+            <button type="button" data-format="html" aria-pressed="false">
+              &lt;HTML&gt;
+            </button>
+          </div>
+        </section>
+
+        <!-- Import: target -->
+        <section class="panel" data-step="target" hidden>
+          <h2 class="panel-title" tabindex="-1">
+            Where should the bookmarks go?
+          </h2>
+          <p class="panel-lead">
+            Imported bookmarks are added to the folder you choose. Existing
+            bookmarks are not replaced or removed. The root of the bookmark tree
+            can't be an import target.
+          </p>
+          <label class="field-label" for="importfolder">Target folder</label>
+          <select id="importfolder">
+            <option value="">— Choose a folder —</option>
+          </select>
+          <div class="checkline">
+            <input type="checkbox" id="noroot" />
+            <label for="noroot"
+              >Strip the root node (recommended when merging into an existing
+              folder)</label
+            >
+          </div>
+        </section>
+
+        <!-- Result (both flows) -->
+        <section class="panel" data-step="result" hidden>
+          <h2 class="panel-title" tabindex="-1" id="result-title">Result</h2>
+          <p id="message" class="message" role="status" aria-live="polite"></p>
+          <div class="data-panel" id="exportdata" hidden>
+            <div class="data-panel-head">
+              <span>Exported data</span>
+              <div class="data-panel-actions">
+                <button id="docopy" type="button">Copy</button>
+                <button id="dosave" type="button">Save file</button>
+              </div>
+            </div>
+            <div class="filename-row">
+              <label for="filename">File name</label>
+              <input
+                id="filename"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+              />
+              <span id="fileext">.json</span>
+            </div>
+            <textarea
+              id="output"
+              readonly
+              spellcheck="false"
+              wrap="off"
+              aria-label="Exported data"
+            ></textarea>
+          </div>
+        </section>
+
+        <div class="nav" id="nav" hidden>
+          <button id="back" class="btn btn-ghost" type="button">Back</button>
+          <span class="recap" id="recap"></span>
+          <button id="next" class="btn btn-next" type="button">Next</button>
         </div>
-
-        <p id="message" role="status" aria-live="polite"></p>
-      </div>
-
-      <div class="data-panel">
-        <div class="data-panel-head">
-          <span>Data</span>
-          <div class="data-panel-actions">
-            <button id="docopy" type="button">Copy</button>
-            <button id="doclear" type="button">Clear</button>
-          </div>
-        </div>
-        <textarea id="output" spellcheck="false" wrap="off">
---- How to Export ---
-
-[1] Select the folder/branch to export
-[2] Select the export format ( {json} or <html> )
-[3] Click Export
-
-Note: exported data always has one root node — you can skip it on import.
-
-
---- How to Import ---
-
-[1] Select the folder/branch to import into
-[2] Select the import format ( {json} or <html> )
-[3] Check "strip the root node" if you want to skip it
-[4] Paste your data into this panel, then click Import
-
-Note: importing into the root of the bookmark tree isn't possible —
-pick a folder first.
-</textarea
-        >
       </div>
 
       <footer>Bookmark Branch Porter</footer>
