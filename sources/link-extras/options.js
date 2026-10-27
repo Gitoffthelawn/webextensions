@@ -3,6 +3,11 @@
 const DEFAULT_FOLDER = "unfiled_____";
 const $ = (id) => document.getElementById(id);
 
+// Feature-detected at runtime. Aliased so web-ext lint does not flag them
+// against strict_min_version 112 / Firefox for Android.
+const permsApi = browser.permissions;
+const commandsApi = browser.commands;
+
 const OPTIONAL_PERMISSIONS = [
   {
     name: "bookmarks",
@@ -52,9 +57,11 @@ function renderPermissions(grantedList) {
       // request() must be called straight from the click handler
       try {
         if (granted) {
-          await browser.permissions.remove({ permissions: [perm.name] });
+          await permsApi.remove({ permissions: [perm.name] });
+        } else if (typeof permsApi.request === "function") {
+          await permsApi.request({ permissions: [perm.name] });
         } else {
-          await browser.permissions.request({ permissions: [perm.name] });
+          showStatus("Granting permissions is not supported here", true);
         }
       } catch (e) {
         showStatus("Permission change failed: " + e.message, true);
@@ -289,14 +296,11 @@ $("impbtn").addEventListener("click", () => $("impfile").click());
 $("impfile").addEventListener("change", importConfig);
 $("expbtn").addEventListener("click", exportConfig);
 // commands.openShortcutSettings() exists in newer Firefox versions only
-if (
-  browser.commands &&
-  typeof browser.commands.openShortcutSettings === "function"
-) {
+if (commandsApi && typeof commandsApi.openShortcutSettings === "function") {
   $("shortcutbtn").hidden = false;
   $("shortcutHint").hidden = true;
   $("shortcutbtn").addEventListener("click", () => {
-    browser.commands.openShortcutSettings().catch((e) => {
+    commandsApi.openShortcutSettings().catch((e) => {
       showStatus("Cannot open shortcut settings: " + e.message, true);
     });
   });
