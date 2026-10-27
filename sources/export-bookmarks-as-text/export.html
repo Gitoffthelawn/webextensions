@@ -3,10 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Export Bookmarks as Text</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-      }
       html,
       body {
         height: 100%;
@@ -15,7 +13,7 @@
       body {
         display: flex;
         flex-direction: column;
-        font-family: system-ui, sans-serif;
+        font-family: var(--font-ui);
       }
       header {
         display: flex;
@@ -26,7 +24,7 @@
       }
       #edited {
         margin-left: auto;
-        color: #d97706;
+        color: var(--warn);
         font-weight: 600;
       }
       #edited + #count {
@@ -52,7 +50,7 @@
         outline: none;
         overflow: auto;
         resize: none;
-        font-family: ui-monospace, monospace;
+        font-family: var(--font-mono);
       }
     </style>
   </head>
@@ -78,8 +76,7 @@
       <span id="count"></span>
     </header>
     <textarea autocomplete="off" spellcheck="false" id="output">
-loading, please wait</textarea
-    >
+loading, please wait</textarea>
     <script src="export.js"></script>
   </body>
 </html>
