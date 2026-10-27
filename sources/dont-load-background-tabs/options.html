@@ -3,39 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
     <title>Dont Load Background Tabs</title>
+    <link rel="stylesheet" href="theme.css" />
     <style>
-      :root {
-        --bg: #f6f7fb;
-        --card: #ffffff;
-        --text: #1b1d2b;
-        --muted: #62667a;
-        --border: #dcdfea;
-        --accent: #5b6ee1;
-        --accent-soft: #e9ecfc;
-        --ok: #1f9d55;
-        --ok-soft: #e3f6ea;
-        --warn: #c0392b;
-        --warn-soft: #fbe9e7;
-        --code-bg: #eef0f8;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #15161f;
-          --card: #1e2030;
-          --text: #e8e9f2;
-          --muted: #9a9eb5;
-          --border: #34374d;
-          --accent: #8494ff;
-          --accent-soft: #29305a;
-          --ok: #4cd28a;
-          --ok-soft: #1c3a2b;
-          --warn: #ff8b7d;
-          --warn-soft: #3d2320;
-          --code-bg: #2a2d42;
-        }
-      }
       * {
         box-sizing: border-box;
       }
@@ -44,11 +14,7 @@
         padding: 24px 16px 48px;
         background: var(--bg);
         color: var(--text);
-        font:
-          14px/1.5 system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        font: 14px/1.5 var(--font-ui);
       }
       main {
         max-width: 760px;
@@ -129,7 +95,7 @@
         border-radius: 8px;
         border: 0;
         background: var(--accent);
-        color: #fff;
+        color: var(--accent-text);
         cursor: pointer;
       }
       button:hover {
@@ -181,11 +147,7 @@
         border-radius: 8px;
         background: var(--card);
         color: var(--text);
-        font:
-          13px/1.5 ui-monospace,
-          "SF Mono",
-          Consolas,
-          monospace;
+        font: 13px/1.5 var(--font-mono);
         resize: vertical;
       }
       textarea:focus {
